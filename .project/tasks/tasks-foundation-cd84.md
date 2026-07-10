@@ -9,7 +9,7 @@ status: in-progress
 ## Phase 0: Scaffolding & quality gates
 
 - [x] T001 [artifacts: constitution] Initialize a SvelteKit project with TypeScript, Svelte 5 (runes) and `adapter-node`. Commit the baseline app; confirm `dev` and `build` run. Add a placeholder `/` route.
-- [ ] T002 [artifacts: constitution] Configure Vitest with coverage reporting. Add one trivial domain util written test-first (red→green) to establish the TDD loop and a coverage baseline number.
+- [x] T002 [artifacts: constitution] Configure Vitest with coverage reporting. Add one trivial domain util written test-first (red→green) to establish the TDD loop and a coverage baseline number.
 - [ ] T003 [artifacts: constitution] [parallel] Configure ESLint + `svelte-check`/`tsc` with `lint` and `check` npm scripts; make them pass on the current tree. No `any`/untyped seams (Principle II).
 - [ ] T004 [artifacts: constitution, ui] [parallel] Add Playwright + `@axe-core/playwright`; write a WCAG 2.1 AA smoke test asserting zero axe violations on `/`.
 - [ ] T005 [artifacts: constitution] Add a pre-commit hook (e.g. Husky/lefthook) running lint → type-check → tests in that order; document the emergency-bypass policy from the constitution.
