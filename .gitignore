@@ -24,3 +24,6 @@ playwright-report/
 
 # ARDD install (reinstalled via install.sh; copied into worktrees via .worktreeinclude)
 .claude/
+
+# ARDD advisory project lock (ephemeral)
+.project/.lock
