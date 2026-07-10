@@ -14,7 +14,7 @@ status: in-progress
 - [x] T004 [artifacts: constitution, ui] [parallel] Add Playwright + `@axe-core/playwright`; write a WCAG 2.1 AA smoke test asserting zero axe violations on `/`.
 - [x] T005 [artifacts: constitution] Add a pre-commit hook (e.g. Husky/lefthook) running lint → type-check → tests in that order; document the emergency-bypass policy from the constitution.
 - [x] T006 [artifacts: constitution] GitHub Actions CI mirroring the pre-commit hook (lint, type-check, tests) on push/PR, plus a **coverage ratchet** step that fails when overall coverage drops below the stored baseline and updates the baseline upward.
-- [ ] T007 [artifacts: constitution] Establish the module/directory structure so entry files only wire dependencies (Principle XV) and shared types have one home (Principle XIII). Document it briefly in the repo README.
+- [x] T007 [artifacts: constitution] Establish the module/directory structure so entry files only wire dependencies (Principle XV) and shared types have one home (Principle XIII). Document it briefly in the repo README.
 
 ## Phase 1: Data layer & auth
 
