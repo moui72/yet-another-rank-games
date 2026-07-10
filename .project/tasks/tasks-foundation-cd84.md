@@ -10,7 +10,7 @@ status: in-progress
 
 - [x] T001 [artifacts: constitution] Initialize a SvelteKit project with TypeScript, Svelte 5 (runes) and `adapter-node`. Commit the baseline app; confirm `dev` and `build` run. Add a placeholder `/` route.
 - [x] T002 [artifacts: constitution] Configure Vitest with coverage reporting. Add one trivial domain util written test-first (red→green) to establish the TDD loop and a coverage baseline number.
-- [ ] T003 [artifacts: constitution] [parallel] Configure ESLint + `svelte-check`/`tsc` with `lint` and `check` npm scripts; make them pass on the current tree. No `any`/untyped seams (Principle II).
+- [x] T003 [artifacts: constitution] [parallel] Configure ESLint + `svelte-check`/`tsc` with `lint` and `check` npm scripts; make them pass on the current tree. No `any`/untyped seams (Principle II).
 - [ ] T004 [artifacts: constitution, ui] [parallel] Add Playwright + `@axe-core/playwright`; write a WCAG 2.1 AA smoke test asserting zero axe violations on `/`.
 - [ ] T005 [artifacts: constitution] Add a pre-commit hook (e.g. Husky/lefthook) running lint → type-check → tests in that order; document the emergency-bypass policy from the constitution.
 - [ ] T006 [artifacts: constitution] GitHub Actions CI mirroring the pre-commit hook (lint, type-check, tests) on push/PR, plus a **coverage ratchet** step that fails when overall coverage drops below the stored baseline and updates the baseline upward.
