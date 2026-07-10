@@ -12,7 +12,7 @@ status: in-progress
 - [x] T002 [artifacts: constitution] Configure Vitest with coverage reporting. Add one trivial domain util written test-first (red→green) to establish the TDD loop and a coverage baseline number.
 - [x] T003 [artifacts: constitution] [parallel] Configure ESLint + `svelte-check`/`tsc` with `lint` and `check` npm scripts; make them pass on the current tree. No `any`/untyped seams (Principle II).
 - [x] T004 [artifacts: constitution, ui] [parallel] Add Playwright + `@axe-core/playwright`; write a WCAG 2.1 AA smoke test asserting zero axe violations on `/`.
-- [ ] T005 [artifacts: constitution] Add a pre-commit hook (e.g. Husky/lefthook) running lint → type-check → tests in that order; document the emergency-bypass policy from the constitution.
+- [x] T005 [artifacts: constitution] Add a pre-commit hook (e.g. Husky/lefthook) running lint → type-check → tests in that order; document the emergency-bypass policy from the constitution.
 - [ ] T006 [artifacts: constitution] GitHub Actions CI mirroring the pre-commit hook (lint, type-check, tests) on push/PR, plus a **coverage ratchet** step that fails when overall coverage drops below the stored baseline and updates the baseline upward.
 - [ ] T007 [artifacts: constitution] Establish the module/directory structure so entry files only wire dependencies (Principle XV) and shared types have one home (Principle XIII). Document it briefly in the repo README.
 

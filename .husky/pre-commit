@@ -1,0 +1,8 @@
+# Constitution: Pre-commit Enforcement — lint, type-check, then tests, in
+# that order, before a commit is accepted. Bypassing (git commit --no-verify)
+# is prohibited except in a documented emergency, and any bypass must be
+# followed immediately by a commit that re-establishes the passing state.
+# (End-to-end/axe tests run in CI, not here, to keep the hook fast.)
+npm run lint
+npm run check
+npm run test
