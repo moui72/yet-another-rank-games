@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import { env } from '$env/dynamic/public';
+import { getSupabaseEnv } from '$lib/supabaseEnv';
 
 /**
  * Auth handle (canonical @supabase/ssr pattern).
@@ -12,7 +12,8 @@ import { env } from '$env/dynamic/public';
  * load functions and endpoints read `locals.user` / `locals.session`.
  */
 const supabase: Handle = async ({ event, resolve }) => {
-	event.locals.supabase = createServerClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+	const { url, publishableKey } = getSupabaseEnv();
+	event.locals.supabase = createServerClient(url, publishableKey, {
 		cookies: {
 			getAll: () => event.cookies.getAll(),
 			setAll: (cookiesToSet) => {

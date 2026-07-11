@@ -24,7 +24,8 @@ jobs:
         run: npm run coverage:ratchet
 
   # End-to-end + WCAG 2.1 AA (axe) checks — run in CI rather than pre-commit
-  # to keep local commits fast.
+  # to keep local commits fast. Spins up a local Supabase (auth + DB) so the
+  # auth/collection flows have a real backend.
   e2e:
     runs-on: ubuntu-latest
     steps:
@@ -34,5 +35,20 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start local Supabase (applies migrations)
+        run: supabase start
+      - name: Write .env from Supabase status
+        run: |
+          supabase status -o json > sb.json
+          {
+            echo "PUBLIC_SUPABASE_URL=$(jq -r .API_URL sb.json)"
+            echo "PUBLIC_SUPABASE_PUBLISHABLE_KEY=$(jq -r .PUBLISHABLE_KEY sb.json)"
+            echo "SUPABASE_SECRET_KEY=$(jq -r .SECRET_KEY sb.json)"
+            echo "DATABASE_URL=$(jq -r .DB_URL sb.json)"
+          } > .env
+          rm sb.json
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

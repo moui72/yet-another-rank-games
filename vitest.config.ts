@@ -20,6 +20,9 @@ export default defineConfig({
 			exclude: [
 				'src/lib/**/*.{test,spec}.ts',
 				'src/lib/index.ts',
+				// Uses the $env virtual module — not importable in unit tests;
+				// exercised via SSR/e2e.
+				'src/lib/supabaseEnv.ts',
 				// Thin connection/client constructors that require a live service —
 				// exercised by integration/e2e, not unit tests.
 				'src/lib/server/db.ts',
