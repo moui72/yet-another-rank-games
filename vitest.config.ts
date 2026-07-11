@@ -22,6 +22,8 @@ export default defineConfig({
 			exclude: [
 				'src/lib/**/*.{test,spec}.ts',
 				'src/lib/index.ts',
+				// Svelte runes modules — compiled/reactive, exercised via e2e.
+				'src/lib/**/*.svelte.ts',
 				// Uses the $env virtual module — not importable in unit tests;
 				// exercised via SSR/e2e.
 				'src/lib/supabaseEnv.ts',

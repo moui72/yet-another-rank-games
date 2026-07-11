@@ -59,6 +59,30 @@ export function pairKey(a: number, b: number): string {
 	return a < b ? `${a}:${b}` : `${b}:${a}`;
 }
 
+/** One recorded pairwise choice. */
+export interface Choice {
+	winnerId: number;
+	loserId: number;
+}
+
+/**
+ * Derive the full pairwise state from the choice log (the source of truth) and
+ * the games being ranked: ratings, the seen-pair set, the current best-first
+ * order, and the next matchup to show. Everything is a pure function of the
+ * log, so a session serialized to its log and reconstructed is identical
+ * (stop-early/resume).
+ */
+export function pairwiseState(gameIds: readonly number[], log: readonly Choice[]) {
+	const ratings = ratingsFromComparisons(log);
+	const comparedKeys = new Set(log.map((c) => pairKey(c.winnerId, c.loserId)));
+	return {
+		ratings,
+		comparedKeys,
+		order: rankGames(gameIds, ratings),
+		currentPair: selectNextPair(gameIds, ratings, comparedKeys)
+	};
+}
+
 /**
  * How informative comparing two games would be: favors **close ratings** (the
  * outcome is uncertain, so it teaches us the most) and **high combined

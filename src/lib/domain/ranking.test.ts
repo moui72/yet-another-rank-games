@@ -6,7 +6,9 @@ import {
 	rankGames,
 	pairKey,
 	selectNextPair,
-	type Ratings
+	pairwiseState,
+	type Ratings,
+	type Choice
 } from './ranking';
 
 describe('applyComparison', () => {
@@ -98,5 +100,35 @@ describe('selectNextPair', () => {
 
 	it('picks a deterministic pair when all games are unrated (tie)', () => {
 		expect(selectNextPair([5, 6, 7], new Map(), new Set())).toEqual([5, 6]);
+	});
+});
+
+describe('pairwiseState', () => {
+	const games = [1, 2, 3];
+
+	it('starts with the initial order and the first matchup, nothing seen', () => {
+		const s = pairwiseState(games, []);
+		expect(s.order).toEqual([1, 2, 3]);
+		expect(s.currentPair).toEqual([1, 2]);
+		expect(s.comparedKeys.size).toBe(0);
+	});
+
+	it('serialize/resume — the same log reproduces the same state', () => {
+		const log: Choice[] = [
+			{ winnerId: 1, loserId: 2 },
+			{ winnerId: 1, loserId: 3 },
+			{ winnerId: 2, loserId: 3 }
+		];
+		const a = pairwiseState(games, log);
+		const b = pairwiseState(games, log);
+		expect(a.order).toEqual(b.order);
+		expect(a.currentPair).toEqual(b.currentPair);
+		expect(a.order).toEqual([1, 2, 3]);
+	});
+
+	it('reflects wins in the order and does not re-show a seen pair while unseen remain', () => {
+		const s = pairwiseState(games, [{ winnerId: 3, loserId: 1 }]);
+		expect(s.currentPair).not.toEqual([3, 1]);
+		expect(s.currentPair).not.toEqual([1, 3]);
 	});
 });
