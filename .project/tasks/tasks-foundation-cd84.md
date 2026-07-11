@@ -62,7 +62,7 @@ collections to pools. T023/T024 were reworked accordingly.
 - [x] T028 [artifacts: ui] Novelty-biased next-pair selector as a pure function over current ratings + already-compared pairs. Unit-test: prefers unseen informative pairs; permits a repeat only when no unseen pair remains or to break a persistent ambiguity; handles exhaustion.
 - [x] T029 [artifacts: ui] Single Svelte 5 runes store (Principle XII) holding the comparison log (source of truth), derived `Map<gameId,{mu,sigma}>`, and the current candidate pair — fully recomputable from the log. Test serialize/resume.
 - [x] T030 [artifacts: ui] Pairwise view: keyboard-operable choose left/right + undo, a confidence/coverage progress signal, stop-early/resume, and cold-start seeding from `CollectionItem.user_rating`/`num_plays`. Test interactions; WCAG 2.1 AA.
-- [ ] T031 [artifacts: ui] Settle the `ui.md` tuning open questions with real interaction data — pair-selection scoring formula, the "done" definition/signal, large-set comparison budget (and any pairwise list-size cap), and intransitive-cycle display — and record them via `/ardd-refine ui`.
+- [x] T031 [artifacts: ui] Settle the `ui.md` tuning open questions with real interaction data — pair-selection scoring formula, the "done" definition/signal, large-set comparison budget (and any pairwise list-size cap), and intransitive-cycle display — and record them via `/ardd-refine ui`.
 
 ## Phase 5: Manual drag-to-order + export
 

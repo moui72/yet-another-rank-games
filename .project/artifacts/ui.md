@@ -96,17 +96,22 @@ contradictory judgments poorly).
   candidate pair — everything recomputable from the log. Order is **derived from
   the `Comparison` graph** (see `datamodel.md`), not authored directly.
 
-Remaining refinements (do not block build; tune during implementation):
-- [OPEN: exact pair-selection scoring — how to weight rating-closeness vs.
-  combined uncertainty vs. novelty, and whether to impose Swiss-round structure.]
-- [OPEN: concrete "done" definition — confidence threshold on aggregate `sigma`,
-  a coverage target, a comparison budget, or purely user-driven — and how it's
-  communicated.]
-- [OPEN: acceptable comparison budget for large sets (~100 games) to still feel
-  "fun" — and whether to cap pairwise list size, steering big sets toward
-  drag-to-order or tiering.]
-- [OPEN: how to present the rare intransitive-cycle case, given ratings still
-  produce a linear order.]
+Tuning decisions (settled while building; revisit with real usage):
+- **Pair-selection scoring:** `informativeness = sigma_a + sigma_b − |mu_a −
+  mu_b|` — prefer the most uncertain, closest-rated **unseen** pair; repeat only
+  when every pair has been seen; deterministic tie-break by game id. No Swiss
+  round structure for v1 (the greedy informative pick suffices).
+- **"Done" is user-driven** with a **coverage signal**: the view shows
+  "*N of M* matchups judged" (M = all pairs) and a complete current ranking at
+  every step, so the user stops when satisfied. No forced completion or
+  confidence threshold gate in v1.
+- **Large sets:** no hard comparison budget or list-size cap in v1 — the
+  novelty-preferring selector concentrates effort on informative pairs and the
+  top stabilizes early, so the user simply stops when the order looks right.
+  Steering very large pools toward drag-to-order/tiering is a later enhancement.
+- **Intransitive cycles** need no special UI: the rating model absorbs
+  contradictory judgments into a sensible linear order (confidence just drops);
+  the linear ranking is shown as-is.
 
 ## Manual drag-to-order view (override / fallback)
 
