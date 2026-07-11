@@ -44,6 +44,7 @@
 		"@supabase/supabase-js": "^2.110.2",
 		"kysely": "^0.29.3",
 		"kysely-postgres-js": "^3.0.0",
-		"postgres": "^3.4.9"
+		"postgres": "^3.4.9",
+		"zod": "^4.4.3"
 	}
 }

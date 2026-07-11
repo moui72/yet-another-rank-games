@@ -22,7 +22,7 @@ status: in-progress
 - [x] T009 [artifacts: datamodel] Write the initial migration creating `User`, `Game`, `Collection`, `CollectionItem`, `List`, `Comparison`, `ListEntry` and all indexes in `datamodel.md`. Test: migration applies to a clean database and the resulting schema (columns, unique `Game.bgg_id`, FKs) matches expectations.
 - [x] T010 [artifacts: datamodel] [parallel] Define shared, exported TypeScript types for every entity as the single source of truth (Principle XIII), reused by the data layer and UI.
 - [x] T011 [artifacts: datamodel] Typed data-access layer for `User`/`Collection`/`CollectionItem` CRUD, written test-first, using the shared types.
-- [ ] T012 [artifacts: datamodel] [parallel] Implement and test the `List.filter` schema validator (the v1 jsonb predicate schema): valid filters pass; unknown or malformed keys are rejected on write.
+- [x] T012 [artifacts: datamodel] [parallel] Implement and test the `List.filter` schema validator (the v1 jsonb predicate schema): valid filters pass; unknown or malformed keys are rejected on write.
 - [ ] T013 [artifacts: infrastructure] Supabase Auth integration: email + OAuth sign-in/up/out, with JWT validation in SvelteKit `hooks.server`. Test authenticated vs. anonymous request handling.
 - [ ] T014 [artifacts: infrastructure, datamodel] App-code per-user ownership enforcement helper (RLS is off). Test-first: a user can read/write only their own `Collection`/`List`; cross-user access is denied.
 
