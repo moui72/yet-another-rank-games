@@ -46,6 +46,7 @@
 		"fast-xml-parser": "^5.9.3",
 		"kysely": "^0.29.3",
 		"kysely-postgres-js": "^3.0.0",
+		"openskill": "^5.0.1",
 		"postgres": "^3.4.9",
 		"zod": "^4.4.3"
 	}
