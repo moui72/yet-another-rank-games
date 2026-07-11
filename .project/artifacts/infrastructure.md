@@ -1,6 +1,6 @@
 ---
 name: infrastructure
-status: draft
+status: stable
 last_updated: 2026-07-10
 diagram_status: unrendered
 ---
@@ -44,13 +44,15 @@ worker-driven** rather than handled inline in a request.
 ## External integration — Board Game Geek (`xmlapi2`)
 
 - Source of all game and collection data. Consumed via BGG's `xmlapi2`
-  endpoints. [OPEN: raw `xmlapi2` HTTP + our own typed XML parser vs. an existing
-  BGG SDK/wrapper — **deliberately deferred to an early implementation spike**
-  that vets candidate SDKs (typed? maintained? handles `202`?) against a
-  raw-parser baseline before committing. Default fallback if no SDK clears the
-  bar: raw + our own parser, for full control over the `202` poll-retry, rate
-  limiting, and partial-XML tolerance (per Principle IX, don't adopt an
-  unmaintained wrapper just to avoid boilerplate).]
+  endpoints through **our own thin typed client** built on **`fast-xml-parser`**
+  for XML→object parsing. Decided by the T015 spike: the surveyed BGG SDKs are
+  either stale, untyped, or (for the maintained one, `bgg-xml-api-client`) a
+  pre-1.0 API — and crucially none own the `202 Accepted` poll-retry loop, rate
+  limiting, or partial-XML tolerance that dominate this integration. Those are
+  ours to write regardless, so we call `xmlapi2` directly and parse with a
+  maintained library rather than couple a core path to an unstable wrapper
+  (Principle IX is satisfied by using `fast-xml-parser`, not by adopting a whole
+  SDK).
 - Quirks to design around: `202 Accepted` async queueing, slow responses,
   rate limits, and occasionally malformed/partial XML.
 - **Freshness model:** a collection's BGG data is imported once and cached; it
