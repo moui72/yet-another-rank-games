@@ -25,6 +25,8 @@ export default defineConfig({
 				'src/lib/server/db.ts',
 				// Auth admin client — integration-tested against local GoTrue.
 				'src/lib/server/auth.ts',
+				// Ownership guards — DB-scoped, integration-tested.
+				'src/lib/server/ownership.ts',
 				// DB-touching repositories are covered by integration tests
 				// (npm run test:integration), not the unit suite.
 				'src/lib/server/repositories/**'

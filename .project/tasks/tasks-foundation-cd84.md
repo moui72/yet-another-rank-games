@@ -24,7 +24,7 @@ status: in-progress
 - [x] T011 [artifacts: datamodel] Typed data-access layer for `User`/`Collection`/`CollectionItem` CRUD, written test-first, using the shared types.
 - [x] T012 [artifacts: datamodel] [parallel] Implement and test the `List.filter` schema validator (the v1 jsonb predicate schema): valid filters pass; unknown or malformed keys are rejected on write.
 - [x] T013 [artifacts: infrastructure] Supabase Auth integration: email + OAuth sign-in/up/out, with JWT validation in SvelteKit `hooks.server`. Test authenticated vs. anonymous request handling.
-- [ ] T014 [artifacts: infrastructure, datamodel] App-code per-user ownership enforcement helper (RLS is off). Test-first: a user can read/write only their own `Collection`/`List`; cross-user access is denied.
+- [x] T014 [artifacts: infrastructure, datamodel] App-code per-user ownership enforcement helper (RLS is off). Test-first: a user can read/write only their own `Collection`/`List`; cross-user access is denied.
 
 ## Phase 2: BGG import pipeline (worker)
 
