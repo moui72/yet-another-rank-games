@@ -1,3 +1,7 @@
+// Load .env into process.env for local dev/build so server config (which reads
+// process.env, for parity with the standalone worker) works under `vite dev`.
+// Production (Cloud Run) doesn't run this — the platform provides the env.
+import 'dotenv/config';
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
