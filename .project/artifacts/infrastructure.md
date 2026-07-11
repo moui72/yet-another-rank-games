@@ -70,8 +70,26 @@ worker-driven** rather than handled inline in a request.
   reached with a service credential, not per-user anon keys, so RLS would add
   policy overhead without being the enforcement path. Trade-off accepted: a
   server-side authorization bug has no DB backstop — see Production Annotations.
-- Schema changes go through migrations (constitution Principle XI); no implicit
-  ORM sync against real data.
+- **The Supabase Data API (PostgREST) is disabled.** With RLS off, exposing the
+  auto-generated REST API on the public schema would let the public anon key
+  read/write tables directly. Because we enforce authorization server-side, we
+  turn the Data API off entirely and reach Postgres over a **direct connection**
+  instead — so there is no public data surface.
+- **Data access:** a direct Postgres connection (`postgres.js` driver) with
+  **Kysely** as the type-safe query builder. `supabase-js`/`@supabase/ssr` are
+  used only for Auth (a separate endpoint), not for table queries.
+- Schema changes go through **SQL migrations managed by the Supabase CLI**
+  (`supabase/migrations`, applied locally and pushed to the hosted project at
+  deploy), per constitution Principle XI — no implicit ORM sync against real
+  data.
+
+## Local development
+
+Development runs against a **local Supabase stack** via the Supabase CLI
+(Docker): Postgres + Auth + the API gateway + a local mail server, with the
+heavier services (Studio, Realtime, Storage) disabled in `supabase/config.toml`
+to keep startup light. Local dev uses the CLI's standard local-only demo keys;
+the hosted Supabase project is only needed for deployment.
 
 ## Cost guardrails (cross-cutting)
 
