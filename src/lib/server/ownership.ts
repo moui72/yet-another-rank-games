@@ -1,6 +1,6 @@
 import type { Kysely } from 'kysely';
 import type { Database } from './schema';
-import type { Collection, List } from '$lib/types/entities';
+import type { Collection, List, Pool } from '$lib/types/entities';
 
 /**
  * Thrown when a user tries to access a resource they don't own. Because RLS is
@@ -28,6 +28,22 @@ export async function getOwnedCollection(
 		.where('userId', '=', userId)
 		.executeTakeFirst();
 	if (!row) throw new AccessDeniedError('collection');
+	return row;
+}
+
+/** Fetch a pool only if it belongs to `userId`; otherwise throw. */
+export async function getOwnedPool(
+	db: Kysely<Database>,
+	userId: string,
+	poolId: string
+): Promise<Pool> {
+	const row = await db
+		.selectFrom('pools')
+		.selectAll()
+		.where('id', '=', poolId)
+		.where('userId', '=', userId)
+		.executeTakeFirst();
+	if (!row) throw new AccessDeniedError('pool');
 	return row;
 }
 

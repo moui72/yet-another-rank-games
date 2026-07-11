@@ -32,7 +32,7 @@ test('triggering an import creates a collection that reaches a terminal state', 
 	await expect(item).toContainText(/Collection imported|Import failed/, { timeout: 25000 });
 });
 
-test('create a list from a collection (with axe check)', async ({ page }) => {
+test('collection detail links to pools', async ({ page }) => {
 	await signUp(page);
 	await page.getByLabel('BoardGameGeek username').fill('sometester');
 	await page.getByRole('button', { name: 'Import collection' }).click();
@@ -40,21 +40,7 @@ test('create a list from a collection (with axe check)', async ({ page }) => {
 		/Collection imported|Import failed/,
 		{ timeout: 25000 }
 	);
-
 	await page.getByRole('link', { name: 'sometester' }).click();
 	await expect(page.getByRole('heading', { name: /collection/i })).toBeVisible();
-
-	const results = await new AxeBuilder({ page })
-		.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-		.analyze();
-	expect(results.violations).toEqual([]);
-
-	await page.getByLabel('List name').fill('My co-op list');
-	await page.getByLabel('Mechanics include (comma-separated)').fill('Cooperative Game');
-	await page.getByRole('button', { name: 'Create list' }).click();
-
-	const listItem = page.getByRole('listitem').filter({ hasText: 'My co-op list' });
-	await expect(listItem).toBeVisible();
-	await expect(listItem).toContainText('In progress');
-	await expect(listItem).toContainText('Pairwise');
+	await expect(page.getByRole('link', { name: 'pool' })).toBeVisible();
 });

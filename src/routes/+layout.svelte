@@ -34,6 +34,7 @@
 	<nav aria-label="Primary">
 		<a href={resolve('/')}>yet-another-rank-games</a>
 		{#if data.user}
+			<a href={resolve('/pools')}>Pools</a>
 			<span>{data.user.email}</span>
 			<button type="button" onclick={signOut}>Sign out</button>
 		{:else}

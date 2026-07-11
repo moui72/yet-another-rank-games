@@ -2,7 +2,7 @@
 name: datamodel
 status: stable
 last_updated: 2026-07-11
-diagram_status: unrendered
+diagram_status: stale
 ---
 
 # Data Model
@@ -19,9 +19,22 @@ duplicated per user. The `Game` catalogue is refreshed on a **time-to-live**
 stale), while collection *membership* is refreshed on user request — see the
 freshness model in `infrastructure.md`.
 
-A user has one or more **collections** (imported from BGG). A collection feeds
-many **lists**, each a filtered, ordered subset. A list's order is produced by
-**comparisons** (pairwise judgments) and/or manual reordering.
+The hierarchy is **Collection → Pool → List**. A user has one or more
+**collections** (imported from BGG — the raw owned/rated set). From those a user
+builds **pools**: reusable, named, hand-curated groups of games. A pool is
+populated by applying a **filter** to bulk-add matching games from a collection,
+plus individual add/remove; a pool may include catalogue games beyond any
+collection. Each pool then feeds one or more **lists** — a list is a *ranking*
+over a pool's games, so several lists can rank the same pool differently. A
+list's order is produced by **comparisons** (pairwise judgments) and/or manual
+reordering.
+
+Pools are **user-owned and collection-agnostic** (`Pool → User`), so a pool can
+mix games across collections and the catalogue. The filter is a *build tool*
+(the user picks a collection to filter from); it is not stored on the pool —
+the pool is defined by its `PoolGame` rows, not a query. Editing a pool affects
+every list built from it: ranking always operates over the pool's **current**
+games and ignores comparisons that reference a game no longer in the pool.
 
 **Order is derived, not authored** (decided from
 `.project/plans/research-pairwise-ranking-algorithm-2026-07-10.md`; resolves the
@@ -95,18 +108,40 @@ Join of Collection ↔ Game, plus BGG collection-specific facts.
 | user_rating | numeric | the user's BGG rating, nullable |
 | num_plays | integer | nullable |
 
-### List
+### Pool
 
-A named, filtered, ordered subset of a collection.
+A reusable, user-owned, curated group of games (the eligible set a list ranks).
 
 | Field | Type | Notes |
 |-------|------|-------|
 | id | uuid | |
-| collection_id | uuid | → Collection |
+| user_id | uuid | → User |
+| name | string | e.g. "Co-op games" |
+| description | string | nullable |
+| created_at | timestamptz | |
+
+### PoolGame
+
+Membership of the pool — the explicit, editable set of eligible games.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| id | uuid | |
+| pool_id | uuid | → Pool |
+| game_id | bigint | → Game |
+| — | — | unique `(pool_id, game_id)` |
+
+### List
+
+A named ranking over a pool's games. Many lists can rank the same pool.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| id | uuid | |
+| pool_id | uuid | → Pool (the source set of games) |
 | user_id | uuid | → User (denormalized for ownership checks) |
 | name | string | e.g. "Top 10 Co-op" |
 | description | string | nullable |
-| filter | jsonb | criteria selecting games from the collection; schema below |
 | ranking_method | enum | `pairwise` \| `manual` \| `tier` (tier deferred) |
 | status | enum | `in_progress` \| `complete` |
 | created_at | timestamptz | |
@@ -143,11 +178,13 @@ drag-to-order. Also carries tiers if/when tiering ships.
 | score | numeric | nullable; conservative rating score (e.g. `mu − k·sigma`) the snapshot was sorted by; null for manual lists |
 | tier | string | nullable; for the future tiering feature |
 
-## List filter schema
+## Pool filter (build tool)
 
-`List.filter` is a jsonb object: a **conjunction (AND)** of optional, typed
-predicates over a game's fields. An omitted key means "no constraint on that
-dimension," so `{}` selects the whole collection. Version 1:
+The filter is not persisted on any entity — it is the **build tool** the pool
+editor uses to bulk-add matching games from a chosen collection (games not
+matching can still be added/removed by hand). It is a **conjunction (AND)** of
+optional, typed predicates over a game's fields; an omitted key means "no
+constraint on that dimension," so `{}` matches the whole collection. Version 1:
 
 ```jsonc
 {
@@ -172,9 +209,9 @@ dimension," so `{}` selects the whole collection. Version 1:
   filter predicate — the filter selects the candidate set; the ranking picks the
   order.
 
-The stored `filter` is validated against a shared typed schema (Principle II,
-XIII) on write, so an unknown or malformed key is rejected rather than silently
-ignored.
+The filter is validated against a shared typed schema (Principle II, XIII)
+before it's used to match games, so an unknown or malformed key is rejected
+rather than silently ignored.
 
 ## Normalization Rules
 
@@ -196,7 +233,9 @@ ignored.
 - `Comparison.list_id` — comparisons are read/written per list constantly by the
   ranking algorithm.
 - `ListEntry (list_id, position)` — rendering a list in order.
-- `List.collection_id` and `List.user_id` — listing a user's/collection's lists.
+- `Pool.user_id` — listing a user's pools.
+- `PoolGame (pool_id, game_id)` — unique; index on `pool_id` for reading a pool.
+- `List.pool_id` and `List.user_id` — listing a pool's / user's lists.
 
 ## Production Annotations
 

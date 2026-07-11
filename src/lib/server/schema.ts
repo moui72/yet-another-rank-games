@@ -1,5 +1,5 @@
-import type { Generated, ColumnType } from 'kysely';
-import type { RankingMethod, ListStatus, ListFilter, ImportStatus } from '$lib/types/entities';
+import type { Generated } from 'kysely';
+import type { RankingMethod, ListStatus, ImportStatus } from '$lib/types/entities';
 
 /**
  * Kysely database interface — the typed view of the Postgres schema
@@ -50,14 +50,26 @@ interface CollectionItemsTable {
 	numPlays: number | null;
 }
 
-interface ListsTable {
+interface PoolsTable {
 	id: Generated<string>;
-	collectionId: string;
 	userId: string;
 	name: string;
 	description: string | null;
-	// Stored as jsonb; read back as ListFilter, written as ListFilter.
-	filter: ColumnType<ListFilter, ListFilter, ListFilter>;
+	createdAt: Generated<string>;
+}
+
+interface PoolGamesTable {
+	id: Generated<string>;
+	poolId: string;
+	gameId: number;
+}
+
+interface ListsTable {
+	id: Generated<string>;
+	poolId: string;
+	userId: string;
+	name: string;
+	description: string | null;
 	rankingMethod: RankingMethod;
 	status: Generated<ListStatus>;
 	createdAt: Generated<string>;
@@ -86,6 +98,8 @@ export interface Database {
 	games: GamesTable;
 	collections: CollectionsTable;
 	collectionItems: CollectionItemsTable;
+	pools: PoolsTable;
+	poolGames: PoolGamesTable;
 	lists: ListsTable;
 	comparisons: ComparisonsTable;
 	listEntries: ListEntriesTable;

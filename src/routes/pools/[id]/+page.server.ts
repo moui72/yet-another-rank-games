@@ -1,0 +1,103 @@
+import { error, fail } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
+import { db } from '$lib/server/db';
+import { getOwnedPool, getOwnedCollection, AccessDeniedError } from '$lib/server/ownership';
+import {
+	listPoolGames,
+	addPoolGames,
+	removePoolGame,
+	findMatchingGameIds
+} from '$lib/server/repositories/pools';
+import { listCollectionsByUser } from '$lib/server/repositories/collections';
+import { createList, listListsByPool } from '$lib/server/repositories/lists';
+import { buildListFilter } from '$lib/domain/listForm';
+import { parseListFilter } from '$lib/domain/listFilter';
+
+function str(v: FormDataEntryValue | null): string | undefined {
+	return typeof v === 'string' ? v : undefined;
+}
+
+async function requirePool(userId: string, poolId: string) {
+	try {
+		return await getOwnedPool(db, userId, poolId);
+	} catch (e) {
+		if (e instanceof AccessDeniedError) error(404, 'Pool not found');
+		throw e;
+	}
+}
+
+export const load: PageServerLoad = async ({ locals, params }) => {
+	if (!locals.user) error(401, 'Not authenticated');
+	const pool = await requirePool(locals.user.id, params.id);
+	const [games, collections, lists] = await Promise.all([
+		listPoolGames(db, params.id),
+		listCollectionsByUser(db, locals.user.id),
+		listListsByPool(db, params.id)
+	]);
+	return { pool, games, collections, lists };
+};
+
+export const actions: Actions = {
+	addByFilter: async ({ locals, params, request }) => {
+		if (!locals.user) error(401, 'Not authenticated');
+		await requirePool(locals.user.id, params.id);
+
+		const form = await request.formData();
+		const collectionId = str(form.get('collectionId')) ?? '';
+		if (!collectionId) return fail(400, { error: 'Pick a collection to filter from.' });
+		try {
+			await getOwnedCollection(db, locals.user.id, collectionId);
+		} catch (e) {
+			if (e instanceof AccessDeniedError) return fail(404, { error: 'Collection not found.' });
+			throw e;
+		}
+
+		const raw = buildListFilter({
+			mechanicsInclude: str(form.get('mechanicsInclude')),
+			weightMin: str(form.get('weightMin')),
+			weightMax: str(form.get('weightMax')),
+			playerCount: str(form.get('playerCount')),
+			playingTimeMax: str(form.get('playingTimeMax')),
+			ownedOnly: form.get('ownedOnly') === 'on'
+		});
+		let filter;
+		try {
+			filter = parseListFilter(raw);
+		} catch {
+			return fail(400, { error: 'One or more filter values are invalid.' });
+		}
+
+		const ids = await findMatchingGameIds(db, collectionId, filter);
+		const added = await addPoolGames(db, params.id, ids);
+		return { added, matched: ids.length };
+	},
+
+	removeGame: async ({ locals, params, request }) => {
+		if (!locals.user) error(401, 'Not authenticated');
+		await requirePool(locals.user.id, params.id);
+		const form = await request.formData();
+		const gameId = Number(str(form.get('gameId')));
+		if (Number.isFinite(gameId)) await removePoolGame(db, params.id, gameId);
+		return { removed: true };
+	},
+
+	createList: async ({ locals, params, request }) => {
+		if (!locals.user) error(401, 'Not authenticated');
+		await requirePool(locals.user.id, params.id);
+		const form = await request.formData();
+		const name = (str(form.get('name')) ?? '').trim();
+		const rankingMethod = str(form.get('rankingMethod')) ?? 'pairwise';
+		if (!name) return fail(400, { error: 'A list name is required.' });
+		if (rankingMethod !== 'pairwise' && rankingMethod !== 'manual') {
+			return fail(400, { error: 'Invalid ranking method.' });
+		}
+		await createList(db, {
+			poolId: params.id,
+			userId: locals.user.id,
+			name,
+			description: str(form.get('description')) || null,
+			rankingMethod
+		});
+		return { listCreated: true };
+	}
+};

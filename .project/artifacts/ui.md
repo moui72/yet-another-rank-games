@@ -1,7 +1,7 @@
 ---
 name: ui
 status: draft
-last_updated: 2026-07-10
+last_updated: 2026-07-11
 diagram_status: unrendered
 ---
 
@@ -14,8 +14,9 @@ user is a board game hobbyist who tracks a collection on BGG and wants to turn
 it into ranked lists. The experience is the product (constitution Principle
 III): the ranking flow must feel fun, fast, and low-friction.
 
-Core user journey: **connect a BGG account → import a collection → create a
-list (name + filter) → rank it (pairwise, primarily) → view/export the result.**
+Core user journey: **connect a BGG account → import a collection → build a pool
+(filter + hand-edit) → create a list from the pool → rank it (pairwise,
+primarily) → view/export the result.**
 
 Heavy comparison state lives in **one reactive store per runtime**
 (constitution Principle XII), not threaded between components by reference.
@@ -28,12 +29,27 @@ Heavy comparison state lives in **one reactive store per runtime**
   processing → done, with a clear failure state if BGG gives up.
 - Re-import is explicit and user-initiated (data is cached otherwise).
 
+## Pool builder view
+
+A **pool** is a reusable, curated group of games that lists rank (see
+`datamodel.md`). Building a pool is the step between importing and ranking.
+
+- Create a pool: name + optional description.
+- **Bulk-add by filter:** pick a collection and apply a **filter** (mechanic —
+  e.g. co-op, weight range, player count, playing time, owned-only) to add all
+  matching games at once.
+- **Hand-edit:** remove individual games, and add individual games from the
+  catalogue (games already imported by any user). [OPEN: adding a game not yet
+  in the catalogue by searching BGG is a backlog feature — needs the API token.]
+- See the pool's current games and its size.
+- Pools are reusable: the same pool can feed several lists.
+
 ## List management view
 
-- Create a list: name, optional description, and a **filter** that selects
-  games from the collection (mechanic — e.g. co-op, weight range, player count,
-  "all games," etc.).
-- See all lists for a collection with their status (in progress / complete).
+- Create a list **from a pool**: choose a pool, name, optional description, and
+  ranking method (pairwise / manual).
+- See a pool's lists, and a user's lists, with status (in progress / complete).
+- Many lists can rank the same pool differently.
 
 ## Pairwise ranking view (primary, "fun" UI)
 

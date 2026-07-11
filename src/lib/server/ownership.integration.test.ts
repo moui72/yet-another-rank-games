@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { db, sql } from './db';
-import { AccessDeniedError, getOwnedCollection, getOwnedList } from './ownership';
+import { AccessDeniedError, getOwnedCollection, getOwnedList, getOwnedPool } from './ownership';
 import { createUser } from './repositories/users';
 import { createCollection } from './repositories/collections';
+import { createPool } from './repositories/pools';
 
 async function makeUser(): Promise<string> {
 	const [row] = await sql<{ id: string }[]>`
@@ -11,10 +12,11 @@ async function makeUser(): Promise<string> {
 	return row.id;
 }
 
-async function makeList(collectionId: string, userId: string): Promise<string> {
+async function makeList(userId: string): Promise<string> {
+	const pool = await createPool(db, { userId, name: 'Pool' });
 	const row = await db
 		.insertInto('lists')
-		.values({ collectionId, userId, name: 'Top 10', rankingMethod: 'pairwise', filter: {} })
+		.values({ poolId: pool.id, userId, name: 'Top 10', rankingMethod: 'pairwise' })
 		.returning('id')
 		.executeTakeFirstOrThrow();
 	return row.id;
@@ -45,11 +47,19 @@ describe('ownership enforcement (RLS off)', () => {
 	it('lets the owner read their list but denies another user', async () => {
 		const owner = await makeUser();
 		const other = await makeUser();
-		const collection = await createCollection(db, { userId: owner, bggUsername: 'tyler' });
-		const listId = await makeList(collection.id, owner);
+		const listId = await makeList(owner);
 
 		await expect(getOwnedList(db, owner, listId)).resolves.toMatchObject({ id: listId });
 		await expect(getOwnedList(db, other, listId)).rejects.toBeInstanceOf(AccessDeniedError);
+	});
+
+	it('lets the owner read their pool but denies another user', async () => {
+		const owner = await makeUser();
+		const other = await makeUser();
+		const pool = await createPool(db, { userId: owner, name: 'Co-op' });
+
+		await expect(getOwnedPool(db, owner, pool.id)).resolves.toMatchObject({ id: pool.id });
+		await expect(getOwnedPool(db, other, pool.id)).rejects.toBeInstanceOf(AccessDeniedError);
 	});
 
 	it('denies access to a nonexistent resource', async () => {

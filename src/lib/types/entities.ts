@@ -63,14 +63,29 @@ export interface CollectionItem {
 	numPlays: number | null;
 }
 
-/** A named, filtered, ordered subset of a collection. */
-export interface List {
+/** A reusable, user-owned curated group of games (see Pool builder). */
+export interface Pool {
 	id: string;
-	collectionId: string;
 	userId: string;
 	name: string;
 	description: string | null;
-	filter: ListFilter;
+	createdAt: string;
+}
+
+/** Membership of a pool — the explicit, editable eligible set. */
+export interface PoolGame {
+	id: string;
+	poolId: string;
+	gameId: number;
+}
+
+/** A named ranking over a pool's games. Many lists can rank one pool. */
+export interface List {
+	id: string;
+	poolId: string;
+	userId: string;
+	name: string;
+	description: string | null;
 	rankingMethod: RankingMethod;
 	status: ListStatus;
 	createdAt: string;

@@ -43,6 +43,18 @@ status: in-progress
 - [x] T024 [artifacts: ui, datamodel] [parallel] List listing view showing each list's status, with loading/empty/error states (empty = no collection, or no games match a filter). Test.
 - [x] T025 [artifacts: ui] WCAG 2.1 AA audit pass (axe + keyboard + screen-reader) across all Phase 3 views; fix findings. Gate before Phase 4.
 
+## Phase 3b: Pools (design change 2026-07-11)
+
+Reusable game pools introduced between collection and list (Collection → Pool →
+List); the filter became a pool build tool, list creation moved from
+collections to pools. T023/T024 were reworked accordingly.
+
+- [x] T040 [artifacts: datamodel, ui] Refine datamodel + ui for the Collection→Pool→List hierarchy (Pool, PoolGame; List references pool_id; filter is a transient build tool).
+- [x] T041 [artifacts: datamodel] Migration adding pools + pool_games and altering lists (drop collection_id/filter, add pool_id); shared types + Kysely schema.
+- [x] T042 [artifacts: datamodel] Pools repo (create/list/games add/remove) + findMatchingGameIds (filter→games query); ownership getOwnedPool. Integration-tested incl. filter matching.
+- [x] T043 [artifacts: ui] Pool builder UI (/pools, /pools/[id]: add-by-filter, remove, create list from pool); collection detail simplified; nav link.
+- [x] T044 [artifacts: ui] e2e for the pool→list flow with axe; reworked collection/list e2e.
+
 ## Phase 4: Ranking engine + pairwise UI
 
 - [ ] T026 [artifacts: datamodel, ui] Integrate `openskill`: a pure function applying one `Comparison` (winner/loser) to update the two games' `(mu, sigma)`, and a pure function deriving the ordering by conservative score (`mu − k·sigma`). Unit-tested; no persistence yet.
