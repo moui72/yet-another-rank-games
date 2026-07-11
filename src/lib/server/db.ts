@@ -1,14 +1,27 @@
 import postgres from 'postgres';
+import { Kysely, CamelCasePlugin } from 'kysely';
+import { PostgresJSDialect } from 'kysely-postgres-js';
 import { loadServerConfig } from './config';
+import type { Database } from './schema';
 
 /**
- * The single Postgres connection for the server (constitution Principle XV:
- * entry points wire this dependency; modules import it rather than each opening
- * their own connection). Access is direct SQL — the Supabase Data API is
- * disabled (infrastructure.md) — so authorization is enforced in application
- * code (RLS off).
- *
- * A typed query builder (Kysely/Drizzle) is layered on top in Phase 1; this
- * module owns only the raw connection.
+ * The single Postgres connection + typed query builder for the server
+ * (constitution Principle XV: entry points wire this dependency; modules import
+ * it rather than each opening their own). Access is direct SQL via Kysely — the
+ * Supabase Data API is disabled (infrastructure.md) — so authorization is
+ * enforced in application code (RLS off).
  */
-export const sql = postgres(loadServerConfig().databaseUrl);
+
+// Parse int8 and numeric as JS numbers (our ids/weights/scores are well within
+// safe-integer range) so results match the `number` fields in $lib/types.
+const numberParsers = {
+	int8: { to: 20, from: [20], serialize: (x: number) => String(x), parse: (x: string) => Number(x) },
+	numeric: { to: 1700, from: [1700], serialize: (x: number) => String(x), parse: (x: string) => Number(x) }
+};
+
+export const sql = postgres(loadServerConfig().databaseUrl, { types: numberParsers });
+
+export const db = new Kysely<Database>({
+	dialect: new PostgresJSDialect({ postgres: sql }),
+	plugins: [new CamelCasePlugin()]
+});

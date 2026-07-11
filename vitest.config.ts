@@ -22,7 +22,10 @@ export default defineConfig({
 				'src/lib/index.ts',
 				// Thin connection/client constructors that require a live service —
 				// exercised by integration/e2e, not unit tests.
-				'src/lib/server/db.ts'
+				'src/lib/server/db.ts',
+				// DB-touching repositories are covered by integration tests
+				// (npm run test:integration), not the unit suite.
+				'src/lib/server/repositories/**'
 			]
 		}
 	}
