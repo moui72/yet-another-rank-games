@@ -1,26 +1,56 @@
 import { describe, it, expect } from 'vitest';
 import { loadServerConfig } from './config';
 
-describe('loadServerConfig', () => {
-	it('reads the database URL and optional secret key from the environment', () => {
-		const config = loadServerConfig({
-			DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:54322/postgres',
-			SUPABASE_SECRET_KEY: 'sb_secret_test'
+describe('loadServerConfig database', () => {
+	it('uses a full DATABASE_URL when present', () => {
+		const { database } = loadServerConfig({
+			DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
 		});
-		expect(config.databaseUrl).toBe('postgresql://postgres:postgres@127.0.0.1:54322/postgres');
-		expect(config.secretKey).toBe('sb_secret_test');
+		expect(database).toEqual({ url: 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' });
 	});
 
-	it('leaves the secret key undefined when it is absent', () => {
-		const config = loadServerConfig({ DATABASE_URL: 'postgresql://x/y' });
-		expect(config.secretKey).toBeUndefined();
+	it('assembles from components with the password the only secret, defaulting port and ssl', () => {
+		const { database } = loadServerConfig({
+			DB_HOST: 'db.example.supabase.co',
+			DB_USER: 'postgres',
+			DB_NAME: 'postgres',
+			DB_PASSWORD: 's3cret'
+		});
+		expect(database).toEqual({
+			host: 'db.example.supabase.co',
+			user: 'postgres',
+			database: 'postgres',
+			password: 's3cret',
+			port: 5432,
+			ssl: true
+		});
 	});
 
-	it('throws when DATABASE_URL is missing', () => {
-		expect(() => loadServerConfig({})).toThrow(/DATABASE_URL/);
+	it('respects an explicit port and ssl=false', () => {
+		const { database } = loadServerConfig({
+			DB_HOST: 'localhost',
+			DB_USER: 'postgres',
+			DB_NAME: 'postgres',
+			DB_PASSWORD: 'x',
+			DB_PORT: '6543',
+			DB_SSL: 'false'
+		});
+		expect(database).toMatchObject({ port: 6543, ssl: false });
 	});
 
-	it('throws when DATABASE_URL is empty', () => {
-		expect(() => loadServerConfig({ DATABASE_URL: '' })).toThrow(/DATABASE_URL/);
+	it('throws listing the missing component vars when neither URL nor full components are set', () => {
+		expect(() => loadServerConfig({ DB_HOST: 'h' })).toThrow(/DB_USER.*DB_NAME.*DB_PASSWORD/);
+	});
+});
+
+describe('loadServerConfig secretKey', () => {
+	it('reads the optional secret key', () => {
+		expect(loadServerConfig({ DATABASE_URL: 'x', SUPABASE_SECRET_KEY: 'sb_secret_t' }).secretKey).toBe(
+			'sb_secret_t'
+		);
+	});
+
+	it('leaves the secret key undefined when absent', () => {
+		expect(loadServerConfig({ DATABASE_URL: 'x' }).secretKey).toBeUndefined();
 	});
 });

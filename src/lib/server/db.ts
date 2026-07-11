@@ -19,7 +19,19 @@ const numberParsers = {
 	numeric: { to: 1700, from: [1700], serialize: (x: number) => String(x), parse: (x: string) => Number(x) }
 };
 
-export const sql = postgres(loadServerConfig().databaseUrl, { types: numberParsers });
+const database = loadServerConfig().database;
+export const sql =
+	'url' in database
+		? postgres(database.url, { types: numberParsers })
+		: postgres({
+				host: database.host,
+				port: database.port,
+				user: database.user,
+				password: database.password,
+				database: database.database,
+				ssl: database.ssl ? 'require' : false,
+				types: numberParsers
+			});
 
 export const db = new Kysely<Database>({
 	dialect: new PostgresJSDialect({ postgres: sql }),

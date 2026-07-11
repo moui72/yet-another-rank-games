@@ -115,8 +115,15 @@ lives in the committed `.env.example`.
 | `PUBLIC_SUPABASE_URL` | no | `.env` | Cloud Run plain env var |
 | `PUBLIC_SUPABASE_PUBLISHABLE_KEY` | no | `.env` | Cloud Run plain env var |
 | `SUPABASE_SECRET_KEY` | yes | `.env` (local demo key) | GCP Secret Manager |
-| `DATABASE_URL` | yes | `.env` (local) | GCP Secret Manager |
+| `DB_HOST` / `DB_PORT` / `DB_USER` / `DB_NAME` | no | via `DATABASE_URL` | Cloud Run plain env vars |
+| `DB_PASSWORD` | yes | via `DATABASE_URL` | GCP Secret Manager |
 | `BGG_API_TOKEN` | yes | `.env` (empty until provisioned) | GCP Secret Manager |
+
+The database connection accepts **either** a full `DATABASE_URL` (used locally
+and by tooling) **or** discrete components. Production uses the components so
+that **only `DB_PASSWORD` is a secret** — the host, port, user, and database
+name are non-sensitive plain config, and the app assembles the connection (no
+password ever embedded in a stored URL string).
 
 The web and worker Cloud Run services receive the same bindings; secret-marked
 variables are injected from Secret Manager as env vars at container start.
