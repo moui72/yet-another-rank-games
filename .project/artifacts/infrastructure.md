@@ -53,6 +53,14 @@ worker-driven** rather than handled inline in a request.
   maintained library rather than couple a core path to an unstable wrapper
   (Principle IX is satisfied by using `fast-xml-parser`, not by adopting a whole
   SDK).
+- **Authentication (BGG "XML APIcalypse", Oct 2025):** the XML API is no longer
+  anonymous — every request needs an `Authorization: Bearer <token>` header from
+  a **registered** BGG application, or BGG returns `401 Unauthorized`. The token
+  is an app-level secret, `BGG_API_TOKEN`, held server-side (env var; never sent
+  to the client) and attached by the client on every call. Obtaining it requires
+  registering the app with BGG (see https://boardgamegeek.com/using_the_xml_api).
+  Until a token is provisioned, the client and pipeline are built and tested
+  against fixtures/mocks; live import is blocked on the token.
 - Quirks to design around: `202 Accepted` async queueing, slow responses,
   rate limits, and occasionally malformed/partial XML.
 - **Freshness model:** a collection's BGG data is imported once and cached; it

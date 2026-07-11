@@ -27,6 +27,8 @@ export default defineConfig({
 				'src/lib/server/auth.ts',
 				// Ownership guards — DB-scoped, integration-tested.
 				'src/lib/server/ownership.ts',
+				// BGG HTTP client — thin fetch IO, exercised live/in the worker.
+				'src/lib/server/bgg/client.ts',
 				// DB-touching repositories are covered by integration tests
 				// (npm run test:integration), not the unit suite.
 				'src/lib/server/repositories/**'

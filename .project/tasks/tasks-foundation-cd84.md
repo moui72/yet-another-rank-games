@@ -29,7 +29,7 @@ status: in-progress
 ## Phase 2: BGG import pipeline (worker)
 
 - [x] T015 [artifacts: infrastructure] **[spike]** Evaluate candidate BGG SDK/wrapper libraries vs. a raw `xmlapi2` + typed-parser baseline (typed? maintained? handles `202`?). Timeboxed; produce a recorded decision and run `/ardd-refine infrastructure` to resolve the open question. No test requirement (decision task); raw parser is the fallback.
-- [ ] T016 [artifacts: infrastructure, datamodel] Implement the BGG client per the spike decision: fetch a collection and game details, parse XML into the shared typed models, tolerate partial/malformed XML. Test-first against saved fixture XML (including a `202` body and a missing-fields case).
+- [x] T016 [artifacts: infrastructure, datamodel] Implement the BGG client per the spike decision: fetch a collection and game details, parse XML into the shared typed models, tolerate partial/malformed XML. Test-first against saved fixture XML (including a `202` body and a missing-fields case).
 - [ ] T017 [artifacts: infrastructure] `202` poll-retry with backoff and **bounded** max attempts + rate-limit handling. Test-first: resolves once BGG returns data; hits a terminal give-up state (not an infinite loop) when `202` persists past the cap.
 - [ ] T018 [artifacts: infrastructure] Worker Cloud Run service skeleton consuming **Cloud Tasks**, plus a web endpoint that enqueues an import job. Test the enqueue→invoke handoff with a stubbed queue.
 - [ ] T019 [artifacts: infrastructure, datamodel] Import handler: upsert `Game` globally by `bgg_id`, upsert `CollectionItem` rows, stamp `Collection.last_synced_at`. Test-first: idempotent re-import doesn't duplicate games; shared games are one row across users.
