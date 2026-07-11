@@ -8,8 +8,8 @@
 export interface ServerConfig {
 	/** Direct Postgres connection string (the Data API is disabled). */
 	databaseUrl: string;
-	/** Supabase service-role/secret key for admin operations. Optional until needed. */
-	serviceRoleKey?: string;
+	/** Supabase secret key (server-only, bypasses RLS) for admin operations. */
+	secretKey?: string;
 }
 
 export function loadServerConfig(env: Record<string, string | undefined> = process.env): ServerConfig {
@@ -19,6 +19,6 @@ export function loadServerConfig(env: Record<string, string | undefined> = proce
 	}
 	return {
 		databaseUrl,
-		serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY || undefined
+		secretKey: env.SUPABASE_SECRET_KEY || undefined
 	};
 }

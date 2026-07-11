@@ -1,16 +1,16 @@
 import { createClient, type User } from '@supabase/supabase-js';
 
 /**
- * Admin Supabase client (service-role key) for server-side token validation and
+ * Admin Supabase client (secret key) for server-side token validation and
  * privileged operations. Reads from `process.env` so it works in both the
- * SvelteKit server and the standalone worker. Never expose the service-role key
- * to the client.
+ * SvelteKit server and the standalone worker. The secret key bypasses RLS and
+ * must never be exposed to the client or committed.
  */
 function adminClient() {
 	const url = process.env.PUBLIC_SUPABASE_URL;
-	const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+	const key = process.env.SUPABASE_SECRET_KEY;
 	if (!url || !key) {
-		throw new Error('Missing PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+		throw new Error('Missing PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY');
 	}
 	return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }

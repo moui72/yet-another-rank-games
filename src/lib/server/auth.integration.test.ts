@@ -6,14 +6,14 @@ import { getUserFromToken } from './auth';
 // access token. Email confirmation is disabled in local dev, so sign-up yields
 // an active session immediately.
 async function signUpAndSignIn(): Promise<{ email: string; token: string }> {
-	const anon = createClient(
+	const client = createClient(
 		process.env.PUBLIC_SUPABASE_URL as string,
-		process.env.PUBLIC_SUPABASE_ANON_KEY as string
+		process.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY as string
 	);
 	const email = `t${Date.now()}${Math.floor(Math.random() * 1000)}@example.com`;
 	const password = 'password123';
-	await anon.auth.signUp({ email, password });
-	const { data, error } = await anon.auth.signInWithPassword({ email, password });
+	await client.auth.signUp({ email, password });
+	const { data, error } = await client.auth.signInWithPassword({ email, password });
 	if (error || !data.session) throw error ?? new Error('no session');
 	return { email, token: data.session.access_token };
 }
