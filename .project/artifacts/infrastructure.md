@@ -1,7 +1,7 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-07-10
+last_updated: 2026-07-11
 diagram_status: unrendered
 ---
 
@@ -77,12 +77,12 @@ worker-driven** rather than handled inline in a request.
 - **Row-Level Security is off.** All data access flows through our own trusted
   Cloud Run app and worker, which enforce per-user ownership in application code
   (backed by the denormalized `List.user_id` etc. in `datamodel.md`). The DB is
-  reached with a service credential, not per-user anon keys, so RLS would add
+  reached with the secret key, not per-user publishable keys, so RLS would add
   policy overhead without being the enforcement path. Trade-off accepted: a
   server-side authorization bug has no DB backstop — see Production Annotations.
 - **The Supabase Data API (PostgREST) is disabled.** With RLS off, exposing the
-  auto-generated REST API on the public schema would let the public anon key
-  read/write tables directly. Because we enforce authorization server-side, we
+  auto-generated REST API on the public schema would let the public publishable
+  key read/write tables directly. Because we enforce authorization server-side, we
   turn the Data API off entirely and reach Postgres over a **direct connection**
   instead — so there is no public data surface.
 - **Data access:** a direct Postgres connection (`postgres.js` driver) with
@@ -100,6 +100,49 @@ Development runs against a **local Supabase stack** via the Supabase CLI
 heavier services (Studio, Realtime, Storage) disabled in `supabase/config.toml`
 to keep startup light. Local dev uses the CLI's standard local-only demo keys;
 the hosted Supabase project is only needed for deployment.
+
+## Configuration & secrets
+
+Config is read at runtime from `process.env` via SvelteKit's `$env/dynamic/*`
+(never `$env/static/*`), so **one container image is configured per environment
+without a rebuild**. There is no committed env file with real values and no
+`.env.prod` — a prod secrets file in a public repo would leak (and Supabase
+auto-revokes secret keys detected in public repositories). The variable contract
+lives in the committed `.env.example`.
+
+| Variable | Secret? | Local | Production |
+|---|---|---|---|
+| `PUBLIC_SUPABASE_URL` | no | `.env` | Cloud Run plain env var |
+| `PUBLIC_SUPABASE_PUBLISHABLE_KEY` | no | `.env` | Cloud Run plain env var |
+| `SUPABASE_SECRET_KEY` | yes | `.env` (local demo key) | GCP Secret Manager |
+| `DATABASE_URL` | yes | `.env` (local) | GCP Secret Manager |
+| `BGG_API_TOKEN` | yes | `.env` (empty until provisioned) | GCP Secret Manager |
+
+The web and worker Cloud Run services receive the same bindings; secret-marked
+variables are injected from Secret Manager as env vars at container start.
+
+**Secret management — Terraform + 1Password:**
+
+- **Terraform owns the secret *containers* and wiring**, not the values:
+  `google_secret_manager_secret` resources, IAM grants to the Cloud Run service
+  accounts, and the Cloud Run secret-env bindings. No secret value lands in
+  Terraform state.
+- **Values come from 1Password and are never committed.** A committed template
+  holds only 1Password secret references (`op://Vault/item/field`), resolved with
+  the `op` CLI:
+  - Local: `op run --env-file=secrets.op.env -- <cmd>` (or `op inject`) injects
+    values from the unlocked 1Password app into the process — nothing sensitive
+    on disk.
+  - Seeding GCP: a script resolves the same references with `op` and pushes each
+    into Secret Manager (`gcloud secrets versions add <name> --data-file=-`), so
+    values flow 1Password → Secret Manager, out of git and out of Terraform state.
+  - CI (if used) authenticates `op` with a 1Password **Service Account token** —
+    the one bootstrap secret, held in the CI provider's own secret store.
+- Alternative (documented, not chosen): the 1Password Terraform provider
+  (`data.onepassword_item` → `google_secret_manager_secret_version`) manages
+  values inside Terraform too — simpler apply, but the resolved values then live
+  in Terraform state, requiring an encrypted, access-controlled remote backend
+  (GCS + CMEK). Chosen split keeps values out of state entirely.
 
 ## Cost guardrails (cross-cutting)
 
