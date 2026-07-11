@@ -3,7 +3,10 @@ import {
 	initialRating,
 	applyComparison,
 	ratingsFromComparisons,
-	rankGames
+	rankGames,
+	pairKey,
+	selectNextPair,
+	type Ratings
 } from './ranking';
 
 describe('applyComparison', () => {
@@ -57,5 +60,43 @@ describe('rankGames', () => {
 		const ids = [3, 1, 2];
 		rankGames(ids, new Map());
 		expect(ids).toEqual([3, 1, 2]);
+	});
+});
+
+describe('pairKey', () => {
+	it('is order-independent', () => {
+		expect(pairKey(2, 5)).toBe(pairKey(5, 2));
+	});
+});
+
+describe('selectNextPair', () => {
+	// 1 & 2 are close (informative); 3 is far.
+	const ratings: Ratings = new Map([
+		[1, { mu: 30, sigma: 2 }],
+		[2, { mu: 29, sigma: 2 }],
+		[3, { mu: 10, sigma: 2 }]
+	]);
+
+	it('returns null when fewer than two games', () => {
+		expect(selectNextPair([], ratings, new Set())).toBeNull();
+		expect(selectNextPair([1], ratings, new Set())).toBeNull();
+	});
+
+	it('prefers the most informative (closest-rated) unseen pair', () => {
+		expect(selectNextPair([1, 2, 3], ratings, new Set())).toEqual([1, 2]);
+	});
+
+	it('skips a seen pair for the next most informative unseen one', () => {
+		const seen = new Set([pairKey(1, 2)]);
+		expect(selectNextPair([1, 2, 3], ratings, seen)).toEqual([2, 3]);
+	});
+
+	it('permits a repeat only when every pair has been seen', () => {
+		const allSeen = new Set([pairKey(1, 2), pairKey(1, 3), pairKey(2, 3)]);
+		expect(selectNextPair([1, 2, 3], ratings, allSeen)).toEqual([1, 2]);
+	});
+
+	it('picks a deterministic pair when all games are unrated (tie)', () => {
+		expect(selectNextPair([5, 6, 7], new Map(), new Set())).toEqual([5, 6]);
 	});
 });

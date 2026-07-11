@@ -53,3 +53,46 @@ export function rankGames(gameIds: readonly number[], ratings: Ratings, k = 3): 
 	};
 	return [...gameIds].sort((a, b) => scoreOf(b) - scoreOf(a));
 }
+
+/** Order-independent key for a compared pair of games. */
+export function pairKey(a: number, b: number): string {
+	return a < b ? `${a}:${b}` : `${b}:${a}`;
+}
+
+/**
+ * How informative comparing two games would be: favors **close ratings** (the
+ * outcome is uncertain, so it teaches us the most) and **high combined
+ * uncertainty**. Higher = more informative.
+ */
+function informativeness(a: number, b: number, ratings: Ratings): number {
+	const ra = ratings.get(a) ?? initialRating();
+	const rb = ratings.get(b) ?? initialRating();
+	return ra.sigma + rb.sigma - Math.abs(ra.mu - rb.mu);
+}
+
+/**
+ * Pick the next matchup (novelty-biased, `ui.md`): prefer the most informative
+ * **unseen** pair; only fall back to a repeat when every pair has been seen.
+ * Deterministic tie-break by game id. Returns null when fewer than two games.
+ */
+export function selectNextPair(
+	gameIds: readonly number[],
+	ratings: Ratings,
+	comparedKeys: ReadonlySet<string>
+): [number, number] | null {
+	if (gameIds.length < 2) return null;
+
+	const pairs: { a: number; b: number; seen: boolean; info: number }[] = [];
+	for (let i = 0; i < gameIds.length; i++) {
+		for (let j = i + 1; j < gameIds.length; j++) {
+			const a = gameIds[i];
+			const b = gameIds[j];
+			pairs.push({ a, b, seen: comparedKeys.has(pairKey(a, b)), info: informativeness(a, b, ratings) });
+		}
+	}
+
+	const unseen = pairs.filter((p) => !p.seen);
+	const candidates = unseen.length > 0 ? unseen : pairs;
+	candidates.sort((x, y) => y.info - x.info || x.a - y.a || x.b - y.b);
+	return [candidates[0].a, candidates[0].b];
+}
