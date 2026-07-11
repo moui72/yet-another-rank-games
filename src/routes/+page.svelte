@@ -64,7 +64,10 @@
 			{#each collections as collection (collection.id)}
 				{@const view = describeImport(collection)}
 				<li data-status={view.state}>
-					<strong>{collection.bggUsername}</strong> — {view.heading}
+					<a href={resolve('/collections/[id]', { id: collection.id })}>
+						<strong>{collection.bggUsername}</strong>
+					</a>
+					— {view.heading}
 					<span>{view.detail}</span>
 				</li>
 			{:else}
