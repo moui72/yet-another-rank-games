@@ -9,7 +9,10 @@ const parser = new XMLParser({
 	attributeNamePrefix: '',
 	parseAttributeValue: true,
 	textNodeName: '#text',
-	trimValues: true
+	trimValues: true,
+	// BGG encodes names with numeric HTML entities (e.g. `&#039;` for an
+	// apostrophe); decode them so titles render correctly.
+	htmlEntities: true
 });
 
 /** fast-xml-parser yields a single object for one child, an array for many. */

@@ -16,6 +16,7 @@
 	const nameOf = (id: number) => names.get(id) ?? `#${id}`;
 	const compareUrl = $derived(`/api/lists/${data.list.id}/compare`);
 	const undoUrl = $derived(`/api/lists/${data.list.id}/undo`);
+	const dropUrl = $derived(`/api/lists/${data.list.id}/drop`);
 
 	// Persist choices in order (a serial chain) so the optimistic UI stays
 	// instant/responsive while the server never sees out-of-order recomputes.
@@ -44,6 +45,18 @@
 		const url = undoUrl;
 		session.undo();
 		persist(() => fetch(url, { method: 'POST' }));
+	}
+
+	function dropGame(gameId: number) {
+		const url = dropUrl;
+		session.gameIds = session.gameIds.filter((id) => id !== gameId);
+		persist(() =>
+			fetch(url, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ gameId })
+			})
+		);
 	}
 
 	function onKeydown(event: KeyboardEvent) {
@@ -84,7 +97,12 @@
 		<h2 id="ranking-heading">Current ranking</h2>
 		<ol>
 			{#each session.order as gameId (gameId)}
-				<li>{nameOf(gameId)}</li>
+				<li>
+					{nameOf(gameId)}
+					<button type="button" onclick={() => dropGame(gameId)} aria-label="Drop {nameOf(gameId)} from this list">
+						Drop
+					</button>
+				</li>
 			{/each}
 		</ol>
 	</section>

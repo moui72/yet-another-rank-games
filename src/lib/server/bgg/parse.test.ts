@@ -106,6 +106,12 @@ describe('parseThingXml', () => {
 		});
 	});
 
+	it('decodes numeric HTML entities in names (BGG encodes apostrophes as &#039;)', () => {
+		const xml = `<items><item type="boardgame" id="77130"><name type="primary" value="Sid Meier&#039;s Civilization &amp; More" /></item></items>`;
+		const [g] = parseThingXml(xml);
+		expect(g.name).toBe("Sid Meier's Civilization & More");
+	});
+
 	it('tolerates a sparse item, defaulting missing fields to null/empty', () => {
 		const [g] = parseThingXml(THING_SPARSE_XML);
 		expect(g).toEqual({

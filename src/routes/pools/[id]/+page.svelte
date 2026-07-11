@@ -26,7 +26,9 @@
 		<ul>
 			{#each data.games as game (game.id)}
 				<li>
-					{game.name}
+					<strong>{game.name}</strong>
+					{#if game.weight}<span>weight {game.weight.toFixed(1)}</span>{/if}
+					{#if game.minPlayers}<span>{game.minPlayers}–{game.maxPlayers} players</span>{/if}
 					<form method="POST" action="?/removeGame" use:enhance>
 						<input type="hidden" name="gameId" value={game.id} />
 						<button type="submit" aria-label="Remove {game.name}">Remove</button>

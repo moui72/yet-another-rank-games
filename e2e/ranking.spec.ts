@@ -16,10 +16,11 @@ async function signUp(page: Page): Promise<string> {
 /** Seed a catalogue + pool + list for a user (imports are empty without a BGG token). */
 async function seedList(userId: string): Promise<string> {
 	const sql = postgres(process.env.DATABASE_URL as string);
+	const base = 900000 + Math.floor(Math.random() * 90000);
 	try {
 		const games = await sql<{ id: number }[]>`
 			insert into games (bgg_id, name)
-			values (${900001}, 'Alpha'), (${900002}, 'Beta'), (${900003}, 'Gamma')
+			values (${base + 1}, 'Alpha'), (${base + 2}, 'Beta'), (${base + 3}, 'Gamma')
 			returning id`;
 		const [pool] = await sql<{ id: string }[]>`
 			insert into pools (user_id, name) values (${userId}, 'E2E pool') returning id`;
@@ -51,7 +52,7 @@ test('pairwise ranking: choose, keyboard, undo, resume — with axe', async ({ p
 	const status = page.getByRole('status');
 
 	// First matchup is Alpha vs Beta (name order). Choose one.
-	await page.getByRole('button', { name: 'Alpha' }).click();
+	await page.getByRole('button', { name: 'Alpha', exact: true }).click();
 	await expect(status).toContainText('1 of 3');
 
 	// Keyboard choice.
@@ -66,7 +67,16 @@ test('pairwise ranking: choose, keyboard, undo, resume — with axe', async ({ p
 	const ranking = page.getByRole('list').filter({ hasText: 'Gamma' });
 	await expect(ranking).toContainText('Alpha');
 
-	// Resume: reload rebuilds the session from persisted comparisons.
+	// Drop a game from the pool while ranking — it leaves the ranking, and the
+	// removal persists (wait for the drop request before reloading).
+	await Promise.all([
+		page.waitForResponse((r) => r.url().includes('/drop') && r.request().method() === 'POST'),
+		page.getByRole('button', { name: 'Drop Gamma from this list' }).click()
+	]);
+	await expect(page.getByRole('listitem').filter({ hasText: 'Gamma' })).toHaveCount(0);
+
+	// Resume: reload rebuilds the session from persisted comparisons + pool.
 	await page.reload();
-	await expect(page.getByRole('status')).toContainText('1 of 3');
+	await expect(page.getByRole('status')).toBeVisible();
+	await expect(page.getByRole('listitem').filter({ hasText: 'Gamma' })).toHaveCount(0);
 });
