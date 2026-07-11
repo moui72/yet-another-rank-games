@@ -53,5 +53,8 @@ test('create a list from a collection (with axe check)', async ({ page }) => {
 	await page.getByLabel('Mechanics include (comma-separated)').fill('Cooperative Game');
 	await page.getByRole('button', { name: 'Create list' }).click();
 
-	await expect(page.getByRole('listitem').filter({ hasText: 'My co-op list' })).toBeVisible();
+	const listItem = page.getByRole('listitem').filter({ hasText: 'My co-op list' });
+	await expect(listItem).toBeVisible();
+	await expect(listItem).toContainText('In progress');
+	await expect(listItem).toContainText('Pairwise');
 });

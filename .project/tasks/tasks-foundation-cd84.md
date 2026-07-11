@@ -40,7 +40,7 @@ status: in-progress
 - [x] T021 [artifacts: ui, infrastructure] Auth UI (sign in/up/out) wired to Supabase Auth. Test the flow; WCAG 2.1 AA (axe + keyboard).
 - [x] T022 [artifacts: ui, infrastructure] Collection import view: trigger/re-import, **live progress** (queued → fetching → processing → done), plus error and dead-letter states. Test each state renders from import status.
 - [x] T023 [artifacts: ui, datamodel] List-creation form with a filter builder over the v1 filter schema (mechanics/categories/weight/player-count/time/owned). Client + server validation; test invalid filters are rejected.
-- [ ] T024 [artifacts: ui, datamodel] [parallel] List listing view showing each list's status, with loading/empty/error states (empty = no collection, or no games match a filter). Test.
+- [x] T024 [artifacts: ui, datamodel] [parallel] List listing view showing each list's status, with loading/empty/error states (empty = no collection, or no games match a filter). Test.
 - [ ] T025 [artifacts: ui] WCAG 2.1 AA audit pass (axe + keyboard + screen-reader) across all Phase 3 views; fix findings. Gate before Phase 4.
 
 ## Phase 4: Ranking engine + pairwise UI

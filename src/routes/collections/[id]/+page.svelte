@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { listStatusLabel, rankingMethodLabel } from '$lib/domain/listView';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -16,7 +17,11 @@
 		<h2>Lists</h2>
 		<ul>
 			{#each data.lists as list (list.id)}
-				<li>{list.name} — {list.rankingMethod}</li>
+				<li>
+					<strong>{list.name}</strong>
+					<span>{rankingMethodLabel(list.rankingMethod)}</span>
+					<span data-status={list.status}>{listStatusLabel(list.status)}</span>
+				</li>
 			{:else}
 				<li>No lists yet — create one below.</li>
 			{/each}
