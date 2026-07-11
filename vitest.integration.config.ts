@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { defineConfig } from 'vitest/config';
 
 // Integration tests that require a live local Supabase Postgres (DATABASE_URL).

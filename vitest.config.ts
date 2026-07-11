@@ -23,6 +23,8 @@ export default defineConfig({
 				// Thin connection/client constructors that require a live service —
 				// exercised by integration/e2e, not unit tests.
 				'src/lib/server/db.ts',
+				// Auth admin client — integration-tested against local GoTrue.
+				'src/lib/server/auth.ts',
 				// DB-touching repositories are covered by integration tests
 				// (npm run test:integration), not the unit suite.
 				'src/lib/server/repositories/**'
