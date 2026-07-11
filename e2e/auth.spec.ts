@@ -36,3 +36,14 @@ test('sign in with a wrong password shows an error', async ({ page }) => {
 	await page.getByRole('button', { name: 'Sign in' }).click();
 	await expect(page.getByRole('alert')).toBeVisible();
 });
+
+test('login form is fully operable by keyboard (WCAG AA)', async ({ page }) => {
+	await page.goto('/login');
+	await page.getByLabel('Email').focus();
+	await page.keyboard.type('kbd@example.com');
+	await page.keyboard.press('Tab');
+	await expect(page.getByLabel('Password')).toBeFocused();
+	await page.keyboard.type('wrongpassword');
+	await page.keyboard.press('Enter'); // submit without touching the mouse
+	await expect(page.getByRole('alert')).toBeVisible();
+});
