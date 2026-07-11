@@ -54,3 +54,13 @@ describe('loadServerConfig secretKey', () => {
 		expect(loadServerConfig({ DATABASE_URL: 'x' }).secretKey).toBeUndefined();
 	});
 });
+
+describe('loadServerConfig gameCacheTtlDays', () => {
+	it('defaults to 30 days', () => {
+		expect(loadServerConfig({ DATABASE_URL: 'x' }).gameCacheTtlDays).toBe(30);
+	});
+
+	it('reads an override from GAME_CACHE_TTL_DAYS', () => {
+		expect(loadServerConfig({ DATABASE_URL: 'x', GAME_CACHE_TTL_DAYS: '90' }).gameCacheTtlDays).toBe(90);
+	});
+});

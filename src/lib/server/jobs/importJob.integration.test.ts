@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 import { db, sql } from '../db';
 import { runImport, executeImportJob, type ImportDeps } from './importJob';
 import { BggQueuedTimeoutError } from '../bgg/collection';
@@ -31,7 +31,7 @@ function deps(items: BggCollectionItem[], things: BggThing[]): ImportDeps {
 	return {
 		db,
 		fetchCollection: async () => items,
-		fetchThings: async (ids) => things.filter((t) => ids.includes(t.bggId))
+		fetchThings: vi.fn(async (ids: number[]) => things.filter((t) => ids.includes(t.bggId)))
 	};
 }
 
@@ -56,7 +56,7 @@ describe('runImport', () => {
 			username: 'tyler'
 		});
 
-		expect(result).toEqual({ gameCount: 2, itemCount: 2 });
+		expect(result).toEqual({ gameCount: 2, itemCount: 2, fetchedCount: 2 });
 		expect(await gameCount()).toBe(2);
 
 		const items = await listItemsByCollection(db, collectionId);
@@ -82,13 +82,37 @@ describe('runImport', () => {
 		expect(await listItemsByCollection(db, collectionId)).toHaveLength(2);
 	});
 
-	it('shares one games row across two users’ collections', async () => {
+	it('reuses fresh catalogue games on re-import — no second thing fetch', async () => {
+		const { collectionId } = await makeUserAndCollection();
+		const d = deps([CATAN_ITEM, CARC_ITEM], [CATAN_THING, CARC_THING]);
+		const first = await runImport(d, { collectionId, username: 'tyler' });
+		expect(first.fetchedCount).toBe(2);
+
+		const second = await runImport(d, { collectionId, username: 'tyler' });
+		expect(second).toMatchObject({ gameCount: 2, itemCount: 2, fetchedCount: 0 });
+		// fetchThings was called once (first import), not again.
+		expect(d.fetchThings).toHaveBeenCalledTimes(1);
+	});
+
+	it('re-fetches stale games when the TTL has passed (ttlDays 0)', async () => {
+		const { collectionId } = await makeUserAndCollection();
+		const d = deps([CATAN_ITEM], [CATAN_THING]);
+		await runImport(d, { collectionId, username: 'tyler' }, { ttlDays: 0 });
+		const second = await runImport(d, { collectionId, username: 'tyler' }, { ttlDays: 0 });
+		expect(second.fetchedCount).toBe(1);
+		expect(d.fetchThings).toHaveBeenCalledTimes(2);
+	});
+
+	it('shares one games row across two users’ collections and skips the second fetch', async () => {
 		const a = await makeUserAndCollection();
 		const b = await makeUserAndCollection();
 		await runImport(deps([CATAN_ITEM], [CATAN_THING]), { collectionId: a.collectionId, username: 'a' });
-		await runImport(deps([CATAN_ITEM], [CATAN_THING]), { collectionId: b.collectionId, username: 'b' });
+		const bDeps = deps([CATAN_ITEM], [CATAN_THING]);
+		const bResult = await runImport(bDeps, { collectionId: b.collectionId, username: 'b' });
 
 		expect(await gameCount()).toBe(1);
+		expect(bResult.fetchedCount).toBe(0);
+		expect(bDeps.fetchThings).toHaveBeenCalledTimes(0);
 		expect(await listItemsByCollection(db, a.collectionId)).toHaveLength(1);
 		expect(await listItemsByCollection(db, b.collectionId)).toHaveLength(1);
 	});

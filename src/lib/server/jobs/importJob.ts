@@ -2,7 +2,7 @@ import type { Kysely } from 'kysely';
 import type { Database } from '../schema';
 import type { ImportJob } from './types';
 import type { BggCollectionItem, BggThing } from '../bgg/types';
-import { upsertGame } from '../repositories/games';
+import { upsertGame, findFreshGameIds } from '../repositories/games';
 import { upsertCollectionItem } from '../repositories/collectionItems';
 import {
 	markCollectionSynced,
@@ -38,26 +38,41 @@ function minimalThing(bggId: number, name: string): BggThing {
 }
 
 /**
- * Import a BGG collection into `job.collectionId`: fetch the collection, fetch
- * game details, upsert the globally-shared game rows (by bgg_id) and this
- * collection's items, then stamp the sync. Idempotent — re-running updates in
- * place rather than duplicating.
+ * Import a BGG collection into `job.collectionId`. The `Game` catalogue is
+ * global and shared: this fetches `collection` (membership + per-user rating/
+ * plays, always) but only calls `thing` for games that are **missing or stale**
+ * in the catalogue (older than `ttlDays`, default 30). Fresh catalogue rows are
+ * reused as-is — so a popular game is fetched from BGG roughly once, not once
+ * per user. Then upserts this collection's items and stamps the sync.
+ * Idempotent — re-running updates in place rather than duplicating.
  */
 export async function runImport(
 	deps: ImportDeps,
-	job: ImportJob
-): Promise<{ gameCount: number; itemCount: number }> {
+	job: ImportJob,
+	options: { ttlDays?: number } = {}
+): Promise<{ gameCount: number; itemCount: number; fetchedCount: number }> {
+	const ttlDays = options.ttlDays ?? 30;
 	const items = await deps.fetchCollection(job.username, { ownedOnly: job.ownedOnly });
 	const bggIds = [...new Set(items.map((i) => i.bggId))];
-	const things = bggIds.length ? await deps.fetchThings(bggIds) : [];
+
+	// Reuse fresh catalogue rows; fetch only the missing/stale remainder.
+	const gameIdByBggId = await findFreshGameIds(deps.db, bggIds, ttlDays);
+	const toFetch = bggIds.filter((id) => !gameIdByBggId.has(id));
+	const things = toFetch.length ? await deps.fetchThings(toFetch) : [];
 	const thingByBggId = new Map(things.map((t) => [t.bggId, t]));
 
-	const gameIdByBggId = new Map<number, number>();
-	for (const item of items) {
-		if (gameIdByBggId.has(item.bggId)) continue;
-		const thing = thingByBggId.get(item.bggId) ?? minimalThing(item.bggId, item.name);
-		const game = await upsertGame(deps.db, thing);
-		gameIdByBggId.set(item.bggId, game.id);
+	for (const bggId of toFetch) {
+		const thing = thingByBggId.get(bggId);
+		if (thing) {
+			const game = await upsertGame(deps.db, thing);
+			gameIdByBggId.set(bggId, game.id);
+		} else {
+			// No details returned — create a minimal, stale (null lastFetchedAt)
+			// game so it gets enriched on a later import.
+			const name = items.find((i) => i.bggId === bggId)?.name ?? '';
+			const game = await upsertGame(deps.db, minimalThing(bggId, name), null);
+			gameIdByBggId.set(bggId, game.id);
+		}
 	}
 
 	for (const item of items) {
@@ -73,7 +88,7 @@ export async function runImport(
 	}
 
 	await markCollectionSynced(deps.db, job.collectionId);
-	return { gameCount: gameIdByBggId.size, itemCount: items.length };
+	return { gameCount: gameIdByBggId.size, itemCount: items.length, fetchedCount: toFetch.length };
 }
 
 /**
@@ -84,11 +99,15 @@ export async function runImport(
  * failure here is terminal, not something to loop on. In production, Cloud
  * Tasks' own dead-letter queue backs this up (infrastructure.md).
  */
-export async function executeImportJob(deps: ImportDeps, job: ImportJob): Promise<void> {
+export async function executeImportJob(
+	deps: ImportDeps,
+	job: ImportJob,
+	options: { ttlDays?: number } = {}
+): Promise<void> {
 	await markCollectionImporting(deps.db, job.collectionId);
 	logEvent('import.start', { collectionId: job.collectionId, username: job.username });
 	try {
-		const result = await runImport(deps, job);
+		const result = await runImport(deps, job, options);
 		logEvent('import.done', { collectionId: job.collectionId, ...result });
 	} catch (e) {
 		const error = e instanceof Error ? e.message : String(e);
@@ -100,10 +119,11 @@ export async function executeImportJob(deps: ImportDeps, job: ImportJob): Promis
 /** Queue entry point: wires the real BGG client (with poll-retry) + db. */
 export async function processImportJob(job: ImportJob): Promise<void> {
 	const { db } = await import('../db');
+	const { loadServerConfig } = await import('../config');
 	const deps: ImportDeps = {
 		db,
 		fetchCollection: (username, opts) => fetchCollectionWithRetry(fetchCollectionXml, username, opts),
 		fetchThings: async (ids) => parseThingXml((await fetchThingXml(ids)).xml)
 	};
-	await executeImportJob(deps, job);
+	await executeImportJob(deps, job, { ttlDays: loadServerConfig().gameCacheTtlDays });
 }

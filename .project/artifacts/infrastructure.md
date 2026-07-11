@@ -63,9 +63,21 @@ worker-driven** rather than handled inline in a request.
   against fixtures/mocks; live import is blocked on the token.
 - Quirks to design around: `202 Accepted` async queueing, slow responses,
   rate limits, and occasionally malformed/partial XML.
-- **Freshness model:** a collection's BGG data is imported once and cached; it
-  is re-fetched **only when the user explicitly requests a refresh**, never on
-  a schedule. This keeps us well clear of rate limits in normal use.
+- **Freshness model — two independent concerns:**
+  - **Game catalogue** (the global, shared `Game` rows: name, weight, mechanics,
+    …) is cached and governed by a **time-to-live** (`GAME_CACHE_TTL_DAYS`,
+    default 30). On import the app serves catalogue data from its own cache and
+    calls the `thing` endpoint **only for games that are missing or past their
+    TTL**. Since games are shared across users, a popular game is fetched from
+    BGG roughly **once**, not once per user. Slightly stale game facts are
+    tolerated; there is no per-user force-refresh of catalogue data.
+  - **Collection membership** (the per-user `CollectionItem` rows: which games,
+    owned, rating, plays) is **user-driven** — re-fetched only when the user
+    explicitly refreshes their collection, never on a schedule. A refresh
+    re-pulls membership and fetches any *missing* games, but leaves
+    fresh-enough catalogue rows untouched.
+  This split keeps request volume low and is driven solely by games in real
+  users' collections (no bulk crawling).
 
 ## Storage & auth — Supabase
 

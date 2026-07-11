@@ -20,6 +20,8 @@ export interface ServerConfig {
 	database: DatabaseConfig;
 	/** Supabase secret key (server-only, bypasses RLS) for admin operations. */
 	secretKey?: string;
+	/** How long a cached game stays fresh before re-fetch. Default 30 days. */
+	gameCacheTtlDays: number;
 }
 
 function loadDatabaseConfig(env: Record<string, string | undefined>): DatabaseConfig {
@@ -48,6 +50,7 @@ function loadDatabaseConfig(env: Record<string, string | undefined>): DatabaseCo
 export function loadServerConfig(env: Record<string, string | undefined> = process.env): ServerConfig {
 	return {
 		database: loadDatabaseConfig(env),
-		secretKey: env.SUPABASE_SECRET_KEY || undefined
+		secretKey: env.SUPABASE_SECRET_KEY || undefined,
+		gameCacheTtlDays: env.GAME_CACHE_TTL_DAYS ? Number(env.GAME_CACHE_TTL_DAYS) : 30
 	};
 }

@@ -1,7 +1,7 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-10
+last_updated: 2026-07-11
 diagram_status: unrendered
 ---
 
@@ -14,7 +14,10 @@ game facts is Board Game Geek, imported and cached locally (see
 `infrastructure.md`); the source of truth for *rankings* is the user's own
 pairwise/manual judgments captured here. Games are stored **once, globally**
 (keyed by BGG id) and referenced by many users' collections, rather than
-duplicated per user.
+duplicated per user. The `Game` catalogue is refreshed on a **time-to-live**
+(`Game.last_fetched_at` is the cache clock; null = never enriched, treated as
+stale), while collection *membership* is refreshed on user request — see the
+freshness model in `infrastructure.md`.
 
 A user has one or more **collections** (imported from BGG). A collection feeds
 many **lists**, each a filtered, ordered subset. A list's order is produced by
@@ -63,7 +66,7 @@ One row per distinct BGG game, shared across all users.
 | thumbnail_url | string | nullable |
 | mechanics | text[] | for filtering (e.g. "Cooperative Game") |
 | categories | text[] | for filtering |
-| last_fetched_at | timestamptz | when BGG data was last pulled |
+| last_fetched_at | timestamptz | cache clock: when `thing` details were last pulled; null = minimal/never-enriched (treated as stale) |
 
 ### Collection
 
