@@ -29,6 +29,9 @@ export default defineConfig({
 				'src/lib/server/ownership.ts',
 				// BGG HTTP client — thin fetch IO, exercised live/in the worker.
 				'src/lib/server/bgg/client.ts',
+				// Job processor + queue wiring — IO/composition, integration-tested.
+				'src/lib/server/jobs/importJob.ts',
+				'src/lib/server/jobs/queue.ts',
 				// DB-touching repositories are covered by integration tests
 				// (npm run test:integration), not the unit suite.
 				'src/lib/server/repositories/**'
