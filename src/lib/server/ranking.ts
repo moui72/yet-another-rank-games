@@ -2,7 +2,11 @@ import type { Kysely } from 'kysely';
 import type { Database } from './schema';
 import { ratingsFromComparisons, rankGames, initialRating } from '$lib/domain/ranking';
 import { conservativeScore } from '$lib/domain/score';
-import { listComparisons, recordComparison } from './repositories/comparisons';
+import {
+	listComparisons,
+	recordComparison,
+	deleteLastComparison
+} from './repositories/comparisons';
 import { listPoolGames } from './repositories/pools';
 import { replaceListEntries } from './repositories/listEntries';
 
@@ -46,4 +50,13 @@ export async function recordComparisonAndRecompute(
 ): Promise<void> {
 	await recordComparison(db, input);
 	await recomputeListEntries(db, input.listId);
+}
+
+/** Undo the most recent comparison, then refresh the ordering snapshot. */
+export async function undoLastComparisonAndRecompute(
+	db: Kysely<Database>,
+	listId: string
+): Promise<void> {
+	await deleteLastComparison(db, listId);
+	await recomputeListEntries(db, listId);
 }

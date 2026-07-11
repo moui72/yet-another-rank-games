@@ -1,0 +1,72 @@
+import { test, expect, type Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+import postgres from 'postgres';
+
+async function signUp(page: Page): Promise<string> {
+	await page.goto('/login');
+	await page.getByRole('button', { name: 'Create one' }).click();
+	await page.getByLabel('Email').fill(`rank${Date.now()}${Math.floor(Math.random() * 1000)}@example.com`);
+	await page.getByLabel('Password').fill('password123');
+	await page.getByRole('button', { name: 'Sign up' }).click();
+	await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+	const me = await (await page.request.get('/api/me')).json();
+	return me.userId as string;
+}
+
+/** Seed a catalogue + pool + list for a user (imports are empty without a BGG token). */
+async function seedList(userId: string): Promise<string> {
+	const sql = postgres(process.env.DATABASE_URL as string);
+	try {
+		const games = await sql<{ id: number }[]>`
+			insert into games (bgg_id, name)
+			values (${900001}, 'Alpha'), (${900002}, 'Beta'), (${900003}, 'Gamma')
+			returning id`;
+		const [pool] = await sql<{ id: string }[]>`
+			insert into pools (user_id, name) values (${userId}, 'E2E pool') returning id`;
+		for (const g of games) {
+			await sql`insert into pool_games (pool_id, game_id) values (${pool.id}, ${g.id})`;
+		}
+		const [list] = await sql<{ id: string }[]>`
+			insert into lists (pool_id, user_id, name, ranking_method)
+			values (${pool.id}, ${userId}, 'E2E ranking', 'pairwise') returning id`;
+		return list.id;
+	} finally {
+		await sql.end();
+	}
+}
+
+test('pairwise ranking: choose, keyboard, undo, resume — with axe', async ({ page }) => {
+	const userId = await signUp(page);
+	const listId = await seedList(userId);
+
+	await page.goto(`/lists/${listId}`);
+	await expect(page.getByRole('heading', { name: 'E2E ranking' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Which is better?' })).toBeVisible();
+
+	const results = await new AxeBuilder({ page })
+		.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+		.analyze();
+	expect(results.violations).toEqual([]);
+
+	const status = page.getByRole('status');
+
+	// First matchup is Alpha vs Beta (name order). Choose one.
+	await page.getByRole('button', { name: 'Alpha' }).click();
+	await expect(status).toContainText('1 of 3');
+
+	// Keyboard choice.
+	await page.keyboard.press('1');
+	await expect(status).toContainText('2 of 3');
+
+	// Undo goes back.
+	await page.getByRole('button', { name: 'Undo' }).click();
+	await expect(status).toContainText('1 of 3');
+
+	// The ranking lists all three games.
+	const ranking = page.getByRole('list').filter({ hasText: 'Gamma' });
+	await expect(ranking).toContainText('Alpha');
+
+	// Resume: reload rebuilds the session from persisted comparisons.
+	await page.reload();
+	await expect(page.getByRole('status')).toContainText('1 of 3');
+});

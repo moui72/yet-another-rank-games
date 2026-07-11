@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { listStatusLabel, rankingMethodLabel } from '$lib/domain/listView';
 	import type { PageData, ActionData } from './$types';
 
@@ -81,7 +82,7 @@
 		<ul>
 			{#each data.lists as list (list.id)}
 				<li>
-					<strong>{list.name}</strong>
+					<a href={resolve('/lists/[id]', { id: list.id })}>{list.name}</a>
 					<span>{rankingMethodLabel(list.rankingMethod)}</span>
 					<span data-status={list.status}>{listStatusLabel(list.status)}</span>
 				</li>

@@ -19,6 +19,19 @@ export function recordComparison(
 		.executeTakeFirstOrThrow();
 }
 
+/** Delete the most recent comparison for a list (undo). */
+export async function deleteLastComparison(db: Kysely<Database>, listId: string): Promise<void> {
+	const last = await db
+		.selectFrom('comparisons')
+		.select('id')
+		.where('listId', '=', listId)
+		.orderBy('createdAt', 'desc')
+		.orderBy('id', 'desc')
+		.limit(1)
+		.executeTakeFirst();
+	if (last) await db.deleteFrom('comparisons').where('id', '=', last.id).execute();
+}
+
 /** A list's comparisons in replay order (oldest first). */
 export function listComparisons(db: Kysely<Database>, listId: string): Promise<Comparison[]> {
 	return db
