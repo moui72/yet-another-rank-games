@@ -157,9 +157,9 @@ supports undo.
 |-------|------|-------|
 | id | uuid | |
 | list_id | uuid | → List |
-| game_a_id | bigint | → Game |
-| game_b_id | bigint | → Game |
-| winner_id | bigint | → Game (game_a_id or game_b_id) |
+| game_a | bigint | → Game |
+| game_b | bigint | → Game |
+| winner_id | bigint | → Game (game_a or game_b) |
 | created_at | timestamptz | ordering/undo |
 
 ### ListEntry

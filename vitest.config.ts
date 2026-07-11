@@ -1,9 +1,11 @@
+import { resolve } from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 // Standalone config for pure unit tests — deliberately does not load the
 // SvelteKit Vite plugin, which expects app context that node-level domain
 // tests don't need. Component/e2e coverage is handled separately (Playwright).
 export default defineConfig({
+	resolve: { alias: { $lib: resolve('src/lib') } },
 	test: {
 		include: ['src/**/*.{test,spec}.ts'],
 		// Integration tests need a live local Supabase DB — run separately
@@ -30,6 +32,8 @@ export default defineConfig({
 				'src/lib/server/auth.ts',
 				// Ownership guards — DB-scoped, integration-tested.
 				'src/lib/server/ownership.ts',
+				// Ranking recompute service — DB-orchestration, integration-tested.
+				'src/lib/server/ranking.ts',
 				// BGG HTTP client — thin fetch IO, exercised live/in the worker.
 				'src/lib/server/bgg/client.ts',
 				// Job processor + queue wiring — IO/composition, integration-tested.

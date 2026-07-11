@@ -95,8 +95,8 @@ export interface List {
 export interface Comparison {
 	id: string;
 	listId: string;
-	gameAId: number;
-	gameBId: number;
+	gameA: number;
+	gameB: number;
 	winnerId: number;
 	createdAt: string;
 }

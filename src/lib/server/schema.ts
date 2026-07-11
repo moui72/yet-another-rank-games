@@ -78,8 +78,8 @@ interface ListsTable {
 interface ComparisonsTable {
 	id: Generated<string>;
 	listId: string;
-	gameAId: number;
-	gameBId: number;
+	gameA: number;
+	gameB: number;
 	winnerId: number;
 	createdAt: Generated<string>;
 }

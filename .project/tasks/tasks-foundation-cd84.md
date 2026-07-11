@@ -58,7 +58,7 @@ collections to pools. T023/T024 were reworked accordingly.
 ## Phase 4: Ranking engine + pairwise UI
 
 - [x] T026 [artifacts: datamodel, ui] Integrate `openskill`: a pure function applying one `Comparison` (winner/loser) to update the two games' `(mu, sigma)`, and a pure function deriving the ordering by conservative score (`mu − k·sigma`). Unit-tested; no persistence yet.
-- [ ] T027 [artifacts: datamodel] Persist `Comparison` rows as the source of truth and recompute the `ListEntry` snapshot after each comparison. Test-first: replaying the comparison log rehydrates the same ranking (stop-and-resume correctness).
+- [x] T027 [artifacts: datamodel] Persist `Comparison` rows as the source of truth and recompute the `ListEntry` snapshot after each comparison. Test-first: replaying the comparison log rehydrates the same ranking (stop-and-resume correctness).
 - [ ] T028 [artifacts: ui] Novelty-biased next-pair selector as a pure function over current ratings + already-compared pairs. Unit-test: prefers unseen informative pairs; permits a repeat only when no unseen pair remains or to break a persistent ambiguity; handles exhaustion.
 - [ ] T029 [artifacts: ui] Single Svelte 5 runes store (Principle XII) holding the comparison log (source of truth), derived `Map<gameId,{mu,sigma}>`, and the current candidate pair — fully recomputable from the log. Test serialize/resume.
 - [ ] T030 [artifacts: ui] Pairwise view: keyboard-operable choose left/right + undo, a confidence/coverage progress signal, stop-early/resume, and cold-start seeding from `CollectionItem.user_rating`/`num_plays`. Test interactions; WCAG 2.1 AA.
