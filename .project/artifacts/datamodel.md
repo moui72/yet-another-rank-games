@@ -75,6 +75,8 @@ A user's imported BGG collection.
 | user_id | uuid | → User |
 | bgg_username | string | the BGG account imported from |
 | last_synced_at | timestamptz | last successful import; nullable until first import |
+| import_status | enum | `idle` \| `importing` \| `complete` \| `failed`; import lifecycle |
+| import_error | string | failure message when `import_status = failed` (app-side dead-letter); nullable |
 | created_at | timestamptz | |
 
 ### CollectionItem

@@ -32,7 +32,17 @@ export function listCollectionsByUser(
 		.execute();
 }
 
-/** Stamp a successful sync. Defaults to now(); pass an ISO string to override. */
+/** Mark an import as in progress (clears any prior error). */
+export function markCollectionImporting(db: Kysely<Database>, id: string): Promise<Collection> {
+	return db
+		.updateTable('collections')
+		.set({ importStatus: 'importing', importError: null })
+		.where('id', '=', id)
+		.returningAll()
+		.executeTakeFirstOrThrow();
+}
+
+/** Stamp a successful sync (status complete, error cleared). */
 export function markCollectionSynced(
 	db: Kysely<Database>,
 	id: string,
@@ -40,7 +50,21 @@ export function markCollectionSynced(
 ): Promise<Collection> {
 	return db
 		.updateTable('collections')
-		.set({ lastSyncedAt: syncedAt })
+		.set({ lastSyncedAt: syncedAt, importStatus: 'complete', importError: null })
+		.where('id', '=', id)
+		.returningAll()
+		.executeTakeFirstOrThrow();
+}
+
+/** Record a terminal import failure (app-side dead-letter). */
+export function markCollectionFailed(
+	db: Kysely<Database>,
+	id: string,
+	error: string
+): Promise<Collection> {
+	return db
+		.updateTable('collections')
+		.set({ importStatus: 'failed', importError: error })
 		.where('id', '=', id)
 		.returningAll()
 		.executeTakeFirstOrThrow();

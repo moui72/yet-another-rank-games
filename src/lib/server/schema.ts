@@ -1,5 +1,5 @@
 import type { Generated, ColumnType } from 'kysely';
-import type { RankingMethod, ListStatus, ListFilter } from '$lib/types/entities';
+import type { RankingMethod, ListStatus, ListFilter, ImportStatus } from '$lib/types/entities';
 
 /**
  * Kysely database interface — the typed view of the Postgres schema
@@ -36,6 +36,8 @@ interface CollectionsTable {
 	userId: string;
 	bggUsername: string;
 	lastSyncedAt: string | null;
+	importStatus: Generated<ImportStatus>;
+	importError: string | null;
 	createdAt: Generated<string>;
 }
 

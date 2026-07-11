@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { db, sql } from '../db';
-import { runImport, type ImportDeps } from './importJob';
+import { runImport, executeImportJob, type ImportDeps } from './importJob';
+import { BggQueuedTimeoutError } from '../bgg/collection';
 import { createUser } from '../repositories/users';
 import { createCollection } from '../repositories/collections';
 import { listItemsByCollection } from '../repositories/collectionItems';
@@ -100,5 +101,38 @@ describe('runImport', () => {
 			select name, weight from games where bgg_id = 13`;
 		expect(name).toBe('Catan');
 		expect(weight).toBeNull();
+	});
+});
+
+describe('executeImportJob (lifecycle + dead-letter)', () => {
+	async function statusOf(collectionId: string) {
+		const [row] = await sql<{ import_status: string; import_error: string | null }[]>`
+			select import_status, import_error from collections where id = ${collectionId}`;
+		return row;
+	}
+
+	it('marks the collection complete on success', async () => {
+		const { collectionId } = await makeUserAndCollection();
+		await executeImportJob(deps([CATAN_ITEM], [CATAN_THING]), { collectionId, username: 'tyler' });
+		const s = await statusOf(collectionId);
+		expect(s.import_status).toBe('complete');
+		expect(s.import_error).toBeNull();
+	});
+
+	it('records a failed (dead-letter) state on terminal failure without throwing', async () => {
+		const { collectionId } = await makeUserAndCollection();
+		const failing: ImportDeps = {
+			db,
+			fetchCollection: async () => {
+				throw new BggQueuedTimeoutError(10);
+			},
+			fetchThings: async () => []
+		};
+		await expect(
+			executeImportJob(failing, { collectionId, username: 'tyler' })
+		).resolves.toBeUndefined();
+		const s = await statusOf(collectionId);
+		expect(s.import_status).toBe('failed');
+		expect(s.import_error).toContain('queued');
 	});
 });

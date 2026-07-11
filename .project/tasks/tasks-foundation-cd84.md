@@ -33,7 +33,7 @@ status: in-progress
 - [x] T017 [artifacts: infrastructure] `202` poll-retry with backoff and **bounded** max attempts + rate-limit handling. Test-first: resolves once BGG returns data; hits a terminal give-up state (not an infinite loop) when `202` persists past the cap.
 - [x] T018 [artifacts: infrastructure] Worker Cloud Run service skeleton consuming **Cloud Tasks**, plus a web endpoint that enqueues an import job. Test the enqueue→invoke handoff with a stubbed queue.
 - [x] T019 [artifacts: infrastructure, datamodel] Import handler: upsert `Game` globally by `bgg_id`, upsert `CollectionItem` rows, stamp `Collection.last_synced_at`. Test-first: idempotent re-import doesn't duplicate games; shared games are one row across users.
-- [ ] T020 [artifacts: infrastructure] Dead-letter path + terminal failure state, with structured log events on success/failure carrying identifiers (Principle X). Test: a permanently-failing import lands in dead-letter and is queryable, not retried forever.
+- [x] T020 [artifacts: infrastructure] Dead-letter path + terminal failure state, with structured log events on success/failure carrying identifiers (Principle X). Test: a permanently-failing import lands in dead-letter and is queryable, not retried forever.
 
 ## Phase 3: Collection & list management UI
 

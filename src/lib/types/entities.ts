@@ -38,12 +38,18 @@ export interface Game {
 	lastFetchedAt: string | null;
 }
 
+/** Lifecycle of a collection's BGG import. */
+export type ImportStatus = 'idle' | 'importing' | 'complete' | 'failed';
+
 /** A user's imported BGG collection. */
 export interface Collection {
 	id: string;
 	userId: string;
 	bggUsername: string;
 	lastSyncedAt: string | null;
+	importStatus: ImportStatus;
+	/** Failure message when importStatus is 'failed' (app-side dead-letter). */
+	importError: string | null;
 	createdAt: string;
 }
 
