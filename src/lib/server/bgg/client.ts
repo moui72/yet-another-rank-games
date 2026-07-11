@@ -13,7 +13,8 @@ async function get(url: string): Promise<BggResponse> {
 	const token = process.env.BGG_API_TOKEN;
 	if (token) headers.authorization = `Bearer ${token}`;
 
-	const res = await fetch(url, { headers });
+	// A hung BGG call must never hang the import — bound it with a timeout.
+	const res = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
 	return { status: res.status, xml: await res.text() };
 }
 

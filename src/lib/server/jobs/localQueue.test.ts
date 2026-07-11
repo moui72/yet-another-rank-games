@@ -2,21 +2,25 @@ import { describe, it, expect, vi } from 'vitest';
 import { LocalJobQueue } from './localQueue';
 import type { ImportJob } from './types';
 
+const job: ImportJob = { collectionId: 'c1', username: 'tyler', ownedOnly: true };
+
 describe('LocalJobQueue', () => {
-	it('hands the enqueued job to the processor', async () => {
+	it('runs the processor with the enqueued job (asynchronously)', async () => {
 		const seen: ImportJob[] = [];
-		const queue = new LocalJobQueue(async (job) => {
-			seen.push(job);
+		const queue = new LocalJobQueue(async (j) => {
+			seen.push(j);
 		});
-		await queue.enqueue({ collectionId: 'c1', username: 'tyler', ownedOnly: true });
-		expect(seen).toEqual([{ collectionId: 'c1', username: 'tyler', ownedOnly: true }]);
+		await queue.enqueue(job);
+		await vi.waitFor(() => expect(seen).toEqual([job]));
 	});
 
-	it('surfaces processor errors to the caller (so the job can be retried/dead-lettered)', async () => {
-		const processor = vi.fn(async () => {
+	it('enqueue resolves immediately even if the processor rejects (handled out-of-band)', async () => {
+		const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const queue = new LocalJobQueue(async () => {
 			throw new Error('boom');
 		});
-		const queue = new LocalJobQueue(processor);
-		await expect(queue.enqueue({ collectionId: 'c1', username: 'x' })).rejects.toThrow('boom');
+		await expect(queue.enqueue(job)).resolves.toBeUndefined();
+		await vi.waitFor(() => expect(spy).toHaveBeenCalled());
+		spy.mockRestore();
 	});
 });

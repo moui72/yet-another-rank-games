@@ -24,7 +24,9 @@ test('a new user can sign up and is then signed in', async ({ page }) => {
 
 	// And signing out returns to the signed-out state.
 	await page.getByRole('button', { name: 'Sign out' }).click();
-	await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible();
+	await expect(
+		page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Sign in' })
+	).toBeVisible();
 });
 
 test('sign in with a wrong password shows an error', async ({ page }) => {

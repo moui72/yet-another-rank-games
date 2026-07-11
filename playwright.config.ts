@@ -5,7 +5,10 @@ import { defineConfig, devices } from '@playwright/test';
 // so the a11y gate checks what actually ships.
 export default defineConfig({
 	testDir: 'e2e',
-	fullyParallel: true,
+	// These tests share one preview server + one local Supabase (auth + DB), so
+	// run them serially to avoid auth rate-limit / session / DB races.
+	fullyParallel: false,
+	workers: 1,
 	reporter: 'list',
 	use: {
 		baseURL: 'http://localhost:4173'

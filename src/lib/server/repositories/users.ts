@@ -2,7 +2,11 @@ import type { Kysely } from 'kysely';
 import type { Database } from '../schema';
 import type { User } from '$lib/types/entities';
 
-/** Create the app-level user row for an existing Supabase Auth user. */
+/**
+ * Ensure the app-level user row exists (and set its bgg username). Idempotent —
+ * the `on_auth_user_created` trigger already provisions the row on sign-up, so
+ * this upserts rather than assuming it's absent.
+ */
 export function createUser(
 	db: Kysely<Database>,
 	input: { id: string; bggUsername?: string | null }
@@ -10,6 +14,7 @@ export function createUser(
 	return db
 		.insertInto('users')
 		.values({ id: input.id, bggUsername: input.bggUsername ?? null })
+		.onConflict((oc) => oc.column('id').doUpdateSet({ bggUsername: input.bggUsername ?? null }))
 		.returningAll()
 		.executeTakeFirstOrThrow();
 }
