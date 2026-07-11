@@ -15,7 +15,8 @@
 		"coverage": "vitest run --coverage",
 		"lint": "eslint .",
 		"test:e2e": "playwright test",
-		"coverage:ratchet": "vitest run --coverage && node scripts/coverage-ratchet.mjs"
+		"coverage:ratchet": "vitest run --coverage && node scripts/coverage-ratchet.mjs",
+		"test:integration": "supabase db reset --local >/dev/null 2>&1 && vitest run --config vitest.integration.config.ts"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.12.1",

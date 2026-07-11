@@ -6,6 +6,9 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
 	test: {
 		include: ['src/**/*.{test,spec}.ts'],
+		// Integration tests need a live local Supabase DB — run separately
+		// (npm run test:integration), not in the unit suite / pre-commit / CI-unit.
+		exclude: ['src/**/*.integration.test.ts', 'node_modules/**'],
 		environment: 'node',
 		coverage: {
 			provider: 'v8',

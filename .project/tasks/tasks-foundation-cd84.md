@@ -19,7 +19,7 @@ status: in-progress
 ## Phase 1: Data layer & auth
 
 - [x] T008 [artifacts: infrastructure, datamodel] Provision a Supabase project; add env/config loading and a single DB connection/client module (constructed at the entry, imported elsewhere — Principle XV). No secrets committed.
-- [ ] T009 [artifacts: datamodel] Write the initial migration creating `User`, `Game`, `Collection`, `CollectionItem`, `List`, `Comparison`, `ListEntry` and all indexes in `datamodel.md`. Test: migration applies to a clean database and the resulting schema (columns, unique `Game.bgg_id`, FKs) matches expectations.
+- [x] T009 [artifacts: datamodel] Write the initial migration creating `User`, `Game`, `Collection`, `CollectionItem`, `List`, `Comparison`, `ListEntry` and all indexes in `datamodel.md`. Test: migration applies to a clean database and the resulting schema (columns, unique `Game.bgg_id`, FKs) matches expectations.
 - [ ] T010 [artifacts: datamodel] [parallel] Define shared, exported TypeScript types for every entity as the single source of truth (Principle XIII), reused by the data layer and UI.
 - [ ] T011 [artifacts: datamodel] Typed data-access layer for `User`/`Collection`/`CollectionItem` CRUD, written test-first, using the shared types.
 - [ ] T012 [artifacts: datamodel] [parallel] Implement and test the `List.filter` schema validator (the v1 jsonb predicate schema): valid filters pass; unknown or malformed keys are rejected on write.

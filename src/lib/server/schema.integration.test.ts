@@ -1,0 +1,70 @@
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import postgres from 'postgres';
+
+// Integration test: verifies the initial migration produced the expected
+// schema on the live local Postgres. Run via `npm run test:integration`, which
+// resets the DB (re-applying migrations) first.
+const sql = postgres(process.env.DATABASE_URL ?? '');
+
+const EXPECTED_TABLES = [
+	'users',
+	'games',
+	'collections',
+	'collection_items',
+	'lists',
+	'comparisons',
+	'list_entries'
+];
+
+async function columns(table: string): Promise<Set<string>> {
+	const rows = await sql<{ column_name: string }[]>`
+		select column_name from information_schema.columns
+		where table_schema = 'public' and table_name = ${table}`;
+	return new Set(rows.map((r) => r.column_name));
+}
+
+beforeAll(async () => {
+	if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL not set for integration tests');
+});
+afterAll(async () => {
+	await sql.end();
+});
+
+describe('initial schema', () => {
+	it('creates all core tables in the public schema', async () => {
+		const rows = await sql<{ table_name: string }[]>`
+			select table_name from information_schema.tables
+			where table_schema = 'public' and table_type = 'BASE TABLE'`;
+		const present = new Set(rows.map((r) => r.table_name));
+		for (const t of EXPECTED_TABLES) expect(present, `table ${t}`).toContain(t);
+	});
+
+	it('gives games a unique bgg_id and array mechanics/categories', async () => {
+		const cols = await columns('games');
+		for (const c of ['bgg_id', 'name', 'weight', 'mechanics', 'categories']) {
+			expect(cols, `games.${c}`).toContain(c);
+		}
+		const [uniq] = await sql<{ count: number }[]>`
+			select count(*)::int as count
+			from pg_constraint c join pg_class t on t.oid = c.conrelid
+			where t.relname = 'games' and c.contype = 'u'
+			and pg_get_constraintdef(c.oid) ilike '%bgg_id%'`;
+		expect(uniq.count).toBeGreaterThan(0);
+	});
+
+	it('enforces one row per (collection, game) in collection_items', async () => {
+		const [uniq] = await sql<{ count: number }[]>`
+			select count(*)::int as count
+			from pg_constraint c join pg_class t on t.oid = c.conrelid
+			where t.relname = 'collection_items' and c.contype = 'u'`;
+		expect(uniq.count).toBeGreaterThan(0);
+	});
+
+	it('links lists and comparisons by foreign key', async () => {
+		const [fk] = await sql<{ count: number }[]>`
+			select count(*)::int as count
+			from pg_constraint c join pg_class t on t.oid = c.conrelid
+			where t.relname = 'comparisons' and c.contype = 'f'`;
+		expect(fk.count).toBeGreaterThan(0);
+	});
+});
