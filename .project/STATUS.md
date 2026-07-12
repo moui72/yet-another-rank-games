@@ -19,14 +19,14 @@ _Updated: 2026-07-12. Keep this current as artifacts are refined and open questi
 
 ## Feature Backlog
 
-- 0 backlogged · 0 planned · **2 tasked** · 0 implemented — see `.project/features/`.
-  - `bgg-geeklist-export` — tasked (plan-bgg-geeklist-and-search).
-  - `bgg-game-search-import` — tasked (plan-bgg-geeklist-and-search). BGG-search import resolves the former ui.md pool-builder open question.
+- 0 backlogged · 0 planned · 0 tasked · **2 implemented** — see `.project/features/`.
+  - `bgg-geeklist-export` — implemented (GeekList/BBCode export).
+  - `bgg-game-search-import` — implemented (add any BGG game to a pool via search).
 
 ## Plans & Tasks
 
 - `plan-foundation-2026-07-10.md` — **approved**; `tasks-foundation-cd84.md` **in-progress, 41/46** (only Phase 6 deploy T035–T039 remains, GCP-blocked).
-- `plan-bgg-geeklist-and-search-2026-07-12.md` — **approved**; `tasks-bgg-geeklist-and-search-2299.md` **ready, 0/7** (Phase 1 GeekList/BBCode export → Phase 2 BGG search import). Ready to `/ardd-implement`.
+- `plan-bgg-geeklist-and-search-2026-07-12.md` — **approved**; `tasks-bgg-geeklist-and-search-2299.md` **completed, 7/7**. Merged to `main`.
 
 ## Diagrams
 
@@ -36,12 +36,12 @@ _Updated: 2026-07-12. Keep this current as artifacts are refined and open questi
 
 ## Code-vs-Artifact Defects
 
-No defects — artifacts match the codebase (verified 2026-07-12).
+Last verified 2026-07-12, **before** the GeekList/search implementation landed — no defects then. The new features (`export.ts` `toBbcode`, the BGG `search` client, `/api/games/search`, `addFromSearch`, the pool-builder search UI) were built from the artifacts but haven't been re-verified. Run `/ardd-verify` to cover them.
 
 ## In Flight
 
-- Nothing in a sibling worktree or draft PR. Work proceeds inline on `main` (solo mode); `main` is at `0d1e9a4`, in sync with `origin`. The plan/tasks/artifact changes from this run are uncommitted.
+- Nothing — the delegated worktree merged (fast-forward) and was removed. `main` is at `8f4f43e` (all commits signed). **Local only: `main` is ahead of `origin` and unpushed.**
 
 ## Recommended Next Step
 
-Implement the new tasks: `/ardd-implement` on `tasks-bgg-geeklist-and-search-2299.md` (Phase 1 GeekList export is self-contained and ships first). The foundation Phase 6 deploy remains GCP-blocked.
+Push `main` to `origin` (7-task feature work + planning, all signed and unpushed). Then either run `/ardd-verify` to baseline the new code, or the only remaining foundation work is Phase 6 deploy (T035–T039), which stays GCP-blocked.
