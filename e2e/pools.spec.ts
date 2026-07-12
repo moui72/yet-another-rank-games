@@ -49,3 +49,41 @@ test('build a pool and create a list from it (with axe)', async ({ page }) => {
 		'In progress'
 	);
 });
+
+test('search BGG and add a game to a pool (with axe)', async ({ page }) => {
+	await signUpAndImport(page);
+
+	await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Pools' }).click();
+	await page.getByLabel('Pool name').fill('Search pool');
+	await page.getByRole('button', { name: 'Create pool' }).click();
+	await expect(page.getByRole('heading', { name: 'Search pool' })).toBeVisible();
+
+	// Mock the BGG search endpoint so results are deterministic.
+	await page.route('**/api/games/search?q=*', async (route) => {
+		await route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify([
+				{ bggId: 174430, name: 'Gloomhaven', yearPublished: 2017 },
+				{ bggId: 291457, name: 'Gloomhaven: Jaws of the Lion', yearPublished: 2020 }
+			])
+		});
+	});
+
+	// Idle → search → results.
+	await page.getByLabel('Game name').fill('gloomhaven');
+	await page.getByRole('button', { name: 'Search', exact: true }).click();
+	const resultsList = page.getByRole('list', { name: 'Search results' });
+	await expect(resultsList.getByText('Gloomhaven', { exact: false }).first()).toBeVisible();
+
+	// Axe with results shown (BGG's `thing` is unreachable in test, so the add
+	// falls back to a minimal game from the search pick — deterministic).
+	await axeClean(page);
+
+	// Add the first result — it lands in "Games in this pool".
+	await page.getByRole('button', { name: 'Add Gloomhaven to pool' }).click();
+	const poolGames = page.getByRole('heading', { name: /Games in this pool/ });
+	await expect(poolGames).toContainText('(1)');
+	await expect(page.getByText('Added 1 game from search')).toBeVisible();
+	await axeClean(page);
+});

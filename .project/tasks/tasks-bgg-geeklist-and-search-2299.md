@@ -61,7 +61,7 @@ status: in-progress
   Add a Production Annotation at the search endpoint noting the synchronous BGG
   call could be debounced/cached in production.
 
-- [ ] T007 [artifacts: ui] Add the "Search BGG" UI to the pool builder
+- [x] T007 [artifacts: ui] Add the "Search BGG" UI to the pool builder
   (`src/routes/pools/[id]/+page.svelte`): a query input that calls
   `/api/games/search`, a results list showing name + year with an "Add" control
   per result wired to the T006 action, and the idle / searching / no-results /

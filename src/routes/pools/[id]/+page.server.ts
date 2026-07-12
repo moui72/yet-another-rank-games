@@ -81,13 +81,16 @@ export const actions: Actions = {
 		await requirePool(locals.user.id, params.id);
 		const form = await request.formData();
 		const bggId = Number(str(form.get('bggId')));
-		if (!Number.isFinite(bggId) || bggId <= 0) {
+		const name = (str(form.get('name')) ?? '').trim();
+		if (!Number.isFinite(bggId) || bggId <= 0 || !name) {
 			return fail(400, { error: 'A valid game is required.' });
 		}
+		const yearRaw = Number(str(form.get('yearPublished')));
+		const pick = { bggId, name, yearPublished: Number.isFinite(yearRaw) ? yearRaw : null };
 		// Enrich the pick via the BGG `thing` endpoint, then upsert + attach.
 		const fetchThing: FetchThing = async (id) =>
 			parseThingXml((await fetchThingXml([id])).xml)[0] ?? null;
-		const { added } = await addGameFromSearch(db, params.id, bggId, fetchThing);
+		const { added } = await addGameFromSearch(db, params.id, pick, fetchThing);
 		return { searchAdded: true, added };
 	},
 
