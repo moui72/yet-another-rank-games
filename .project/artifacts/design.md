@@ -1,7 +1,7 @@
 ---
 name: design
 status: draft
-last_updated: 2026-07-11
+last_updated: 2026-07-12
 ---
 
 # Visual Design
@@ -9,6 +9,37 @@ last_updated: 2026-07-11
 The constitution's north star is **fun UX** (Principle III), and the bar is
 **WCAG 2.1 AA in every theme** (Principle VI). The UI was built functional- and
 accessibility-first; this artifact defines the visual layer added on top.
+
+## Brand identity
+
+The product name — *Yet Another Rank Games* → **YARG** — is self-aware and a
+little pirate-y; the look leans into that: colorful and playful, but crafted,
+not amateurish.
+
+- **Signature: the messy spine-stack.** A ranking is drawn as a stack of
+  colored game-box spines, tapering in width with rank — the collection,
+  stacked and sorted. It is the logo *and* a recurring UI motif (hero, live
+  rankings, manual drag-order). This is where colour and boldness are spent;
+  everything else stays quiet.
+- **Logo (`Logo.svelte`).** Three offset, messily-stacked box shapes (each a
+  bright face over a darker depth lip) with **RG** superimposed in the display
+  face under a white halo. Variants: `mark` (RG only — navbar, favicon,
+  avatars), `yarg` (mark + **YARG** wordmark), `full` (mark + *Yet Another
+  Rank Games* + tagline). The favicon is a self-contained SVG (system font for
+  the RG so it renders without the webfont).
+- **Palette.** Indigo **ink `#1B1830`** and clean white/lilac surfaces, with a
+  box-spine brights set — red `#FF5A47`, orange `#FF9F1C`, yellow `#FFCE3A`,
+  teal `#17C3B2`, blue `#3D6EF5`, violet `#8B5CF6`, magenta `#E23FB0`. The
+  ultra-brights are decorative (logo only). Interactive fills use the AA-safe
+  depth of each hue (primary red `#D92D20` etc.), and spine backgrounds — which
+  always carry white title text — use the darker jewel-tone `-700` shades
+  (`#B91C1C`, `#9A3412`, `#A21CAF`, `#6D28D9`, `#1D4ED8`, `#0F766E`, `#15803D`),
+  every one ≥4.5:1 against white. The shared spine palette lives in
+  `src/lib/spine.ts`.
+- **Type.** **Bricolage Grotesque** (display — wonky, crafted; headings + brand
+  only), **Figtree** (body/UI), **Space Mono** (ranks & scores — a
+  "game-stats" numeral). All self-hosted via `@fontsource` (no external
+  request — the app is used on the couch / LAN).
 
 ## Stack
 

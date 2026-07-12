@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 	import type { Provider } from '@supabase/supabase-js';
+	import Logo from '$lib/components/Logo.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -42,10 +43,11 @@
 	<title>Sign in · yet-another-rank-games</title>
 </svelte:head>
 
-<main class="flex justify-center">
-	<div class="card bg-base-200 w-full max-w-sm shadow-sm">
+<main class="flex flex-col items-center gap-6 py-6">
+	<a href={resolve('/')} aria-label="YARG — home"><Logo variant="mark" size={56} /></a>
+	<div class="card bg-base-200 border-base-300 w-full max-w-sm border">
 		<div class="card-body gap-4">
-			<h1 class="card-title text-2xl">{mode === 'signin' ? 'Sign in' : 'Create an account'}</h1>
+			<h1 class="card-title text-2xl">{mode === 'signin' ? 'Welcome back' : 'Create an account'}</h1>
 
 			<form class="flex flex-col gap-3" onsubmit={submit}>
 				<div class="form-control">

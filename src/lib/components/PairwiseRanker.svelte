@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { PairwiseSession } from '$lib/pairwiseSession.svelte';
+	import { spineColor } from '$lib/spine';
 	import type { Choice } from '$lib/domain/ranking';
 
 	let { listId, games, log }: { listId: string; games: { id: number; name: string }[]; log: Choice[] } =
@@ -78,12 +79,15 @@
 			{#each [pair[0], pair[1]] as gameId, i (gameId)}
 				<button
 					type="button"
-					class="btn btn-lg h-auto min-h-24 whitespace-normal py-4 text-lg"
+					class="group bg-base-100 border-base-300 hover:border-primary hover:bg-primary/5 focus-visible:border-primary flex min-h-28 items-center gap-3 rounded-box border-2 p-4 text-left transition-colors"
 					onclick={() => pick(gameId)}
 					aria-label={nameOf(gameId)}
 				>
-					<span class="kbd kbd-sm mr-2 opacity-70" aria-hidden="true">{i + 1}</span>
-					{nameOf(gameId)}
+					<span
+						class="kbd kbd-sm font-mono opacity-70 transition-colors group-hover:opacity-100"
+						aria-hidden="true">{i + 1}</span
+					>
+					<span class="font-display text-xl font-bold">{nameOf(gameId)}</span>
 				</button>
 			{/each}
 		</div>
@@ -101,20 +105,24 @@
 	<p class="alert">Add at least two games to this list's pool to start ranking.</p>
 {/if}
 
-<section class="card bg-base-200 shadow-sm" aria-labelledby="ranking-heading">
-	<div class="card-body gap-2">
+<section class="card bg-base-200 border-base-300 border" aria-labelledby="ranking-heading">
+	<div class="card-body gap-3">
 		<h2 id="ranking-heading" class="card-title text-lg">Current ranking</h2>
-		<ol class="flex flex-col divide-y divide-base-300">
+		<ol class="flex flex-col gap-1.5">
 			{#each session.order as gameId, i (gameId)}
-				<li class="flex items-center justify-between gap-3 py-2">
-					<span><span class="mr-2 font-mono opacity-50">{i + 1}</span>{nameOf(gameId)}</span>
+				<li class="flex items-center gap-2">
+					<span class="spine grow" style="background:{spineColor(i)}">
+						<span class="spine-rank">{String(i + 1).padStart(2, '0')}</span>
+						<span class="truncate">{nameOf(gameId)}</span>
+					</span>
 					<button
 						type="button"
-						class="btn btn-ghost btn-xs"
+						class="btn btn-ghost btn-sm btn-square"
 						onclick={() => dropGame(gameId)}
 						aria-label="Drop {nameOf(gameId)} from this list"
+						title="Drop {nameOf(gameId)}"
 					>
-						Drop
+						✕
 					</button>
 				</li>
 			{/each}

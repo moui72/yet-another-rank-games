@@ -56,6 +56,9 @@
 		"vitest": "^4.1.10"
 	},
 	"dependencies": {
+		"@fontsource-variable/bricolage-grotesque": "^5.2.10",
+		"@fontsource-variable/figtree": "^5.2.10",
+		"@fontsource/space-mono": "^5.2.9",
 		"@supabase/ssr": "^0.12.0",
 		"@supabase/supabase-js": "^2.110.2",
 		"fast-xml-parser": "^5.9.3",

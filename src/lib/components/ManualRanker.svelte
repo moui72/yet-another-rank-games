@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { dndzone, type DndEvent } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
+	import { spineColor } from '$lib/spine';
 
 	type Item = { id: number; name: string };
 	let { listId, games }: { listId: string; games: Item[] } = $props();
@@ -43,17 +44,20 @@
 
 	{#if items.length}
 		<ul
-			class="flex flex-col gap-2"
+			class="flex flex-col gap-1.5"
 			use:dndzone={{ items, flipDurationMs: flipMs }}
 			onconsider={consider}
 			onfinalize={finalize}
 		>
 			{#each items as item, i (item.id)}
-				<li animate:flip={{ duration: flipMs }} class="card bg-base-200 cursor-grab shadow-sm">
-					<div class="card-body flex-row items-center gap-3 py-3">
-						<span class="font-mono opacity-50">{i + 1}</span>
-						<span class="font-medium">{item.name}</span>
-					</div>
+				<li
+					animate:flip={{ duration: flipMs }}
+					class="spine cursor-grab active:cursor-grabbing"
+					style="background:{spineColor(i)}"
+				>
+					<span class="spine-rank">{String(i + 1).padStart(2, '0')}</span>
+					<span class="truncate">{item.name}</span>
+					<span class="ml-auto opacity-70" aria-hidden="true">⠿</span>
 				</li>
 			{/each}
 		</ul>

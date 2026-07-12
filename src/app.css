@@ -1,10 +1,144 @@
 @import 'tailwindcss';
 
-/* DaisyUI provides themeable component classes + a theming system. Light is the
-   default; dark applies on prefers-color-scheme or an explicit data-theme.
-   Adding more themes later is just more entries here. */
-@plugin 'daisyui' {
-	themes:
-		light --default,
-		dark --prefersdark;
+/* Self-hosted brand fonts (no external request — the app runs on the couch /
+   LAN). Bricolage Grotesque = display (wonky, crafted); Figtree = body/UI;
+   Space Mono = ranks & scores (a "game-stats" numeral). */
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/figtree';
+@import '@fontsource/space-mono/400.css';
+@import '@fontsource/space-mono/700.css';
+
+@plugin 'daisyui';
+
+/* ── YARG light ──────────────────────────────────────────────────────────
+   Board-game-box brights over an indigo-ink / clean-white base. The bright
+   palette lives in the logo and decorative spines; interactive fills use the
+   AA-safe depth of each hue so their text passes WCAG 2.1 AA (Principle VI). */
+@plugin 'daisyui/theme' {
+	name: 'light';
+	default: true;
+	color-scheme: light;
+
+	--color-base-100: #ffffff;
+	--color-base-200: #f3f1fa;
+	--color-base-300: #e3dff1;
+	--color-base-content: #1b1830;
+
+	--color-primary: #d92d20; /* vermilion — white text passes */
+	--color-primary-content: #ffffff;
+	--color-secondary: #0e8c7f; /* teal */
+	--color-secondary-content: #ffffff;
+	--color-accent: #6d28d9; /* violet */
+	--color-accent-content: #ffffff;
+	--color-neutral: #1b1830; /* ink */
+	--color-neutral-content: #ffffff;
+
+	--color-info: #2952e3;
+	--color-info-content: #ffffff;
+	--color-success: #15803d;
+	--color-success-content: #ffffff;
+	--color-warning: #ffce3a; /* meeple yellow — needs dark text */
+	--color-warning-content: #1b1830;
+	--color-error: #d92d20;
+	--color-error-content: #ffffff;
+
+	--radius-selector: 0.5rem;
+	--radius-field: 0.7rem;
+	--radius-box: 1.1rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.28rem;
+	--border: 1.5px;
+	--depth: 1;
+	--noise: 0;
+}
+
+/* ── YARG dark ──────────────────────────────────────────────────────────
+   Deep indigo-black surfaces; hues nudged brighter so they hold up on dark. */
+@plugin 'daisyui/theme' {
+	name: 'dark';
+	prefersdark: true;
+	color-scheme: dark;
+
+	--color-base-100: #17142a;
+	--color-base-200: #201b3a;
+	--color-base-300: #2d2650;
+	--color-base-content: #efedfa;
+
+	--color-primary: #ff6154;
+	--color-primary-content: #1b1830;
+	--color-secondary: #22c7b5;
+	--color-secondary-content: #08201d;
+	--color-accent: #a77bff;
+	--color-accent-content: #1b1830;
+	--color-neutral: #efedfa;
+	--color-neutral-content: #17142a;
+
+	--color-info: #6a8bff;
+	--color-info-content: #0a1636;
+	--color-success: #3ecb6d;
+	--color-success-content: #06210f;
+	--color-warning: #ffce3a;
+	--color-warning-content: #2a2200;
+	--color-error: #ff6154;
+	--color-error-content: #2a0a06;
+
+	--radius-selector: 0.5rem;
+	--radius-field: 0.7rem;
+	--radius-box: 1.1rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.28rem;
+	--border: 1.5px;
+	--depth: 1;
+	--noise: 0;
+}
+
+@layer base {
+	:root {
+		--font-display: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+		--font-body: 'Figtree Variable', system-ui, sans-serif;
+		--font-mono: 'Space Mono', ui-monospace, monospace;
+	}
+	html {
+		font-family: var(--font-body);
+	}
+	/* Display face carries the personality — headings and brand only. */
+	h1,
+	h2,
+	h3,
+	.font-display {
+		font-family: var(--font-display);
+		letter-spacing: -0.01em;
+	}
+	.font-mono,
+	kbd {
+		font-family: var(--font-mono);
+	}
+}
+
+@layer components {
+	/* The signature: a ranking rendered as a stack of game-box spines. Width
+	   tapers with rank so the list reads as a physical stack. Backgrounds are
+	   set inline from the AA-safe spine palette (all pass white text). */
+	.spine {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		min-height: 2.5rem;
+		padding: 0.4rem 0.85rem;
+		border-radius: var(--radius-field);
+		color: #fff;
+		font-family: var(--font-display);
+		font-weight: 600;
+		box-shadow: 0 2px 3px rgba(27, 24, 48, 0.16);
+	}
+	.spine-rank {
+		/* Pure white (no opacity) so it keeps the spine's AA contrast; the mono
+		   face and a translucent-dark chip set it apart from the title instead. */
+		font-family: var(--font-mono);
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		padding: 0.05rem 0.35rem;
+		border-radius: 0.35rem;
+		background: rgba(0, 0, 0, 0.18);
+	}
 }
