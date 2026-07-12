@@ -8,6 +8,7 @@ export interface ListFilterInput {
 	playerCount?: string;
 	playingTimeMax?: string;
 	ownedOnly?: boolean;
+	expansions?: string;
 }
 
 function num(v?: string): number | undefined {
@@ -49,6 +50,9 @@ export function buildListFilter(input: ListFilterInput): ListFilter {
 	if (playingTimeMax !== undefined) filter.playingTime = { max: playingTimeMax };
 
 	if (input.ownedOnly) filter.ownedOnly = true;
+	if (input.expansions === 'exclude' || input.expansions === 'only') {
+		filter.expansions = input.expansions;
+	}
 
 	return filter;
 }

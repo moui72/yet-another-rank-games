@@ -77,7 +77,8 @@ export function parseThingXml(xml: string): BggThing[] {
 				playingTime: num(it?.playingtime?.value),
 				thumbnailUrl: thumbnail ? String(thumbnail).trim() : null,
 				mechanics: linkValues('boardgamemechanic'),
-				categories: linkValues('boardgamecategory')
+				categories: linkValues('boardgamecategory'),
+				isExpansion: it?.type === 'boardgameexpansion'
 			};
 		})
 		.filter((t) => Number.isFinite(t.bggId));

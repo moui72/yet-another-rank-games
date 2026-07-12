@@ -79,6 +79,7 @@ One row per distinct BGG game, shared across all users.
 | thumbnail_url | string | nullable |
 | mechanics | text[] | for filtering (e.g. "Cooperative Game") |
 | categories | text[] | for filtering |
+| is_expansion | boolean | true for BGG `boardgameexpansion` items; drives the `expansions` pool filter |
 | last_fetched_at | timestamptz | cache clock: when `thing` details were last pulled; null = minimal/never-enriched (treated as stale) |
 
 ### Collection
@@ -194,7 +195,8 @@ constraint on that dimension," so `{}` matches the whole collection. Version 1:
   "player_count":   { "supports": 4 },                // min_players <= 4 <= max_players
   "playing_time":   { "min": null, "max": 60 },       // minutes
   "year_published": { "min": null, "max": null },
-  "owned_only":     true                              // restrict to CollectionItem.owned
+  "owned_only":     true,                             // restrict to CollectionItem.owned
+  "expansions":     "exclude"                         // "exclude" = base games only; "only" = expansions/promos only; omit = both
 }
 ```
 
@@ -205,6 +207,9 @@ constraint on that dimension," so `{}` matches the whole collection. Version 1:
   and/or `max`, either nullable = open-ended on that side.
 - `player_count.supports = N` keeps games whose `[min_players, max_players]`
   range includes N.
+- `expansions` is a tri-state over `Game.is_expansion` (true for BGG
+  `boardgameexpansion` items): `"exclude"` keeps only base games, `"only"`
+  keeps only expansions/promos, and omitting the key keeps both.
 - The list's displayed size (e.g. "top 10") is a presentation concern, not a
   filter predicate — the filter selects the candidate set; the ranking picks the
   order.

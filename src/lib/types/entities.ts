@@ -35,6 +35,8 @@ export interface Game {
 	thumbnailUrl: string | null;
 	mechanics: string[];
 	categories: string[];
+	/** True for expansions/promos (BGG subtype "boardgameexpansion"). */
+	isExpansion: boolean;
 	lastFetchedAt: string | null;
 }
 
@@ -138,4 +140,6 @@ export interface ListFilter {
 	playerCount?: { supports: number };
 	/** Restrict to owned games. */
 	ownedOnly?: boolean;
+	/** `exclude` = base games only; `only` = expansions/promos only; omitted = both. */
+	expansions?: 'exclude' | 'only';
 }

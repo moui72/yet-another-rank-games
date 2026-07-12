@@ -28,6 +28,7 @@ interface GamesTable {
 	thumbnailUrl: string | null;
 	mechanics: Generated<string[]>;
 	categories: Generated<string[]>;
+	isExpansion: Generated<boolean>;
 	lastFetchedAt: string | null;
 }
 

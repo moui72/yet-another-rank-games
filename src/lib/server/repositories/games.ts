@@ -47,6 +47,7 @@ export function upsertGame(
 		thumbnailUrl: t.thumbnailUrl,
 		mechanics: t.mechanics,
 		categories: t.categories,
+		isExpansion: t.isExpansion,
 		lastFetchedAt: fetchedAt
 	};
 	return db

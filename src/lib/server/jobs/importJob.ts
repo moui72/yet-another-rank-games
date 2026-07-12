@@ -33,7 +33,8 @@ function minimalThing(bggId: number, name: string): BggThing {
 		playingTime: null,
 		thumbnailUrl: null,
 		mechanics: [],
-		categories: []
+		categories: [],
+		isExpansion: false
 	};
 }
 

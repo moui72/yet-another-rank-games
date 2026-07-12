@@ -20,11 +20,11 @@ const CARC_ITEM: BggCollectionItem = { bggId: 822, name: 'Carcassonne', owned: f
 
 const CATAN_THING: BggThing = {
 	bggId: 13, name: 'Catan', yearPublished: 1995, weight: 2.3, minPlayers: 3, maxPlayers: 4,
-	playingTime: 120, thumbnailUrl: 'x.jpg', mechanics: ['Trading'], categories: ['Economic']
+	playingTime: 120, thumbnailUrl: 'x.jpg', mechanics: ['Trading'], categories: ['Economic'], isExpansion: false
 };
 const CARC_THING: BggThing = {
 	bggId: 822, name: 'Carcassonne', yearPublished: 2000, weight: 1.9, minPlayers: 2, maxPlayers: 5,
-	playingTime: 45, thumbnailUrl: 'y.jpg', mechanics: ['Tile Placement'], categories: ['Medieval']
+	playingTime: 45, thumbnailUrl: 'y.jpg', mechanics: ['Tile Placement'], categories: ['Medieval'], isExpansion: false
 };
 
 function deps(items: BggCollectionItem[], things: BggThing[]): ImportDeps {

@@ -102,8 +102,15 @@ describe('parseThingXml', () => {
 			playingTime: 120,
 			thumbnailUrl: 'https://cf.geekdo-images.com/catan.jpg',
 			mechanics: ['Trading', 'Dice Rolling'],
-			categories: ['Economic']
+			categories: ['Economic'],
+			isExpansion: false
 		});
+	});
+
+	it('flags boardgameexpansion items as expansions', () => {
+		const xml = `<items><item type="boardgameexpansion" id="926"><name type="primary" value="Catan: Seafarers" /></item></items>`;
+		const [g] = parseThingXml(xml);
+		expect(g.isExpansion).toBe(true);
 	});
 
 	it('decodes numeric HTML entities in names (BGG encodes apostrophes as &#039;)', () => {
@@ -124,7 +131,8 @@ describe('parseThingXml', () => {
 			playingTime: null,
 			thumbnailUrl: null,
 			mechanics: [],
-			categories: []
+			categories: [],
+			isExpansion: false
 		});
 	});
 });

@@ -73,6 +73,8 @@ export async function findMatchingGameIds(
 		.select('g.id as id');
 
 	if (filter.ownedOnly) q = q.where('ci.owned', '=', true);
+	if (filter.expansions === 'exclude') q = q.where('g.isExpansion', '=', false);
+	else if (filter.expansions === 'only') q = q.where('g.isExpansion', '=', true);
 
 	if (filter.mechanics?.include?.length) {
 		q = q.where(sql<boolean>`g.mechanics @> ${filter.mechanics.include}::text[]`);

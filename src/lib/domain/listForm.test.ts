@@ -29,6 +29,16 @@ describe('buildListFilter', () => {
 		expect(buildListFilter({ weightMin: '', mechanicsInclude: '  ' })).toEqual({});
 	});
 
+	it('carries a valid expansions value through', () => {
+		expect(buildListFilter({ expansions: 'exclude' })).toEqual({ expansions: 'exclude' });
+		expect(buildListFilter({ expansions: 'only' })).toEqual({ expansions: 'only' });
+	});
+
+	it('omits an unrecognized expansions value', () => {
+		expect(buildListFilter({ expansions: '' })).toEqual({});
+		expect(buildListFilter({ expansions: 'both' })).toEqual({});
+	});
+
 	it('produces a filter the schema rejects when a numeric field is non-numeric', () => {
 		// build is lenient; validation is the gate.
 		expect(() => parseListFilter(buildListFilter({ weightMin: 'heavy' }))).toThrow();

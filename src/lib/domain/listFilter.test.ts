@@ -14,9 +14,15 @@ describe('parseListFilter', () => {
 			playingTime: { max: 60 },
 			yearPublished: { min: 2000 },
 			playerCount: { supports: 4 },
-			ownedOnly: true
+			ownedOnly: true,
+			expansions: 'exclude' as const
 		};
 		expect(parseListFilter(filter)).toEqual(filter);
+	});
+
+	it('accepts both expansions enum values and rejects others', () => {
+		expect(parseListFilter({ expansions: 'only' })).toEqual({ expansions: 'only' });
+		expect(() => parseListFilter({ expansions: 'both' })).toThrow();
 	});
 
 	it('rejects an unknown top-level key', () => {

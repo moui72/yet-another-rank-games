@@ -17,7 +17,8 @@ export const listFilterSchema = z
 		playingTime: range.optional(),
 		yearPublished: range.optional(),
 		playerCount: z.object({ supports: z.number().int() }).strict().optional(),
-		ownedOnly: z.boolean().optional()
+		ownedOnly: z.boolean().optional(),
+		expansions: z.enum(['exclude', 'only']).optional()
 	})
 	.strict();
 

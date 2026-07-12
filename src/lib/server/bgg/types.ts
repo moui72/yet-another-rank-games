@@ -19,4 +19,5 @@ export interface BggThing {
 	thumbnailUrl: string | null;
 	mechanics: string[];
 	categories: string[];
+	isExpansion: boolean;
 }

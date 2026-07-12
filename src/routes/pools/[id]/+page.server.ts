@@ -58,7 +58,8 @@ export const actions: Actions = {
 			weightMax: str(form.get('weightMax')),
 			playerCount: str(form.get('playerCount')),
 			playingTimeMax: str(form.get('playingTimeMax')),
-			ownedOnly: form.get('ownedOnly') === 'on'
+			ownedOnly: form.get('ownedOnly') === 'on',
+			expansions: str(form.get('expansions'))
 		});
 		let filter;
 		try {

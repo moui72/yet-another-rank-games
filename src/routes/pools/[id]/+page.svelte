@@ -84,6 +84,14 @@
 						<label class="label" for="playingTimeMax"><span class="label-text">Max playing time (min)</span></label>
 						<input id="playingTimeMax" name="playingTimeMax" type="number" min="1" class="input input-bordered w-full" />
 					</div>
+					<div class="form-control sm:col-span-2">
+						<label class="label" for="expansions"><span class="label-text">Expansions & promos</span></label>
+						<select id="expansions" name="expansions" class="select select-bordered w-full">
+							<option value="">Include both</option>
+							<option value="exclude">Base games only</option>
+							<option value="only">Expansions & promos only</option>
+						</select>
+					</div>
 					<label class="label cursor-pointer justify-start gap-2 sm:col-span-2">
 						<input type="checkbox" name="ownedOnly" class="checkbox checkbox-sm" />
 						<span class="label-text">Owned games only</span>

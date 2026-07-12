@@ -25,6 +25,7 @@ function thing(bggId: number, name: string, over: Partial<BggThing>): BggThing {
 		thumbnailUrl: null,
 		mechanics: [],
 		categories: [],
+		isExpansion: false,
 		...over
 	};
 }
@@ -90,6 +91,18 @@ describe('findMatchingGameIds', () => {
 			mechanics: { include: [], exclude: ['Cooperative Game'] }
 		});
 		expect(matched).toEqual([ids.catan]);
+	});
+
+	it('filters expansions in and out', async () => {
+		const { collectionId, ids } = await setup();
+		const seafarers = await upsertGame(db, thing(926, 'Catan: Seafarers', { isExpansion: true }));
+		await upsertCollectionItem(db, { collectionId, gameId: seafarers.id, owned: true });
+
+		const baseOnly = await findMatchingGameIds(db, collectionId, { expansions: 'exclude' });
+		expect(new Set(baseOnly)).toEqual(new Set([ids.catan, ids.pandemic, ids.gloom]));
+
+		const expansionsOnly = await findMatchingGameIds(db, collectionId, { expansions: 'only' });
+		expect(expansionsOnly).toEqual([seafarers.id]);
 	});
 });
 
