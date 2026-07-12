@@ -120,10 +120,81 @@ worker-driven** rather than handled inline in a request.
 ## Local development
 
 Development runs against a **local Supabase stack** via the Supabase CLI
-(Docker): Postgres + Auth + the API gateway + a local mail server, with the
-heavier services (Studio, Realtime, Storage) disabled in `supabase/config.toml`
-to keep startup light. Local dev uses the CLI's standard local-only demo keys;
-the hosted Supabase project is only needed for deployment.
+(Docker) — the same open-source components as the hosted product, running
+**entirely on the developer's machine** (no cloud project is involved). The CLI
+brings up **Postgres** (`127.0.0.1:54322`), the **Auth** service (GoTrue) behind
+the **Kong API gateway** (`127.0.0.1:54321`), and a local mail catcher; the
+heavier services (Studio, Realtime, Storage) are disabled in
+`supabase/config.toml` to keep startup light. Local dev uses the CLI's standard
+local-only demo keys.
+
+The app reaches this stack as **two independent local endpoints** — the same
+two paths it uses against any environment:
+
+- **Data** — a **direct Postgres** connection (`postgres.js`/Kysely) to
+  `:54322`. Because the Data API is disabled, table access never goes through
+  the gateway.
+- **Auth** — `supabase-js` to the Kong gateway `:54321` (→ GoTrue) for
+  sign-in / JWTs / OAuth.
+
+So "local Supabase" is really **Postgres-in-Docker plus the auth service the app
+depends on** — the same shape as staging/production. Keeping local on the
+Supabase stack (rather than a bare Postgres container) is deliberate: the schema
+FKs into Supabase's `auth` schema (`users.id references auth.users(id)`) and the
+app authenticates via GoTrue, so a non-Supabase local DB would break local auth
+and lose dev/prod parity. The hosted Supabase projects are only used by the
+deployed environments (see below).
+
+## Environments & release flow
+
+Three environments, all running the **same app image** configured only by env
+vars (one build, many environments). Each has its **own** Supabase project and
+secrets — no environment shares a database with another:
+
+| Environment | Data + Auth | Deploy trigger |
+|---|---|---|
+| **local** | Supabase CLI stack (Docker), on the dev machine | `npm run dev` |
+| **staging** | a dedicated hosted Supabase project | **automatic** on push to `main` |
+| **production** | a **separate** hosted Supabase project | on push to the `production` branch (a promotion) |
+
+Keeping all three on Supabase (rather than plain Postgres locally) preserves
+**dev/prod parity** for the Auth coupling described under Local development.
+
+**Branch-based GitOps.**
+- `main` is the trunk. Every push to `main` (i.e. every merge) **auto-deploys to
+  staging**.
+- `production` is a **fast-forward-only pointer branch** — never committed to
+  directly, only advanced to a commit already on `main`. Its tip therefore
+  always names a commit that has passed through staging; the branch cannot
+  diverge from `main`. Pushing to `production` **deploys to production**.
+
+**Cut a release = promote, don't rebuild.** `main`'s CI builds a **single
+immutable image tagged by commit SHA** and deploys that image to staging. A
+manual **"Promote to production"** GitHub Action (`workflow_dispatch`)
+fast-forwards `production` to `main`'s current tip; the resulting push to
+`production` deploys **the same SHA image** to production (no rebuild), so
+production ships the exact artifact staging validated. The `production` tip SHA
+is both "what is live" and "which image."
+
+**Approval gate.** Per-environment secrets and the production gate use **GitHub
+Environments** (`staging`, `production`): the `production` environment requires a
+**manual reviewer**, so a promotion pauses for approval before it ships.
+
+**Migrations per environment.** Each deploy applies that environment's Supabase
+migrations (`supabase db push` against the linked project) before shifting
+traffic. Migrations must be backward-compatible (expand/contract), since Cloud
+Run may briefly run old and new revisions together.
+
+**Rollback.** Because `production` is fast-forward-only, rollback is **not** a
+git operation in the normal case — it is a **Cloud Run traffic shift back to the
+previous revision** (revisions are immutable and retained), plus, if a migration
+was involved, its contract step. Re-pointing the `production` branch is reserved
+for the exceptional case.
+
+**Connection pooling (deployed environments).** Staging and production connect
+through Supabase's **pooler (Supavisor)**, not a direct per-instance connection —
+with Cloud Run `max-instances` a direct connection would exhaust Postgres
+connections. Local keeps the direct `:54322` connection (single developer).
 
 ## Configuration & secrets
 
@@ -134,20 +205,26 @@ without a rebuild**. There is no committed env file with real values and no
 auto-revokes secret keys detected in public repositories). The variable contract
 lives in the committed `.env.example`.
 
-| Variable | Secret? | Local | Production |
+The same variables are set to **per-environment values** — the local demo stack,
+the staging Supabase project, and the production Supabase project each supply
+their own (`Deployed` below covers both staging and production, each with its
+own GitHub Environment secrets):
+
+| Variable | Secret? | Local | Deployed (staging / production) |
 |---|---|---|---|
 | `PUBLIC_SUPABASE_URL` | no | `.env` | Cloud Run plain env var |
 | `PUBLIC_SUPABASE_PUBLISHABLE_KEY` | no | `.env` | Cloud Run plain env var |
 | `SUPABASE_SECRET_KEY` | yes | `.env` (local demo key) | GCP Secret Manager |
-| `DB_HOST` / `DB_PORT` / `DB_USER` / `DB_NAME` | no | via `DATABASE_URL` | Cloud Run plain env vars |
+| `DB_HOST` / `DB_PORT` / `DB_USER` / `DB_NAME` | no | via `DATABASE_URL` | Cloud Run plain env vars (pooler host) |
 | `DB_PASSWORD` | yes | via `DATABASE_URL` | GCP Secret Manager |
 | `BGG_API_TOKEN` | yes | `.env` (empty until provisioned) | GCP Secret Manager |
 
 The database connection accepts **either** a full `DATABASE_URL` (used locally
-and by tooling) **or** discrete components. Production uses the components so
-that **only `DB_PASSWORD` is a secret** — the host, port, user, and database
-name are non-sensitive plain config, and the app assembles the connection (no
-password ever embedded in a stored URL string).
+and by tooling) **or** discrete components. Deployed environments use the
+components so that **only `DB_PASSWORD` is a secret** — host, port, user, and
+database name are non-sensitive plain config, and the app assembles the
+connection (no password ever embedded in a stored URL string). In staging and
+production the host/port point at the Supabase **pooler** (see Environments).
 
 The web and worker Cloud Run services receive the same bindings; secret-marked
 variables are injected from Secret Manager as env vars at container start.
@@ -190,8 +267,9 @@ Enforced from the first deploy, per Principle IV:
   with minimal redundancy — in production, multi-region and a considered
   DR/backup posture would be required.
 - **Supabase free tier**: relies on free-tier limits and Supabase-managed
-  backups — a revenue-bearing version would move to a paid tier with an
-  explicit backup/restore and connection-pooling strategy.
+  backups — a revenue-bearing version would move to a paid tier with an explicit
+  backup/restore strategy. (Connection pooling is no longer deferred: deployed
+  environments connect through the Supavisor pooler — see Environments.)
 - **RLS off, authorization in app code only**: per-user data isolation is
   enforced solely by the app/worker, with no database-level backstop. In a
   hardened production posture, enabling Supabase RLS as defense-in-depth (so a

@@ -25,7 +25,7 @@ _Updated: 2026-07-12. Keep this current as artifacts are refined and open questi
 
 ## Plans & Tasks
 
-- `plan-foundation-2026-07-10.md` — **approved**; `tasks-foundation-cd84.md` **in-progress, 41/46** (only Phase 6 deploy T035–T039 remains, GCP-blocked).
+- `plan-foundation-2026-07-10.md` — **approved**; `tasks-foundation-cd84.md` **in-progress, 41/46**. The remaining Phase 6 deploy tasks (T035–T039) were written for a *single* deploy target and are now **out of date** — `infrastructure.md` defines local / staging / production with a promote-based release flow. Phase 6 needs **re-planning** (new `/ardd-plan`) to cover both hosted environments + the "Promote to production" workflow + GitHub Environments. Still GCP-blocked either way.
 - `plan-bgg-geeklist-and-search-2026-07-12.md` — **approved**; `tasks-bgg-geeklist-and-search-2299.md` **completed, 7/7**. Merged to `main`.
 
 ## Diagrams
@@ -40,8 +40,8 @@ Last verified 2026-07-12, **before** the GeekList/search implementation landed �
 
 ## In Flight
 
-- Nothing — the delegated worktree merged (fast-forward) and was removed. `main` is at `8f4f43e` (all commits signed). **Local only: `main` is ahead of `origin` and unpushed.**
+- No worktrees or draft PRs. `main` is pushed and in sync with `origin` through the GeekList/search merge. **Uncommitted:** this run's `infrastructure.md` refine (three-environment release flow) + this STATUS update.
 
 ## Recommended Next Step
 
-Push `main` to `origin` (7-task feature work + planning, all signed and unpushed). Then either run `/ardd-verify` to baseline the new code, or the only remaining foundation work is Phase 6 deploy (T035–T039), which stays GCP-blocked.
+Commit the `infrastructure.md` refine. Then **re-plan Phase 6** — `/ardd-plan` for the multi-environment deploy (staging + production Supabase projects, the fast-forward `production` pointer, the "Promote to production" workflow, GitHub Environments approval gate, Supavisor pooler). Actual deploy stays blocked until GCP credentials are available. Optionally `/ardd-verify` first to baseline the just-merged GeekList/search code.
