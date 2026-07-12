@@ -1,6 +1,6 @@
 ---
 slug: bgg-geeklist-export
-status: tasked
+status: implemented
 logged: 2026-07-10
 plan: plan-bgg-geeklist-and-search-2026-07-12.md
 tasks: tasks-bgg-geeklist-and-search-2299.md

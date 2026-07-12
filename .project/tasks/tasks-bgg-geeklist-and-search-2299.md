@@ -1,7 +1,7 @@
 ---
 plan: plan-bgg-geeklist-and-search-2026-07-12.md
 generated: 2026-07-12
-status: in-progress
+status: completed
 ---
 
 # Tasks
