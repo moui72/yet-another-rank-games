@@ -71,39 +71,64 @@
 <svelte:head><title>{data.list.name} · ranking · yet-another-rank-games</title></svelte:head>
 <svelte:window onkeydown={onKeydown} />
 
-<main>
-	<h1>{data.list.name}</h1>
+<main class="flex flex-col gap-6">
+	<h1 class="text-2xl font-bold">{data.list.name}</h1>
 
 	{#if session.currentPair}
 		{@const pair = session.currentPair}
-		<section aria-labelledby="matchup-heading">
-			<h2 id="matchup-heading">Which is better?</h2>
-			<p>Choose with the buttons, or press <kbd>1</kbd>/<kbd>2</kbd> (or ←/→). <kbd>U</kbd> to undo.</p>
-			<div>
-				<button type="button" onclick={() => pick(pair[0])}>{nameOf(pair[0])}</button>
-				<button type="button" onclick={() => pick(pair[1])}>{nameOf(pair[1])}</button>
+		<section class="flex flex-col gap-4" aria-labelledby="matchup-heading">
+			<div class="flex flex-wrap items-baseline justify-between gap-2">
+				<h2 id="matchup-heading" class="text-lg font-semibold">Which is better?</h2>
+				<p class="text-xs opacity-60">
+					Press <kbd class="kbd kbd-xs">1</kbd>/<kbd class="kbd kbd-xs">2</kbd> (or ←/→),
+					<kbd class="kbd kbd-xs">U</kbd> to undo
+				</p>
 			</div>
-			<button type="button" onclick={undo} disabled={session.log.length === 0}>Undo</button>
+			<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+				{#each [pair[0], pair[1]] as gameId, i (gameId)}
+					<button
+						type="button"
+						class="btn btn-lg h-auto min-h-24 whitespace-normal py-4 text-lg"
+						onclick={() => pick(gameId)}
+						aria-label={nameOf(gameId)}
+					>
+						<span class="kbd kbd-sm mr-2 opacity-70" aria-hidden="true">{i + 1}</span>
+						{nameOf(gameId)}
+					</button>
+				{/each}
+			</div>
+			<div class="flex items-center justify-between gap-3">
+				<button type="button" class="btn btn-ghost btn-sm" onclick={undo} disabled={session.log.length === 0}>
+					Undo
+				</button>
+				<span role="status" aria-live="polite" class="text-sm opacity-70">
+					{session.progress.seen} of {session.progress.total} matchups judged
+				</span>
+			</div>
+			<progress class="progress progress-primary w-full" value={session.progress.seen} max={session.progress.total}></progress>
 		</section>
-
-		<p role="status" aria-live="polite">
-			{session.progress.seen} of {session.progress.total} matchups judged.
-		</p>
 	{:else}
-		<p>Add at least two games to this list's pool to start ranking.</p>
+		<p class="alert">Add at least two games to this list's pool to start ranking.</p>
 	{/if}
 
-	<section aria-labelledby="ranking-heading">
-		<h2 id="ranking-heading">Current ranking</h2>
-		<ol>
-			{#each session.order as gameId (gameId)}
-				<li>
-					{nameOf(gameId)}
-					<button type="button" onclick={() => dropGame(gameId)} aria-label="Drop {nameOf(gameId)} from this list">
-						Drop
-					</button>
-				</li>
-			{/each}
-		</ol>
+	<section class="card bg-base-200 shadow-sm" aria-labelledby="ranking-heading">
+		<div class="card-body gap-2">
+			<h2 id="ranking-heading" class="card-title text-lg">Current ranking</h2>
+			<ol class="flex flex-col divide-y divide-base-300">
+				{#each session.order as gameId, i (gameId)}
+					<li class="flex items-center justify-between gap-3 py-2">
+						<span><span class="mr-2 font-mono opacity-50">{i + 1}</span>{nameOf(gameId)}</span>
+						<button
+							type="button"
+							class="btn btn-ghost btn-xs"
+							onclick={() => dropGame(gameId)}
+							aria-label="Drop {nameOf(gameId)} from this list"
+						>
+							Drop
+						</button>
+					</li>
+				{/each}
+			</ol>
+		</div>
 	</section>
 </main>

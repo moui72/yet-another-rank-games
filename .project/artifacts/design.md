@@ -43,7 +43,7 @@ accessibility-first; this artifact defines the visual layer added on top.
 
 ## Production Annotations
 
-- **Restyle is incremental.** The foundation (Tailwind + DaisyUI + theming +
-  toggle + shell + auth) landed first; remaining views (pools, ranking,
-  collection, home) are restyled progressively and may show a mix of styled and
-  minimally-styled UI until complete.
+- **Component library is thin.** Views mostly compose DaisyUI classes directly
+  rather than bespoke wrapped components (only `ThemeToggle` is extracted so
+  far). As shared patterns recur, extract them into `src/lib/components/` with
+  Storybook stories rather than repeating class strings.

@@ -11,104 +11,129 @@
 	<title>{data.pool.name} · pool · yet-another-rank-games</title>
 </svelte:head>
 
-<main>
-	<h1>{data.pool.name}</h1>
+<main class="flex flex-col gap-6">
+	<h1 class="text-2xl font-bold">{data.pool.name}</h1>
 
 	{#if form && 'error' in form && form.error}
-		<p role="alert" class="error">{form.error}</p>
+		<p role="alert" class="alert alert-error text-sm">{form.error}</p>
 	{/if}
 	{#if form && 'added' in form}
-		<p role="status">Added {form.added} game{form.added === 1 ? '' : 's'} ({form.matched} matched).</p>
+		<p role="status" class="alert alert-success text-sm">
+			Added {form.added} game{form.added === 1 ? '' : 's'} ({form.matched} matched).
+		</p>
 	{/if}
 
-	<section aria-labelledby="games-heading">
-		<h2 id="games-heading">Games in this pool ({data.games.length})</h2>
-		<ul>
-			{#each data.games as game (game.id)}
-				<li>
-					<strong>{game.name}</strong>
-					{#if game.weight}<span>weight {game.weight.toFixed(1)}</span>{/if}
-					{#if game.minPlayers}<span>{game.minPlayers}–{game.maxPlayers} players</span>{/if}
-					<form method="POST" action="?/removeGame" use:enhance>
-						<input type="hidden" name="gameId" value={game.id} />
-						<button type="submit" aria-label="Remove {game.name}">Remove</button>
-					</form>
-				</li>
-			{:else}
-				<li>No games yet — add some by filter below.</li>
-			{/each}
-		</ul>
+	<section class="card bg-base-200 shadow-sm" aria-labelledby="games-heading">
+		<div class="card-body gap-3">
+			<h2 id="games-heading" class="card-title text-lg">Games in this pool ({data.games.length})</h2>
+			<ul class="flex flex-col divide-y divide-base-300">
+				{#each data.games as game (game.id)}
+					<li class="flex items-center justify-between gap-3 py-2">
+						<div>
+							<span class="font-medium">{game.name}</span>
+							<span class="text-xs opacity-60">
+								{#if game.weight}· weight {game.weight.toFixed(1)}{/if}
+								{#if game.minPlayers}· {game.minPlayers}–{game.maxPlayers} players{/if}
+							</span>
+						</div>
+						<form method="POST" action="?/removeGame" use:enhance>
+							<input type="hidden" name="gameId" value={game.id} />
+							<button type="submit" class="btn btn-ghost btn-xs" aria-label="Remove {game.name}">
+								Remove
+							</button>
+						</form>
+					</li>
+				{:else}
+					<li class="py-2 text-sm opacity-70">No games yet — add some by filter below.</li>
+				{/each}
+			</ul>
+		</div>
 	</section>
 
-	<section aria-labelledby="filter-heading">
-		<h2 id="filter-heading">Add games by filter</h2>
-		<form method="POST" action="?/addByFilter" use:enhance>
-			<div>
-				<label for="collectionId">From collection</label>
-				<select id="collectionId" name="collectionId" required>
+	<section class="card bg-base-200 shadow-sm" aria-labelledby="filter-heading">
+		<form class="card-body gap-3" method="POST" action="?/addByFilter" use:enhance>
+			<h2 id="filter-heading" class="card-title text-lg">Add games by filter</h2>
+			<div class="form-control">
+				<label class="label" for="collectionId"><span class="label-text">From collection</span></label>
+				<select id="collectionId" name="collectionId" class="select select-bordered w-full" required>
 					{#each data.collections as collection (collection.id)}
 						<option value={collection.id}>{collection.bggUsername}</option>
 					{/each}
 				</select>
 			</div>
-			<fieldset>
-				<legend>Filter (optional)</legend>
-				<div>
-					<label for="mechanicsInclude">Mechanics include (comma-separated)</label>
-					<input id="mechanicsInclude" name="mechanicsInclude" />
+			<fieldset class="rounded-box border border-base-300 p-3">
+				<legend class="px-1 text-sm font-medium">Filter (optional)</legend>
+				<div class="grid gap-3 sm:grid-cols-2">
+					<div class="form-control sm:col-span-2">
+						<label class="label" for="mechanicsInclude"><span class="label-text">Mechanics include (comma-separated)</span></label>
+						<input id="mechanicsInclude" name="mechanicsInclude" class="input input-bordered w-full" />
+					</div>
+					<div class="form-control">
+						<label class="label" for="weightMin"><span class="label-text">Weight min</span></label>
+						<input id="weightMin" name="weightMin" type="number" step="0.1" min="1" max="5" class="input input-bordered w-full" />
+					</div>
+					<div class="form-control">
+						<label class="label" for="weightMax"><span class="label-text">Weight max</span></label>
+						<input id="weightMax" name="weightMax" type="number" step="0.1" min="1" max="5" class="input input-bordered w-full" />
+					</div>
+					<div class="form-control">
+						<label class="label" for="playerCount"><span class="label-text">Supports player count</span></label>
+						<input id="playerCount" name="playerCount" type="number" min="1" class="input input-bordered w-full" />
+					</div>
+					<div class="form-control">
+						<label class="label" for="playingTimeMax"><span class="label-text">Max playing time (min)</span></label>
+						<input id="playingTimeMax" name="playingTimeMax" type="number" min="1" class="input input-bordered w-full" />
+					</div>
+					<label class="label cursor-pointer justify-start gap-2 sm:col-span-2">
+						<input type="checkbox" name="ownedOnly" class="checkbox checkbox-sm" />
+						<span class="label-text">Owned games only</span>
+					</label>
 				</div>
-				<div>
-					<label for="weightMin">Weight min</label>
-					<input id="weightMin" name="weightMin" type="number" step="0.1" min="1" max="5" />
-				</div>
-				<div>
-					<label for="weightMax">Weight max</label>
-					<input id="weightMax" name="weightMax" type="number" step="0.1" min="1" max="5" />
-				</div>
-				<div>
-					<label for="playerCount">Supports player count</label>
-					<input id="playerCount" name="playerCount" type="number" min="1" />
-				</div>
-				<div>
-					<label for="playingTimeMax">Max playing time (min)</label>
-					<input id="playingTimeMax" name="playingTimeMax" type="number" min="1" />
-				</div>
-				<label><input type="checkbox" name="ownedOnly" /> Owned games only</label>
 			</fieldset>
-			<button type="submit">Add matching games</button>
+			<button type="submit" class="btn btn-primary self-start">Add matching games</button>
 		</form>
 	</section>
 
-	<section aria-labelledby="lists-heading">
-		<h2 id="lists-heading">Lists from this pool</h2>
-		<ul>
-			{#each data.lists as list (list.id)}
-				<li>
-					<a href={resolve('/lists/[id]', { id: list.id })}>{list.name}</a>
-					<span>{rankingMethodLabel(list.rankingMethod)}</span>
-					<span data-status={list.status}>{listStatusLabel(list.status)}</span>
-				</li>
-			{:else}
-				<li>No lists yet — create one below.</li>
-			{/each}
-		</ul>
+	<section class="card bg-base-200 shadow-sm" aria-labelledby="lists-heading">
+		<div class="card-body gap-3">
+			<h2 id="lists-heading" class="card-title text-lg">Lists from this pool</h2>
+			<ul class="flex flex-col divide-y divide-base-300">
+				{#each data.lists as list (list.id)}
+					<li class="flex items-center justify-between gap-3 py-2">
+						<a class="link link-hover font-medium" href={resolve('/lists/[id]', { id: list.id })}>{list.name}</a>
+						<span class="flex gap-2 text-xs">
+							<span class="badge badge-ghost">{rankingMethodLabel(list.rankingMethod)}</span>
+							<span class="badge" data-status={list.status}>{listStatusLabel(list.status)}</span>
+						</span>
+					</li>
+				{:else}
+					<li class="py-2 text-sm opacity-70">No lists yet — create one below.</li>
+				{/each}
+			</ul>
 
-		<h3>Create a list</h3>
-		<form method="POST" action="?/createList" use:enhance>
-			<div>
-				<label for="name">List name</label>
-				<input id="name" name="name" required />
-			</div>
-			<div>
-				<label for="description">Description (optional)</label>
-				<input id="description" name="description" />
-			</div>
-			<fieldset>
-				<legend>Ranking method</legend>
-				<label><input type="radio" name="rankingMethod" value="pairwise" checked /> Pairwise</label>
-				<label><input type="radio" name="rankingMethod" value="manual" /> Manual</label>
-			</fieldset>
-			<button type="submit">Create list</button>
-		</form>
+			<h3 class="mt-2 font-semibold">Create a list</h3>
+			<form class="flex flex-col gap-3" method="POST" action="?/createList" use:enhance>
+				<div class="form-control">
+					<label class="label" for="name"><span class="label-text">List name</span></label>
+					<input id="name" name="name" class="input input-bordered w-full" required />
+				</div>
+				<div class="form-control">
+					<label class="label" for="description"><span class="label-text">Description (optional)</span></label>
+					<input id="description" name="description" class="input input-bordered w-full" />
+				</div>
+				<fieldset class="flex gap-4">
+					<legend class="text-sm font-medium">Ranking method</legend>
+					<label class="label cursor-pointer gap-2">
+						<input type="radio" name="rankingMethod" value="pairwise" class="radio radio-sm" checked />
+						<span class="label-text">Pairwise</span>
+					</label>
+					<label class="label cursor-pointer gap-2">
+						<input type="radio" name="rankingMethod" value="manual" class="radio radio-sm" />
+						<span class="label-text">Manual</span>
+					</label>
+				</fieldset>
+				<button type="submit" class="btn btn-primary self-start">Create list</button>
+			</form>
+		</div>
 	</section>
 </main>

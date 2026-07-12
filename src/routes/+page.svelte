@@ -49,34 +49,68 @@
 	<title>yet-another-rank-games</title>
 </svelte:head>
 
-<main>
+<main class="flex flex-col gap-6">
 	{#if data.user}
-		<h1>Your collections</h1>
+		<h1 class="text-2xl font-bold">Your collections</h1>
 
-		<form onsubmit={startImport}>
-			<label for="bgg-username">BoardGameGeek username</label>
-			<input id="bgg-username" bind:value={username} autocomplete="off" required />
-			<button type="submit" disabled={submitting || !username}>Import collection</button>
-			{#if error}<p role="alert" class="error">{error}</p>{/if}
+		<form class="card bg-base-200 shadow-sm" onsubmit={startImport}>
+			<div class="card-body gap-3">
+				<label class="label" for="bgg-username">
+					<span class="label-text">BoardGameGeek username</span>
+				</label>
+				<div class="flex flex-col gap-2 sm:flex-row">
+					<input
+						id="bgg-username"
+						class="input input-bordered w-full"
+						bind:value={username}
+						autocomplete="off"
+						required
+					/>
+					<button type="submit" class="btn btn-primary" disabled={submitting || !username}>
+						{submitting ? 'Importing…' : 'Import collection'}
+					</button>
+				</div>
+				{#if error}<p role="alert" class="alert alert-error text-sm">{error}</p>{/if}
+			</div>
 		</form>
 
-		<ul aria-live="polite">
+		<ul class="flex flex-col gap-2" aria-live="polite">
 			{#each collections as collection (collection.id)}
 				{@const view = describeImport(collection)}
-				<li data-status={view.state}>
-					<a href={resolve('/collections/[id]', { id: collection.id })}>
-						<strong>{collection.bggUsername}</strong>
-					</a>
-					— {view.heading}
-					<span>{view.detail}</span>
+				<li class="card bg-base-200 shadow-sm" data-status={view.state}>
+					<div class="card-body flex-row items-center justify-between gap-3 py-3">
+						<div>
+							<a
+								class="link link-hover font-semibold"
+								href={resolve('/collections/[id]', { id: collection.id })}
+							>
+								{collection.bggUsername}
+							</a>
+							<p class="text-sm opacity-70">{view.detail}</p>
+						</div>
+						<span
+							class="badge"
+							class:badge-success={view.state === 'complete'}
+							class:badge-error={view.state === 'failed'}
+							class:badge-info={view.state === 'importing'}
+						>
+							{view.heading}
+						</span>
+					</div>
 				</li>
 			{:else}
-				<li>No collections yet — import one above.</li>
+				<li class="text-sm opacity-70">No collections yet — import one above.</li>
 			{/each}
 		</ul>
 	{:else}
-		<h1>yet-another-rank-games</h1>
-		<p>Build ranked lists of games from your BoardGameGeek collection.</p>
-		<p><a href={resolve('/login')}>Sign in</a> to import your collection.</p>
+		<div class="hero bg-base-200 rounded-box py-16">
+			<div class="hero-content text-center">
+				<div class="max-w-md">
+					<h1 class="text-4xl font-bold">yet-another-rank-games</h1>
+					<p class="py-6">Build ranked lists of games from your BoardGameGeek collection.</p>
+					<a class="btn btn-primary" href={resolve('/login')}>Sign in to get started</a>
+				</div>
+			</div>
+		</div>
 	{/if}
 </main>
