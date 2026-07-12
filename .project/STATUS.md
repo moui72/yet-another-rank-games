@@ -1,6 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-10. Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-11. Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -8,41 +8,41 @@ _Updated: 2026-07-10. Keep this current as artifacts are refined and open questi
 |---|---|---|
 | constitution.md | stable ✅ | — |
 | datamodel.md | stable ✅ | — |
-| infrastructure.md | draft ⚠️ | 1 (BGG spike) |
-| ui.md | draft ⚠️ | 5 (tuning) |
+| infrastructure.md | stable ✅ | — |
+| design.md | draft ⚠️ | — (no `[OPEN:]`; draft pending a stabilizing pass) |
+| ui.md | draft ⚠️ | 2 |
 
 ## Open Questions
 
-**infrastructure**
-- BGG access: raw `xmlapi2` + own typed parser vs. an existing SDK — deferred to the Phase 2 spike (T015).
-
-**ui** (tuning-level; resolved during Phase 4 / deferred)
-- Pair-selection scoring; "done" definition; large-set budget; intransitive-cycle display; public sharing model.
+**ui**
+- Adding a game not yet in the catalogue (BGG-search import) — deferred; tracked as feature `bgg-game-search-import`.
+- Public sharing model — whether a list can be exposed as a read-only shared view.
 
 ## Feature Backlog
 
-- 1 backlogged · 0 planned · 0 tasked · 0 implemented — see `.project/features/`.
+- 2 backlogged · 0 planned · 0 tasked · 0 implemented — see `.project/features/`.
   - `bgg-geeklist-export` — export a finished ranking as a BGG GeekList (BBCode) body. Plan with `/ardd-plan bgg-geeklist-export`.
+  - `bgg-game-search-import` — import a game not yet in the catalogue by BGG search. Plan with `/ardd-plan bgg-game-search-import`.
 
 ## Plans & Tasks
 
 - `plan-foundation-2026-07-10.md` — **approved**.
-- `tasks-foundation-cd84.md` — **in-progress, 14/39** (Phase 0 + Phase 1 complete; Phase 2 next).
+- `tasks-foundation-cd84.md` — **in-progress, 41/46**. Phases 0–5 complete; only Phase 6 (deploy, T035–T039) remains — all blocked on GCP credentials (Cloud Run, Cloud Tasks, billing budget, prod secrets).
 
 ## Diagrams
 
-- datamodel.md — unrendered (run `/ardd-render datamodel`)
-- infrastructure.md — unrendered (run `/ardd-render infrastructure`)
-- ui.md — unrendered (run `/ardd-render ui`)
+- datamodel.md — stale ⚠️ (run `/ardd-render datamodel`)
+- infrastructure.md — unrendered ⚠️ (run `/ardd-render infrastructure`)
+- ui.md — unrendered ⚠️ (run `/ardd-render ui`)
 
 ## Code-vs-Artifact Defects
 
-Never checked — run `/ardd-verify` once more of the app is built.
+`DEFECTS.md` lists 1 cosmetic defect (last checked 2026-07-11), but its fix has since landed — `ui.md`'s pool-builder view now documents the expansions filter. Run `/ardd-verify` to re-baseline and drop the stale entry.
 
 ## In Flight
 
-- Work is proceeding inline on `main` (solo mode): `tasks-foundation-cd84.md` at 14/39. 20 commits not yet pushed (initial GitHub push deferred to an at-machine session).
+- Nothing in a sibling worktree or draft PR. Work proceeds inline on `main` (solo mode); `main` is pushed to `origin` and in sync.
 
 ## Recommended Next Step
 
-Continue `/ardd-implement` on `tasks-foundation-cd84.md` at **T015** (BGG-access spike), starting Phase 2. Or plan the new backlog item with `/ardd-plan bgg-geeklist-export`.
+Phase 6 deploy tasks (T035–T039) are the only remaining foundation work and are all blocked on GCP credentials. Meanwhile: plan a backlog feature — `/ardd-plan bgg-geeklist-export` — or run `/ardd-verify` to re-baseline defects (the one cosmetic entry is now fixed).

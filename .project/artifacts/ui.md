@@ -36,8 +36,10 @@ A **pool** is a reusable, curated group of games that lists rank (see
 
 - Create a pool: name + optional description.
 - **Bulk-add by filter:** pick a collection and apply a **filter** (mechanic —
-  e.g. co-op, weight range, player count, playing time, owned-only) to add all
-  matching games at once.
+  e.g. co-op, weight range, player count, playing time, owned-only, and an
+  expansions/promos toggle — include both, base games only, or expansions
+  only) to add all matching games at once. See the filter predicate list in
+  `datamodel.md`.
 - **Hand-edit:** remove individual games, and add individual games from the
   catalogue (games already imported by any user). [OPEN: adding a game not yet
   in the catalogue by searching BGG is a backlog feature — needs the API token.]
