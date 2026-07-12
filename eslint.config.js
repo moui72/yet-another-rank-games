@@ -39,7 +39,8 @@ export default ts.config(
 			'node_modules/',
 			'.project/',
 			'.claude/',
-			'storybook-static/'
+			'storybook-static/',
+			'infra/'
 		]
 	},
     storybook.configs["flat/recommended"]

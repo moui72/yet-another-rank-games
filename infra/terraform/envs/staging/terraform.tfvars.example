@@ -1,0 +1,19 @@
+# Copy to terraform.tfvars and fill in. NON-SECRET values only — the publishable
+# key is client-safe; SUPABASE_SECRET_KEY / DB_PASSWORD / BGG_API_TOKEN are
+# Secret Manager containers whose values you add out-of-band from 1Password.
+
+project_id      = "yarg-staging-zbch"
+region          = "us-east4"
+billing_account = "01BE4D-XXXXXX-XXXXXX" # gcloud billing accounts list
+budget_amount   = 3
+# enable_kill_switch = true   # disable billing if cost exceeds budget_amount
+
+web_env = {
+  PUBLIC_SUPABASE_URL             = "https://<staging-ref>.supabase.co"
+  PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_..."
+  DB_HOST                         = "<staging-supavisor-pooler-host>"
+  DB_PORT                         = "6543" # Supavisor transaction pooler
+  DB_USER                         = "postgres.<staging-ref>"
+  DB_NAME                         = "postgres"
+  DB_SSL                          = "true"
+}

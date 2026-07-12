@@ -1,0 +1,10 @@
+{
+  "name": "yarg-billing-guard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Disables project billing when a GCP budget is exceeded.",
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/billing": "^4.1.0"
+  }
+}

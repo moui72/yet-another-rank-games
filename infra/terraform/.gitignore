@@ -1,0 +1,16 @@
+# OpenTofu / Terraform — never commit state or real tfvars.
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Real values (secrets and env-specific config) stay out of git.
+*.tfvars
+!*.tfvars.example
+
+# Function build artifacts (zipped by archive_file).
+**/.build/
+
+# Keep the provider lock committed (remove the next line if you prefer to).
+# .terraform.lock.hcl

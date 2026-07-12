@@ -27,6 +27,7 @@ _Updated: 2026-07-12. Keep this current as artifacts are refined and open questi
 
 - `plan-foundation-2026-07-10.md` — **approved**; `tasks-foundation-cd84.md` **in-progress, 41/46**. The remaining Phase 6 deploy tasks (T035–T039) were written for a *single* deploy target and are now **out of date** — `infrastructure.md` defines local / staging / production with a promote-based release flow. Phase 6 needs **re-planning** (new `/ardd-plan`) to cover both hosted environments + the "Promote to production" workflow + GitHub Environments. Still GCP-blocked either way.
 - `plan-bgg-geeklist-and-search-2026-07-12.md` — **approved**; `tasks-bgg-geeklist-and-search-2299.md` **completed, 7/7**. Merged to `main`.
+- `plan-multi-env-deploy-2026-07-12.md` — **draft** (the re-planned Phase 6). Covers local/staging/production deploy + the promote release flow; **blocked** on GCP + two Supabase projects + GitHub Environments (see the plan's Prerequisites). Task it with `/ardd-plan --from plan-multi-env-deploy-2026-07-12.md` once prerequisites are in hand. Its Phase 1 (containerize + local smoke) is **not** GCP-blocked.
 
 ## Diagrams
 
@@ -44,4 +45,4 @@ Last verified 2026-07-12, **before** the GeekList/search implementation landed �
 
 ## Recommended Next Step
 
-Commit the `infrastructure.md` refine. Then **re-plan Phase 6** — `/ardd-plan` for the multi-environment deploy (staging + production Supabase projects, the fast-forward `production` pointer, the "Promote to production" workflow, GitHub Environments approval gate, Supavisor pooler). Actual deploy stays blocked until GCP credentials are available. Optionally `/ardd-verify` first to baseline the just-merged GeekList/search code.
+Prepare the GCP-phase prerequisites (GCP project + billing/budget, two Supabase projects, GitHub Environments — see `plan-multi-env-deploy`'s Prerequisites). Phase 1 (containerize + local smoke test) is unblocked and can be tasked/implemented now via `/ardd-plan --from plan-multi-env-deploy-2026-07-12.md`. Also uncommitted: the draft plan + this STATUS update.
