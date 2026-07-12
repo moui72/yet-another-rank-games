@@ -31,6 +31,16 @@ export function toCsv(data: ExportData): string {
 	return rows.map((r) => r.map(csvCell).join(',')).join('\n') + '\n';
 }
 
+/**
+ * A ranked list as BGG GeekList BBCode — one bare `[thing=<bggId>][/thing]`
+ * entry per line in rank order. BGG renders each thing's name + thumbnail and
+ * rank is implied by line position, so no rank prefix is emitted. The user
+ * pastes the body into a new GeekList on BGG.
+ */
+export function toBbcode(data: ExportData): string {
+	return data.entries.map((e) => `[thing=${e.bggId}][/thing]\n`).join('');
+}
+
 /** The full structured list as JSON — for re-import / interop. */
 export function toJson(data: ExportData): string {
 	return JSON.stringify({ list: data.listName, entries: data.entries }, null, 2);

@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: GeekList (BBCode) export
 
-- [ ] T001 [artifacts: ui] TDD `toBbcode(data: ExportData): string` in
+- [x] T001 [artifacts: ui] TDD `toBbcode(data: ExportData): string` in
   `src/lib/domain/export.ts`, mirroring the existing `toMarkdown`/`toCsv`/`toJson`
   functions. Output is a rank-ordered body with one `[thing=<bggId>][/thing]`
   entry per line (bare, no rank prefix — BGG renders name+thumbnail and rank is

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { toMarkdown, toCsv, toJson, type ExportData } from './export';
+import { toMarkdown, toCsv, toJson, toBbcode, type ExportData } from './export';
 
 const data: ExportData = {
 	listName: 'Top co-op',
@@ -31,6 +31,26 @@ describe('toCsv', () => {
 	it('escapes embedded quotes', () => {
 		const csv = toCsv({ listName: 'x', entries: [{ rank: 1, name: 'Say "hi"', bggId: 1, score: 1 }] });
 		expect(csv).toContain('"Say ""hi"""');
+	});
+});
+
+describe('toBbcode', () => {
+	it('renders one bare [thing] entry per line in rank order', () => {
+		expect(toBbcode(data)).toBe(
+			`[thing=30549][/thing]\n[thing=291457][/thing]\n[thing=162886][/thing]\n`
+		);
+	});
+
+	it('yields an empty string for an empty list (no trailing junk)', () => {
+		expect(toBbcode({ listName: 'Empty', entries: [] })).toBe('');
+	});
+
+	it('passes a large bgg id through unescaped', () => {
+		const out = toBbcode({
+			listName: 'x',
+			entries: [{ rank: 1, name: 'Big', bggId: 999999999, score: null }]
+		});
+		expect(out).toBe('[thing=999999999][/thing]\n');
 	});
 });
 
