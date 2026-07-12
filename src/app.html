@@ -4,6 +4,19 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
+		<script>
+			// Set the theme before paint to avoid a flash (saved choice, else OS preference).
+			(function () {
+				try {
+					var t =
+						localStorage.getItem('theme') ||
+						(matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+					document.documentElement.dataset.theme = t;
+				} catch (e) {
+					/* no-op */
+				}
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

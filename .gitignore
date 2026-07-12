@@ -27,3 +27,6 @@ playwright-report/
 
 # ARDD advisory project lock (ephemeral)
 .project/.lock
+
+*storybook.log
+storybook-static

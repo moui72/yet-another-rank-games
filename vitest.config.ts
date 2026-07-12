@@ -2,8 +2,9 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 // Standalone config for pure unit tests — deliberately does not load the
-// SvelteKit Vite plugin, which expects app context that node-level domain
-// tests don't need. Component/e2e coverage is handled separately (Playwright).
+// SvelteKit Vite plugin (node-level domain tests don't need app context) nor
+// Storybook's browser test runner (Storybook is used for component dev/docs;
+// component/e2e behavior is covered by Playwright).
 export default defineConfig({
 	resolve: { alias: { $lib: resolve('src/lib') } },
 	test: {
@@ -24,11 +25,9 @@ export default defineConfig({
 				'src/lib/index.ts',
 				// Svelte runes modules — compiled/reactive, exercised via e2e.
 				'src/lib/**/*.svelte.ts',
-				// Uses the $env virtual module — not importable in unit tests;
-				// exercised via SSR/e2e.
+				// Uses the $env virtual module — not importable in unit tests.
 				'src/lib/supabaseEnv.ts',
-				// Thin connection/client constructors that require a live service —
-				// exercised by integration/e2e, not unit tests.
+				// Thin connection/client constructors that require a live service.
 				'src/lib/server/db.ts',
 				// Auth admin client — integration-tested against local GoTrue.
 				'src/lib/server/auth.ts',
@@ -41,8 +40,7 @@ export default defineConfig({
 				// Job processor + queue wiring — IO/composition, integration-tested.
 				'src/lib/server/jobs/importJob.ts',
 				'src/lib/server/jobs/queue.ts',
-				// DB-touching repositories are covered by integration tests
-				// (npm run test:integration), not the unit suite.
+				// DB-touching repositories are covered by integration tests.
 				'src/lib/server/repositories/**'
 			]
 		}

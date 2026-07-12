@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+
+/* DaisyUI provides themeable component classes + a theming system. Light is the
+   default; dark applies on prefers-color-scheme or an explicit data-theme.
+   Adding more themes later is just more entries here. */
+@plugin 'daisyui' {
+	themes:
+		light --default,
+		dark --prefersdark;
+}

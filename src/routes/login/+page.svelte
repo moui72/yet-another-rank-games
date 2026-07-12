@@ -42,46 +42,62 @@
 	<title>Sign in · yet-another-rank-games</title>
 </svelte:head>
 
-<main>
-	<h1>{mode === 'signin' ? 'Sign in' : 'Create an account'}</h1>
+<main class="flex justify-center">
+	<div class="card bg-base-200 w-full max-w-sm shadow-sm">
+		<div class="card-body gap-4">
+			<h1 class="card-title text-2xl">{mode === 'signin' ? 'Sign in' : 'Create an account'}</h1>
 
-	<form onsubmit={submit}>
-		<div>
-			<label for="email">Email</label>
-			<input id="email" type="email" autocomplete="email" bind:value={email} required />
+			<form class="flex flex-col gap-3" onsubmit={submit}>
+				<div class="form-control">
+					<label class="label" for="email"><span class="label-text">Email</span></label>
+					<input
+						id="email"
+						type="email"
+						autocomplete="email"
+						class="input input-bordered w-full"
+						bind:value={email}
+						required
+					/>
+				</div>
+				<div class="form-control">
+					<label class="label" for="password"><span class="label-text">Password</span></label>
+					<input
+						id="password"
+						type="password"
+						autocomplete={mode === 'signin' ? 'current-password' : 'new-password'}
+						class="input input-bordered w-full"
+						bind:value={password}
+						required
+					/>
+				</div>
+
+				{#if error}
+					<p role="alert" class="alert alert-error text-sm">{error}</p>
+				{/if}
+
+				<button type="submit" class="btn btn-primary" disabled={pending}>
+					{mode === 'signin' ? 'Sign in' : 'Sign up'}
+				</button>
+			</form>
+
+			<p class="text-sm">
+				{#if mode === 'signin'}
+					Need an account?
+					<button type="button" class="link" onclick={() => (mode = 'signup')}>Create one</button>
+				{:else}
+					Already have an account?
+					<button type="button" class="link" onclick={() => (mode = 'signin')}>Sign in</button>
+				{/if}
+			</p>
+
+			<div class="flex flex-col gap-2" aria-label="Sign in with a provider">
+				<button type="button" class="btn btn-outline btn-sm" onclick={() => oauth('google')}>
+					Continue with Google
+				</button>
+				<button type="button" class="btn btn-outline btn-sm" onclick={() => oauth('github')}>
+					Continue with GitHub
+				</button>
+			</div>
 		</div>
-		<div>
-			<label for="password">Password</label>
-			<input
-				id="password"
-				type="password"
-				autocomplete={mode === 'signin' ? 'current-password' : 'new-password'}
-				bind:value={password}
-				required
-			/>
-		</div>
-
-		{#if error}
-			<p role="alert" class="error">{error}</p>
-		{/if}
-
-		<button type="submit" disabled={pending}>
-			{mode === 'signin' ? 'Sign in' : 'Sign up'}
-		</button>
-	</form>
-
-	<p>
-		{#if mode === 'signin'}
-			Need an account?
-			<button type="button" onclick={() => (mode = 'signup')}>Create one</button>
-		{:else}
-			Already have an account?
-			<button type="button" onclick={() => (mode = 'signin')}>Sign in</button>
-		{/if}
-	</p>
-
-	<div aria-label="Sign in with a provider">
-		<button type="button" onclick={() => oauth('google')}>Continue with Google</button>
-		<button type="button" onclick={() => oauth('github')}>Continue with GitHub</button>
 	</div>
 </main>

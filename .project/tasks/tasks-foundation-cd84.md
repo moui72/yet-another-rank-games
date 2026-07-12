@@ -77,3 +77,11 @@ collections to pools. T023/T024 were reworked accordingly.
 - [ ] T037 [artifacts: infrastructure] [parallel] Cloud Tasks production queue config: bounded retry count + dead-letter target aligned with the worker's give-up state.
 - [ ] T038 [artifacts: infrastructure] [parallel] GCP **billing budget + alerts** and low quota caps as a kill-switch; verify an alert fires against a low test threshold.
 - [ ] T039 [artifacts: infrastructure] Production config/secrets management (no secrets in the image); end-to-end smoke on Cloud Run: import → rank → export against the deployed stack.
+
+## Design foundation (visual design, 2026-07-11)
+
+Tailwind v4 + DaisyUI theming (light/dark, re-themeable) + Storybook; captured
+in design.md. Restyle is incremental (shell + auth first).
+
+- [x] T045 [artifacts: design, ui] Tailwind v4 + DaisyUI wired; app.css; semantic-token theming with light/dark, a no-flash init script, and a header theme toggle. design.md artifact.
+- [x] T046 [artifacts: design] Storybook (Svelte 5) set up + decoupled from the vitest unit config; ThemeToggle story; app shell + login restyled with DaisyUI (axe-AA preserved).
