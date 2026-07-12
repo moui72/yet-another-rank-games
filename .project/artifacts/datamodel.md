@@ -1,7 +1,7 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-11
+last_updated: 2026-07-12
 diagram_type: erDiagram
 render_section: Datamodel
 diagram_status: stale
@@ -223,7 +223,10 @@ rather than silently ignored.
 ## Normalization Rules
 
 - **BGG id is the canonical game key.** `bgg_id` is unique on `Game`; an import
-  upserts by `bgg_id` so the same game shared across users is one row.
+  upserts by `bgg_id` so the same game shared across users is one row. A `Game`
+  row may be created two ways — collection import, or **direct BGG search
+  import** (feature `bgg-game-search-import`, the pool builder adding a game in
+  no one's collection) — both upsert by `bgg_id` into the same shared catalogue.
 - **Weight** stored as numeric on BGG's ~1.0–5.0 scale; missing → null, never 0.
 - **Mechanics / categories** parsed from BGG XML into normalized string arrays;
   used for list filters.

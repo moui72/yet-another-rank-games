@@ -1,7 +1,9 @@
 ---
 slug: bgg-game-search-import
-status: backlogged
+status: tasked
 logged: 2026-07-11
+plan: plan-bgg-geeklist-and-search-2026-07-12.md
+tasks: tasks-bgg-geeklist-and-search-2299.md
 ---
 
 Search BoardGameGeek for a game by name and import it into the catalogue so it can be added to a pool even if it's in no one's collection.

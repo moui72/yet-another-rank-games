@@ -1,7 +1,7 @@
 ---
 name: ui
 status: draft
-last_updated: 2026-07-11
+last_updated: 2026-07-12
 diagram_type: graph TD
 render_section: UI
 diagram_status: unrendered
@@ -43,8 +43,15 @@ A **pool** is a reusable, curated group of games that lists rank (see
   only) to add all matching games at once. See the filter predicate list in
   `datamodel.md`.
 - **Hand-edit:** remove individual games, and add individual games from the
-  catalogue (games already imported by any user). [OPEN: adding a game not yet
-  in the catalogue by searching BGG is a backlog feature — needs the API token.]
+  catalogue (games already imported by any user).
+- **Search BGG to add a game not yet in the catalogue** (feature
+  `bgg-game-search-import`): type a name, pick from BGG's search results, and
+  the chosen game is imported into the catalogue and added to the pool — so a
+  pool can include any BGG game, not just ones already in some collection. The
+  search runs against BGG's `search` endpoint and enriches the pick via the
+  `thing` endpoint (see `infrastructure.md`); it uses the same `BGG_API_TOKEN`.
+  States: idle (prompt), searching (in progress), results list, no-results, and
+  an error state if BGG is unavailable.
 - See the pool's current games and its size.
 - Pools are reusable: the same pool can feed several lists.
 
@@ -131,6 +138,13 @@ Tuning decisions (settled while building; revisit with real usage):
   **CSV** (rank, game, BGG id, score — spreadsheet-friendly), and **JSON** (the
   full structured list + entries, for re-import/interop). All three ship as the
   baseline export set.
+- **GeekList (BBCode)** (feature `bgg-geeklist-export`): a rank-ordered body of
+  `[thing=<bggId>][/thing]` entries the user copies and pastes into a **new
+  GeekList** on BGG to publish the ranking natively to the community. Like the
+  others it is a pure string transform over the export data (rank, name,
+  bggId), needs no BGG call, and is offered alongside Markdown/CSV/JSON. The app
+  produces the list *body*; creating the GeekList itself is done by the user on
+  BGG (the XML API is read-only for this).
 - [OPEN: public sharing model — whether a list can be exposed as a read-only
   shareable link (and its privacy/visibility rules) is a deferred product
   decision, separate from the export formats above, which stand on their own.]

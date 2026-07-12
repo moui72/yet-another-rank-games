@@ -10,24 +10,23 @@ _Updated: 2026-07-12. Keep this current as artifacts are refined and open questi
 | datamodel.md | stable ✅ | — |
 | infrastructure.md | stable ✅ | — |
 | design.md | stable ✅ | — |
-| ui.md | draft ⚠️ | 2 |
+| ui.md | draft ⚠️ | 1 |
 
 ## Open Questions
 
 **ui**
-- Adding a game not yet in the catalogue (BGG-search import) — deferred; tracked as feature `bgg-game-search-import`.
-- Public sharing model — whether a list can be exposed as a read-only shared view.
+- Public sharing model — whether a list can be exposed as a read-only shared view (deferred product decision, separate from the export formats).
 
 ## Feature Backlog
 
-- 2 backlogged · 0 planned · 0 tasked · 0 implemented — see `.project/features/`.
-  - `bgg-geeklist-export` — export a finished ranking as a BGG GeekList (BBCode) body. Plan with `/ardd-plan bgg-geeklist-export`.
-  - `bgg-game-search-import` — import a game not yet in the catalogue by BGG search. Plan with `/ardd-plan bgg-game-search-import`.
+- 0 backlogged · 0 planned · **2 tasked** · 0 implemented — see `.project/features/`.
+  - `bgg-geeklist-export` — tasked (plan-bgg-geeklist-and-search).
+  - `bgg-game-search-import` — tasked (plan-bgg-geeklist-and-search). BGG-search import resolves the former ui.md pool-builder open question.
 
 ## Plans & Tasks
 
-- `plan-foundation-2026-07-10.md` — **approved**.
-- `tasks-foundation-cd84.md` — **in-progress, 41/46**. Phases 0–5 complete; only Phase 6 (deploy, T035–T039) remains — all blocked on GCP credentials (Cloud Run, Cloud Tasks, billing budget, prod secrets).
+- `plan-foundation-2026-07-10.md` — **approved**; `tasks-foundation-cd84.md` **in-progress, 41/46** (only Phase 6 deploy T035–T039 remains, GCP-blocked).
+- `plan-bgg-geeklist-and-search-2026-07-12.md` — **approved**; `tasks-bgg-geeklist-and-search-2299.md` **ready, 0/7** (Phase 1 GeekList/BBCode export → Phase 2 BGG search import). Ready to `/ardd-implement`.
 
 ## Diagrams
 
@@ -37,12 +36,12 @@ _Updated: 2026-07-12. Keep this current as artifacts are refined and open questi
 
 ## Code-vs-Artifact Defects
 
-`DEFECTS.md` lists 1 cosmetic defect (last checked 2026-07-11), but its fix has since landed — `ui.md`'s pool-builder view now documents the expansions filter. Run `/ardd-verify` to re-baseline and drop the stale entry.
+No defects — artifacts match the codebase (verified 2026-07-12).
 
 ## In Flight
 
-- Nothing in a sibling worktree or draft PR. Work proceeds inline on `main` (solo mode); `main` is pushed to `origin` and in sync.
+- Nothing in a sibling worktree or draft PR. Work proceeds inline on `main` (solo mode); `main` is at `0d1e9a4`, in sync with `origin`. The plan/tasks/artifact changes from this run are uncommitted.
 
 ## Recommended Next Step
 
-All artifacts are stable except `ui.md` (2 deferred product questions). Phase 6 deploy tasks (T035–T039) are the only remaining foundation work and are all blocked on GCP credentials. Meanwhile: plan a backlog feature — `/ardd-plan bgg-geeklist-export` — or run `/ardd-verify` to re-baseline defects (the one cosmetic entry is now fixed).
+Implement the new tasks: `/ardd-implement` on `tasks-bgg-geeklist-and-search-2299.md` (Phase 1 GeekList export is self-contained and ships first). The foundation Phase 6 deploy remains GCP-blocked.

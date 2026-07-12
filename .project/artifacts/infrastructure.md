@@ -1,7 +1,7 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-07-11
+last_updated: 2026-07-12
 diagram_type: graph TD
 render_section: Infrastructure
 diagram_status: unrendered
@@ -65,6 +65,16 @@ worker-driven** rather than handled inline in a request.
   against fixtures/mocks; live import is blocked on the token.
 - Quirks to design around: `202 Accepted` async queueing, slow responses,
   rate limits, and occasionally malformed/partial XML.
+- **Endpoints used:** `collection` (a user's owned/rated set, with the
+  `202` poll-retry), `thing` (full game details for one or more ids), and
+  `search` (`search?query=<name>&type=boardgame` — name → candidate
+  `{bggId, name, yearPublished}` results, for the pool builder's
+  `bgg-game-search-import` flow). All three go through the same typed client
+  (`fetchCollectionXml` / `fetchThingXml` / `fetchSearchXml`) with the Bearer
+  token and `fast-xml-parser`. **Search is a synchronous request/response** (no
+  `202` queueing); adding a searched game is a normal foreground `thing` fetch +
+  `Game` upsert, not a queued import job — so it stays in the web request, not
+  the worker.
 - **Freshness model — two independent concerns:**
   - **Game catalogue** (the global, shared `Game` rows: name, weight, mechanics,
     …) is cached and governed by a **time-to-live** (`GAME_CACHE_TTL_DAYS`,
