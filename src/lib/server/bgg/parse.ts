@@ -1,5 +1,5 @@
 import { XMLParser } from 'fast-xml-parser';
-import type { BggCollectionItem, BggThing } from './types';
+import type { BggCollectionItem, BggThing, BggSearchResult } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type XmlNode = any;
@@ -55,6 +55,21 @@ export function parseCollectionXml(xml: string): BggCollectionItem[] {
 			};
 		})
 		.filter((i) => Number.isFinite(i.bggId));
+}
+
+export function parseSearchXml(xml: string): BggSearchResult[] {
+	const doc = parser.parse(xml);
+	return toArray<XmlNode>(doc?.items?.item)
+		.map((it): BggSearchResult => {
+			const names = toArray<XmlNode>(it?.name);
+			const primary = names.find((n) => n?.type === 'primary') ?? names[0];
+			return {
+				bggId: Number(it?.id),
+				name: textOf(primary),
+				yearPublished: num(it?.yearpublished?.value)
+			};
+		})
+		.filter((r) => Number.isFinite(r.bggId));
 }
 
 export function parseThingXml(xml: string): BggThing[] {

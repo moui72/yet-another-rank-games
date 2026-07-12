@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseCollectionXml, parseThingXml, isCollectionQueued } from './parse';
+import { parseCollectionXml, parseThingXml, parseSearchXml, isCollectionQueued } from './parse';
 
 const COLLECTION_XML = `<?xml version="1.0" encoding="utf-8"?>
 <items totalitems="2">
@@ -86,6 +86,40 @@ describe('isCollectionQueued', () => {
 	it('detects the queued message body', () => {
 		expect(isCollectionQueued(QUEUED_XML)).toBe(true);
 		expect(isCollectionQueued(COLLECTION_XML)).toBe(false);
+	});
+});
+
+// BGG search results: id + primary name, yearpublished sometimes absent.
+const SEARCH_XML = `<?xml version="1.0" encoding="utf-8"?>
+<items total="2">
+	<item type="boardgame" id="13">
+		<name type="primary" value="Catan" />
+		<yearpublished value="1995" />
+	</item>
+	<item type="boardgame" id="822">
+		<name type="primary" value="Carcassonne" />
+	</item>
+</items>`;
+
+const SEARCH_EMPTY_XML = `<?xml version="1.0" encoding="utf-8"?>
+<items total="0"></items>`;
+
+describe('parseSearchXml', () => {
+	it('maps each result to id, name and year (null when absent)', () => {
+		const results = parseSearchXml(SEARCH_XML);
+		expect(results).toEqual([
+			{ bggId: 13, name: 'Catan', yearPublished: 1995 },
+			{ bggId: 822, name: 'Carcassonne', yearPublished: null }
+		]);
+	});
+
+	it('returns [] for an empty result set', () => {
+		expect(parseSearchXml(SEARCH_EMPTY_XML)).toEqual([]);
+	});
+
+	it('decodes numeric HTML entities in result names', () => {
+		const xml = `<items total="1"><item type="boardgame" id="77130"><name type="primary" value="Sid Meier&#039;s Civilization" /></item></items>`;
+		expect(parseSearchXml(xml)[0].name).toBe("Sid Meier's Civilization");
 	});
 });
 

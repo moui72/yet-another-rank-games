@@ -34,7 +34,7 @@ status: in-progress
 
 ## Phase 2: BGG search import
 
-- [ ] T004 [artifacts: infrastructure] TDD the BGG search client + parser.
+- [x] T004 [artifacts: infrastructure] TDD the BGG search client + parser.
   Add `fetchSearchXml(query: string)` to `src/lib/server/bgg/client.ts` (hits
   `search?query=<name>&type=boardgame` via the existing Bearer-token `get`
   helper and `buildSearchUrl`) and `parseSearchXml(xml)` to

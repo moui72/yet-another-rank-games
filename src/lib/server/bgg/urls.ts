@@ -12,3 +12,9 @@ export function buildThingUrl(ids: number[]): string {
 	const params = new URLSearchParams({ id: ids.join(','), stats: '1' });
 	return `${BASE}/thing?${params.toString()}`;
 }
+
+/** Search URL for board games matching a name query. */
+export function buildSearchUrl(query: string): string {
+	const params = new URLSearchParams({ query, type: 'boardgame' });
+	return `${BASE}/search?${params.toString()}`;
+}

@@ -7,6 +7,13 @@ export interface BggCollectionItem {
 	numPlays: number | null;
 }
 
+/** One hit from the BGG search endpoint (name + id, optional year). */
+export interface BggSearchResult {
+	bggId: number;
+	name: string;
+	yearPublished: number | null;
+}
+
 /** Full game facts from the BGG thing endpoint (stats=1). */
 export interface BggThing {
 	bggId: number;

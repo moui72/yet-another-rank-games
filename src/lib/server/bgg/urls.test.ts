@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildCollectionUrl, buildThingUrl } from './urls';
+import { buildCollectionUrl, buildThingUrl, buildSearchUrl } from './urls';
 
 describe('buildCollectionUrl', () => {
 	it('requests the collection with stats', () => {
@@ -25,5 +25,18 @@ describe('buildThingUrl', () => {
 		expect(url).toContain('/xmlapi2/thing?');
 		expect(url).toContain('id=13%2C822');
 		expect(url).toContain('stats=1');
+	});
+});
+
+describe('buildSearchUrl', () => {
+	it('searches boardgames by name', () => {
+		const url = buildSearchUrl('catan');
+		expect(url).toContain('/xmlapi2/search?');
+		expect(url).toContain('query=catan');
+		expect(url).toContain('type=boardgame');
+	});
+
+	it('encodes the query', () => {
+		expect(buildSearchUrl('a b&c')).toContain('query=a+b%26c');
 	});
 });

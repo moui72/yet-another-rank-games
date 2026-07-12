@@ -1,4 +1,4 @@
-import { buildCollectionUrl, buildThingUrl } from './urls';
+import { buildCollectionUrl, buildThingUrl, buildSearchUrl } from './urls';
 
 /** A raw BGG API response: HTTP status plus the XML body text. */
 export interface BggResponse {
@@ -32,4 +32,9 @@ export function fetchCollectionXml(
 /** Fetch full game details for one or more BGG ids. */
 export function fetchThingXml(ids: number[]): Promise<BggResponse> {
 	return get(buildThingUrl(ids));
+}
+
+/** Search BGG for board games matching a name query. */
+export function fetchSearchXml(query: string): Promise<BggResponse> {
+	return get(buildSearchUrl(query));
 }
