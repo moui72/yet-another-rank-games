@@ -2,6 +2,8 @@
 name: ui
 status: draft
 last_updated: 2026-07-11
+diagram_type: graph TD
+render_section: UI
 diagram_status: unrendered
 ---
 

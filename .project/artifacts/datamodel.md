@@ -2,6 +2,8 @@
 name: datamodel
 status: stable
 last_updated: 2026-07-11
+diagram_type: erDiagram
+render_section: Datamodel
 diagram_status: stale
 ---
 
