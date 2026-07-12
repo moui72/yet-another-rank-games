@@ -1,8 +1,9 @@
 # Pub/Sub topic the budget publishes cost updates to (kill-switch only).
 resource "google_pubsub_topic" "budget" {
-  count   = var.enable_kill_switch ? 1 : 0
-  project = var.project_id
-  name    = "yarg-budget-alerts"
+  count      = var.enable_kill_switch ? 1 : 0
+  project    = var.project_id
+  name       = "yarg-budget-alerts"
+  depends_on = [google_project_service.guard]
 }
 
 # Project-scoped budget. Budgets ALERT, they do not cap — the hard cap is
@@ -40,4 +41,6 @@ resource "google_billing_budget" "budget" {
       pubsub_topic = google_pubsub_topic.budget[0].id
     }
   }
+
+  depends_on = [google_project_service.guard]
 }

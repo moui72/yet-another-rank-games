@@ -8,15 +8,9 @@ locals {
     "cloudtasks.googleapis.com",
     "secretmanager.googleapis.com",
     "artifactregistry.googleapis.com",
-    "cloudbuild.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
     "sts.googleapis.com",
-    # Used by the billing-guard module (budgets + disable-billing kill-switch).
-    "pubsub.googleapis.com",
-    "cloudfunctions.googleapis.com",
-    "cloudbilling.googleapis.com",
-    "storage.googleapis.com",
   ]
 }
 

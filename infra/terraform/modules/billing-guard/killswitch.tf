@@ -28,6 +28,7 @@ resource "google_storage_bucket" "src" {
   location                    = var.region
   uniform_bucket_level_access = true
   force_destroy               = true
+  depends_on                  = [google_project_service.guard]
 }
 
 data "archive_file" "fn" {
@@ -63,4 +64,6 @@ resource "google_cloudfunctions_function" "guard" {
     event_type = "google.pubsub.topic.publish"
     resource   = google_pubsub_topic.budget[0].id
   }
+
+  depends_on = [google_project_service.guard]
 }

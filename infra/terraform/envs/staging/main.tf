@@ -45,7 +45,6 @@ module "billing_guard" {
   billing_account    = var.billing_account
   budget_amount      = var.budget_amount
   enable_kill_switch = var.enable_kill_switch
-  depends_on         = [module.environment] # APIs enabled first
 }
 
 output "web_url" {
