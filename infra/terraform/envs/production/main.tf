@@ -16,6 +16,11 @@ terraform {
 provider "google" {
   project = var.project_id
   region  = var.region
+
+  # Attribute quota/billing for user-ADC requests to this project — required by
+  # APIs like billingbudgets that demand a quota project.
+  billing_project       = var.project_id
+  user_project_override = true
 }
 
 module "environment" {
