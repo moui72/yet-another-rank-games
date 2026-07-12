@@ -1,6 +1,6 @@
 ---
 name: design
-status: draft
+status: stable
 last_updated: 2026-07-12
 ---
 
@@ -56,25 +56,42 @@ not amateurish.
   classes (`bg-base-100`, `text-base-content`, `btn-primary`, …) so a theme is
   just a set of token values — adding themes later is additive, no component
   changes.
-- **Light + dark now**, more themes later. `light` is the default; `dark`
-  applies on OS preference or an explicit choice.
+- **Two custom themes, `light` and `dark`**, defined as `@plugin
+  "daisyui/theme"` blocks in `src/app.css` (they override DaisyUI's stock
+  light/dark rather than sitting alongside them, so the toggle/no-flash script
+  need no change). `light` is `default`; `dark` is `prefersdark`. Both set the
+  YARG palette plus a chunky radius scale (`--radius-box`/`-field`/`-selector`)
+  for the playful, boxy feel. More themes later are just more blocks.
 - **`data-theme` on `<html>`** selects the active theme. A no-flash inline
   script in `app.html` sets it before paint (saved choice in `localStorage`,
-  else OS preference); a header **toggle** flips and persists it.
+  else OS preference); a header **toggle** (`ThemeToggle.svelte`) flips and
+  persists it.
 - **Every theme must pass WCAG 2.1 AA contrast** — verified by the axe checks,
-  which run against the active theme.
+  which run against the active theme. This constrains the palette: spine and
+  interactive fills carrying text use the AA-safe depth of each hue, and the
+  ultra-bright box colours are reserved for the logo (no body text over them).
 
 ## Layout & components
 
-- App shell: a DaisyUI `navbar` (brand, Pools link, theme toggle, auth) over a
-  centered, max-width content column that stays comfortable on phone and
-  desktop (the app is used on the couch).
-- Shared components live in `src/lib/components/` and are documented in
-  Storybook; views compose them rather than repeating utility soup.
+- App shell: a sticky, translucent DaisyUI `navbar` — the `Logo` (`yarg`
+  variant) as brand, Pools link, theme toggle, auth — with a thin box-spine
+  colour stripe as a ruled bottom edge (the brand motif in miniature). Content
+  sits in a centered, max-width reading column that stays comfortable on phone
+  and desktop (the app is used on the couch).
+- The **landing hero breaks out** of the reading column to full width so the
+  headline and the demo spine-stack have room; ordinary views stay in-column.
+- Shared components live in `src/lib/components/` (`Logo`, `ThemeToggle`,
+  `PairwiseRanker`, `ManualRanker`) and are documented in Storybook. The
+  spine-stack motif is a component-layer pair of classes (`.spine` /
+  `.spine-rank` in `app.css`) fed by the shared colour helper `src/lib/spine.ts`,
+  so pairwise and manual rankings render it identically. Views compose these
+  rather than repeating utility soup.
 
 ## Production Annotations
 
-- **Component library is thin.** Views mostly compose DaisyUI classes directly
-  rather than bespoke wrapped components (only `ThemeToggle` is extracted so
-  far). As shared patterns recur, extract them into `src/lib/components/` with
-  Storybook stories rather than repeating class strings.
+- **Component library is still lean.** The brand and interaction primitives are
+  extracted (`Logo`, `ThemeToggle`, `PairwiseRanker`, `ManualRanker`, the
+  `.spine` motif), but many views still compose DaisyUI classes directly (cards,
+  forms, badges). As shared patterns recur, extract them into
+  `src/lib/components/` with Storybook stories rather than repeating class
+  strings.

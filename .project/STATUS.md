@@ -1,6 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-11. Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-12. Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -9,7 +9,7 @@ _Updated: 2026-07-11. Keep this current as artifacts are refined and open questi
 | constitution.md | stable ✅ | — |
 | datamodel.md | stable ✅ | — |
 | infrastructure.md | stable ✅ | — |
-| design.md | draft ⚠️ | — (no `[OPEN:]`; draft pending a stabilizing pass) |
+| design.md | stable ✅ | — |
 | ui.md | draft ⚠️ | 2 |
 
 ## Open Questions
@@ -45,4 +45,4 @@ _Updated: 2026-07-11. Keep this current as artifacts are refined and open questi
 
 ## Recommended Next Step
 
-Phase 6 deploy tasks (T035–T039) are the only remaining foundation work and are all blocked on GCP credentials. Meanwhile: plan a backlog feature — `/ardd-plan bgg-geeklist-export` — or run `/ardd-verify` to re-baseline defects (the one cosmetic entry is now fixed).
+All artifacts are stable except `ui.md` (2 deferred product questions). Phase 6 deploy tasks (T035–T039) are the only remaining foundation work and are all blocked on GCP credentials. Meanwhile: plan a backlog feature — `/ardd-plan bgg-geeklist-export` — or run `/ardd-verify` to re-baseline defects (the one cosmetic entry is now fixed).
