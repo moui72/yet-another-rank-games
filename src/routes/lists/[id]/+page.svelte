@@ -28,6 +28,8 @@
 			<a class="btn btn-outline btn-sm" href="{exportBase}?format=md" download>Markdown</a>
 			<a class="btn btn-outline btn-sm" href="{exportBase}?format=csv" download>CSV</a>
 			<a class="btn btn-outline btn-sm" href="{exportBase}?format=json" download>JSON</a>
+			<a class="btn btn-outline btn-sm" href="{exportBase}?format=bbcode" download>GeekList</a>
 		</div>
+		<p class="text-sm opacity-70">GeekList: paste into a new GeekList on BGG.</p>
 	</section>
 </main>

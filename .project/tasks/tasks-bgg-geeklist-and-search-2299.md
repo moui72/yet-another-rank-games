@@ -25,7 +25,7 @@ status: in-progress
   and ownership pattern. Add/extend the endpoint test to assert the new format's
   body and headers, and that an unknown format still errors.
 
-- [ ] T003 [artifacts: ui] Add the GeekList option to the list result & export
+- [x] T003 [artifacts: ui] Add the GeekList option to the list result & export
   view (`src/routes/lists/[id]/+page.svelte` export section): a control to copy
   and/or download the BBCode, with a one-line hint ("Paste into a new GeekList
   on BGG"). Keep it visually consistent with the other export controls. Extend

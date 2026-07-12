@@ -89,4 +89,12 @@ test('pairwise ranking: choose, keyboard, undo, resume — with axe', async ({ p
 	const json = await (await page.request.get(`/api/lists/${listId}/export?format=json`)).json();
 	expect(json.list).toBe('E2E ranking');
 	expect(Array.isArray(json.entries)).toBe(true);
+
+	// GeekList (BBCode) export control: visible, hinted, and downloads a
+	// text/plain body of bare [thing] entries.
+	await expect(page.getByRole('link', { name: 'GeekList' })).toBeVisible();
+	await expect(page.getByText('paste into a new GeekList on BGG', { exact: false })).toBeVisible();
+	const bbcodeResp = await page.request.get(`/api/lists/${listId}/export?format=bbcode`);
+	expect(bbcodeResp.headers()['content-type']).toContain('text/plain');
+	expect(await bbcodeResp.text()).toMatch(/^\[thing=\d+\]\[\/thing\]/);
 });
