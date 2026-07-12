@@ -44,7 +44,7 @@ status: in-progress
   `search` XML fixture (multiple results with/without `yearpublished`) and the
   empty-results body; implement to green. 100% line coverage on the new logic.
 
-- [ ] T005 [artifacts: infrastructure] Add `GET /api/games/search?q=` at
+- [x] T005 [artifacts: infrastructure] Add `GET /api/games/search?q=` at
   `src/routes/api/games/search/+server.ts`: auth-gated (401 when no
   `locals.user`), 400 on an empty/blank query, otherwise call `fetchSearchXml` +
   `parseSearchXml` and return typed `BggSearchResult[]` as JSON, capped at ~10
