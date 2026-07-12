@@ -12,6 +12,9 @@ import { listCollectionsByUser } from '$lib/server/repositories/collections';
 import { createList, listListsByPool } from '$lib/server/repositories/lists';
 import { buildListFilter } from '$lib/domain/listForm';
 import { parseListFilter } from '$lib/domain/listFilter';
+import { addGameFromSearch, type FetchThing } from '$lib/server/addFromSearch';
+import { fetchThingXml } from '$lib/server/bgg/client';
+import { parseThingXml } from '$lib/server/bgg/parse';
 
 function str(v: FormDataEntryValue | null): string | undefined {
 	return typeof v === 'string' ? v : undefined;
@@ -71,6 +74,21 @@ export const actions: Actions = {
 		const ids = await findMatchingGameIds(db, collectionId, filter);
 		const added = await addPoolGames(db, params.id, ids);
 		return { added, matched: ids.length };
+	},
+
+	addFromSearch: async ({ locals, params, request }) => {
+		if (!locals.user) error(401, 'Not authenticated');
+		await requirePool(locals.user.id, params.id);
+		const form = await request.formData();
+		const bggId = Number(str(form.get('bggId')));
+		if (!Number.isFinite(bggId) || bggId <= 0) {
+			return fail(400, { error: 'A valid game is required.' });
+		}
+		// Enrich the pick via the BGG `thing` endpoint, then upsert + attach.
+		const fetchThing: FetchThing = async (id) =>
+			parseThingXml((await fetchThingXml([id])).xml)[0] ?? null;
+		const { added } = await addGameFromSearch(db, params.id, bggId, fetchThing);
+		return { searchAdded: true, added };
 	},
 
 	removeGame: async ({ locals, params, request }) => {

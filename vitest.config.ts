@@ -35,6 +35,8 @@ export default defineConfig({
 				'src/lib/server/ownership.ts',
 				// Ranking recompute service — DB-orchestration, integration-tested.
 				'src/lib/server/ranking.ts',
+				// Add-from-search service — composes repos + BGG fetch, integration-tested.
+				'src/lib/server/addFromSearch.ts',
 				// BGG HTTP client — thin fetch IO, exercised live/in the worker.
 				'src/lib/server/bgg/client.ts',
 				// Job processor + queue wiring — IO/composition, integration-tested.

@@ -51,7 +51,7 @@ status: in-progress
   results. Test auth rejection, empty-query rejection, and a mocked result set
   (inject the fetch/parse the same way the import tests mock BGG).
 
-- [ ] T006 [artifacts: datamodel, infrastructure] Add an add-from-search server
+- [x] T006 [artifacts: datamodel, infrastructure] Add an add-from-search server
   action to the pool builder (`src/routes/pools/[id]/+page.server.ts`): given a
   `bggId` and the pool id, verify pool ownership (`getOwnedPool`), fetch the
   `thing` (`fetchThingXml` + parse), `upsertGame` it into the catalogue (same
