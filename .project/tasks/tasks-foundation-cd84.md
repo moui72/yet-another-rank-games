@@ -67,8 +67,8 @@ collections to pools. T023/T024 were reworked accordingly.
 ## Phase 5: Manual drag-to-order + export
 
 - [x] T032 [artifacts: ui, datamodel] `svelte-dnd-action` drag-to-order that authors `ListEntry` directly for a manual list (overriding/seeding pairwise). Must be keyboard-accessible. Test reordering persists.
-- [ ] T033 [artifacts: ui] [parallel] Export generators for Markdown, CSV (rank, game, bgg_id, score), and JSON (full structured list). Unit-test each format against a known list.
-- [ ] T034 [artifacts: ui] Export UI + download wiring; WCAG 2.1 AA pass on Phase 5 interactions.
+- [x] T033 [artifacts: ui] [parallel] Export generators for Markdown, CSV (rank, game, bgg_id, score), and JSON (full structured list). Unit-test each format against a known list.
+- [x] T034 [artifacts: ui] Export UI + download wiring; WCAG 2.1 AA pass on Phase 5 interactions.
 
 ## Phase 6: Deployment & cost guardrails
 

@@ -79,4 +79,14 @@ test('pairwise ranking: choose, keyboard, undo, resume — with axe', async ({ p
 	await page.reload();
 	await expect(page.getByRole('status')).toBeVisible();
 	await expect(page.getByRole('listitem').filter({ hasText: 'Gamma' })).toHaveCount(0);
+
+	// Export in all three formats.
+	await expect(page.getByRole('link', { name: 'Markdown' })).toBeVisible();
+	const md = await (await page.request.get(`/api/lists/${listId}/export?format=md`)).text();
+	expect(md).toContain('# E2E ranking');
+	const csv = await (await page.request.get(`/api/lists/${listId}/export?format=csv`)).text();
+	expect(csv).toContain('rank,game,bgg_id,score');
+	const json = await (await page.request.get(`/api/lists/${listId}/export?format=json`)).json();
+	expect(json.list).toBe('E2E ranking');
+	expect(Array.isArray(json.entries)).toBe(true);
 });

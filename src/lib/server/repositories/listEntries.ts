@@ -27,3 +27,18 @@ export function listListEntries(db: Kysely<Database>, listId: string): Promise<L
 		.orderBy('position', 'asc')
 		.execute();
 }
+
+/** The list's ranked entries joined to game details, for export. */
+export async function listRankedEntries(
+	db: Kysely<Database>,
+	listId: string
+): Promise<{ rank: number; name: string; bggId: number; score: number | null }[]> {
+	const rows = await db
+		.selectFrom('listEntries as le')
+		.innerJoin('games as g', 'g.id', 'le.gameId')
+		.where('le.listId', '=', listId)
+		.orderBy('le.position', 'asc')
+		.select(['le.position as rank', 'g.name as name', 'g.bggId as bggId', 'le.score as score'])
+		.execute();
+	return rows;
+}
