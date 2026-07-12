@@ -18,7 +18,7 @@ status: in-progress
   large id passes through unescaped. Then implement to green. Coverage gate must
   stay at 100% lines.
 
-- [ ] T002 Add a `bbcode` (GeekList) branch to the export endpoint
+- [x] T002 Add a `bbcode` (GeekList) branch to the export endpoint
   `src/routes/api/lists/[id]/export/+server.ts` alongside markdown/csv/json:
   call `toBbcode`, return `content-type: text/plain; charset=utf-8` with a
   `.txt` filename (e.g. `<list>-geeklist.txt`). Follow the existing format-switch

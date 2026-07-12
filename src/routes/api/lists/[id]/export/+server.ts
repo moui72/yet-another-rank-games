@@ -3,12 +3,14 @@ import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { getOwnedList, AccessDeniedError } from '$lib/server/ownership';
 import { listRankedEntries } from '$lib/server/repositories/listEntries';
-import { toMarkdown, toCsv, toJson, type ExportData } from '$lib/domain/export';
+import { toMarkdown, toCsv, toJson, toBbcode, type ExportData } from '$lib/domain/export';
 
 const FORMATS = {
 	md: { render: toMarkdown, type: 'text/markdown', ext: 'md' },
 	csv: { render: toCsv, type: 'text/csv', ext: 'csv' },
-	json: { render: toJson, type: 'application/json', ext: 'json' }
+	json: { render: toJson, type: 'application/json', ext: 'json' },
+	// GeekList (BBCode) body to paste into a new GeekList on BGG.
+	bbcode: { render: toBbcode, type: 'text/plain', ext: 'txt', suffix: '-geeklist' }
 } as const;
 
 function slug(name: string): string {
@@ -34,7 +36,7 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 	return new Response(format.render(data), {
 		headers: {
 			'content-type': `${format.type}; charset=utf-8`,
-			'content-disposition': `attachment; filename="${slug(list.name)}.${format.ext}"`
+			'content-disposition': `attachment; filename="${slug(list.name)}${'suffix' in format ? format.suffix : ''}.${format.ext}"`
 		}
 	});
 };
