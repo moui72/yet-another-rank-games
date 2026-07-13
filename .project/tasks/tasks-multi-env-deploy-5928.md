@@ -24,33 +24,60 @@ and live checks rather than unit tests — follow that where unit tests don't ap
 
 - [x] T001 [artifacts: infrastructure] Write a production Dockerfile for the **web** service: multi-stage build (install deps, `npm run build` with `adapter-node`, then a slim runtime stage running `node build` on `$PORT`). `.dockerignore` to keep the image lean. Verify by building locally and running the container against the local Supabase stack — it must serve the real YARG app (not the Cloud Run placeholder) and pass a request. Smoke test is the acceptance check.
 
-- [ ] T002 [artifacts: infrastructure] Provide the **worker** as a deployable that Cloud Tasks can invoke over HTTP: a protected endpoint (or minimal server) that receives an import job and runs `executeImportJob`, plus its Dockerfile (may reuse the web image with a different entrypoint/command, or a separate image — decide per `infrastructure.md`'s "web + worker as separate images"). If the worker's HTTP/invocation contract isn't specified in `infrastructure.md`, stop and surface it before building. Smoke test locally: a simulated Cloud Tasks POST processes a queued import against local Supabase.
+- [x] T002 [artifacts: infrastructure] Provide the **worker** as a deployable that Cloud Tasks can invoke over HTTP: a protected endpoint (or minimal server) that receives an import job and runs `executeImportJob`, plus its Dockerfile (may reuse the web image with a different entrypoint/command, or a separate image — decide per `infrastructure.md`'s "web + worker as separate images"). If the worker's HTTP/invocation contract isn't specified in `infrastructure.md`, stop and surface it before building. Smoke test locally: a simulated Cloud Tasks POST processes a queued import against local Supabase.
 
-  **BLOCKED (2026-07-13): invocation contract genuinely undefined.** `infrastructure.md`
-  says the worker is "a separate Cloud Run service" invoked by Cloud Tasks "with
-  built-in retry/backoff" and (per a `run.tf` comment only, not the artifact itself)
-  "with an OIDC token" — but none of the following are specified anywhere in
-  `infrastructure.md`, `datamodel.md`, the plan, or the existing Terraform
-  (`tasks.tf` has no `http_target` block):
-  - The worker's HTTP path/route for receiving a job (e.g. `POST /tasks/import`).
-  - The request body schema Cloud Tasks should send (does it map 1:1 onto
-    `ImportJob { collectionId, username, ownedOnly }` from
-    `src/lib/server/jobs/types.ts`, as JSON?).
-  - How the worker authenticates the caller: which OIDC audience, which service
-    account is expected as token subject, and where that verification happens
-    (Cloud Run's built-in OIDC enforcement at the ingress vs. app-code checking a
-    header) — plus what a request without a valid token should return.
-  - The response-code contract for Cloud Tasks (which codes count as success vs.
-    trigger the queue's own retry, vs. the app's own bounded-retry/dead-letter
-    state already described for BGG's `202`).
-  - No `CloudTasksJobQueue` implementation exists yet in code (only
-    `LocalJobQueue` in `src/lib/server/jobs/localQueue.ts`, explicitly documented
-    as "the production Cloud Tasks queue is the deploy-time swap") and no
-    `google_cloud_tasks_queue.import` `http_target` wiring exists in
-    `infra/terraform/modules/environment/tasks.tf` to point at the worker.
-
-  Per the task's own instruction, stopping here rather than guessing. Surfaced to
-  the coordinator; not resolved in this run. T001 (web Dockerfile) is complete.
+  **RESOLVED (2026-07-13).** The invocation contract is now documented in
+  `infrastructure.md` under "Worker invocation contract" (`POST /tasks/import`,
+  `ImportJob` JSON body, OIDC token audience/signing-SA check, `2xx`/`5xx`
+  retry contract). Implemented this run:
+  - `src/routes/tasks/import/+server.ts` — the worker's HTTP entry point:
+    verifies the Cloud Tasks OIDC token (`verifyCloudTasksAuth`), validates the
+    body against the `ImportJob` shape (zod, `400` on mismatch), then runs
+    `processImportJob`, returning `204` on completion or `500` on an
+    unhandled exception (Cloud Tasks retries `5xx` only).
+  - `src/lib/server/tasks/verifyCloudTasksAuth.ts` — verifies the token via
+    `google-auth-library`'s `OAuth2Client.verifyIdToken` (signature + issuer +
+    audience) and additionally pins the signing identity (`email` claim) to
+    the dedicated invoker service account.
+  - `src/lib/server/jobs/cloudTasksQueue.ts` (`CloudTasksJobQueue`) — the
+    deploy-time swap for `LocalJobQueue`: creates a Cloud Tasks HTTP task
+    targeting `${WORKER_URL}/tasks/import` via `@google-cloud/tasks`, with an
+    `oidcToken` naming the invoker SA and the worker URL as audience. Wired in
+    `src/lib/server/jobs/queue.ts` (`getImportQueue()`, lazily built —
+    `LocalJobQueue` when the Cloud Tasks env vars are absent).
+  - **No separate worker Dockerfile.** `/tasks/import` is one more SvelteKit
+    route in the same app — the web and worker Cloud Run services deploy the
+    *same* built image (T001's Dockerfile), differing only in Terraform
+    config (ingress, public invocability, `min_instances`). This is the
+    simpler of the two options `infrastructure.md` allows ("may reuse the web
+    image with a different entrypoint/command, or a separate image").
+  - Terraform (`infra/terraform/modules/environment/`): added a dedicated
+    `tasks_invoker` service account (`iam.tf`), granted it `run.invoker` on
+    the worker service and granted `runtime` `serviceAccountUser` on it (so
+    `CloudTasksJobQueue` can create tasks naming it). `run.tf` merges computed
+    env vars into the containers — `GCP_PROJECT_ID`/`GCP_LOCATION`/
+    `CLOUD_TASKS_QUEUE`/`WORKER_URL` onto **web only** (it needs the worker's
+    Terraform-computed URL; wiring that into the worker's *own* env would be
+    a self-referential cycle) and `TASKS_INVOKER_SA_EMAIL` onto **both**. The
+    worker verifies the OIDC audience against its own incoming request
+    origin rather than a `WORKER_URL` env var, sidestepping that cycle.
+    `tofu validate` passes for both `envs/staging` and `envs/production`
+    (not applied — that's T003/T004, live infra, out of this task's scope).
+  - Verified via `src/routes/tasks/import/server.integration.test.ts` against
+    local Supabase (docker + `supabase start`): asserts a missing/invalid/
+    wrong-signer token is rejected without touching the DB or BGG, a
+    malformed body is rejected `400`, and a valid request drives a queued
+    import to completion (`collections.import_status` -> `complete`,
+    `last_synced_at` stamped) end-to-end through the real route, real
+    `executeImportJob`, and the real DB — with the BGG HTTP client mocked
+    (as in the existing import tests) and `google-auth-library`'s
+    `verifyIdToken` (the actual cryptographic signature check) stubbed, since
+    minting a real Google-signed OIDC token isn't possible without live GCP
+    credentials. `verifyCloudTasksAuth.test.ts` unit-tests every check
+    *around* that verification (missing header, wrong signer, unverified
+    email) against the same mocked library. Full unit suite (113 tests),
+    integration suite (43 tests, 5 new), `svelte-check`, `eslint`, and the
+    coverage ratchet (100% lines) all pass.
 
 ## Phase 2: Deploy the real image to staging
 

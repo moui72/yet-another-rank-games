@@ -64,3 +64,46 @@ describe('loadServerConfig gameCacheTtlDays', () => {
 		expect(loadServerConfig({ DATABASE_URL: 'x', GAME_CACHE_TTL_DAYS: '90' }).gameCacheTtlDays).toBe(90);
 	});
 });
+
+describe('loadServerConfig cloudTasksQueue', () => {
+	const full = {
+		DATABASE_URL: 'x',
+		GCP_PROJECT_ID: 'yarg-staging-zbch',
+		GCP_LOCATION: 'us-east4',
+		CLOUD_TASKS_QUEUE: 'yarg-import',
+		WORKER_URL: 'https://yarg-worker-abc.a.run.app'
+	};
+
+	it('is undefined when none of the vars are set (local dev, or the worker service)', () => {
+		expect(loadServerConfig({ DATABASE_URL: 'x' }).cloudTasksQueue).toBeUndefined();
+	});
+
+	it('assembles from all four vars when deployed', () => {
+		expect(loadServerConfig(full).cloudTasksQueue).toEqual({
+			projectId: 'yarg-staging-zbch',
+			location: 'us-east4',
+			queueName: 'yarg-import',
+			workerUrl: 'https://yarg-worker-abc.a.run.app'
+		});
+	});
+
+	it('throws listing the missing vars on a partial set', () => {
+		const partial = { ...full, GCP_LOCATION: undefined };
+		expect(() => loadServerConfig(partial)).toThrow(/GCP_LOCATION/);
+	});
+});
+
+describe('loadServerConfig cloudTasksAuth', () => {
+	it('is undefined when TASKS_INVOKER_SA_EMAIL is unset (local dev)', () => {
+		expect(loadServerConfig({ DATABASE_URL: 'x' }).cloudTasksAuth).toBeUndefined();
+	});
+
+	it('reads the expected invoker service account email when set', () => {
+		expect(
+			loadServerConfig({
+				DATABASE_URL: 'x',
+				TASKS_INVOKER_SA_EMAIL: 'yarg-tasks-invoker@yarg-staging-zbch.iam.gserviceaccount.com'
+			}).cloudTasksAuth
+		).toEqual({ invokerServiceAccountEmail: 'yarg-tasks-invoker@yarg-staging-zbch.iam.gserviceaccount.com' });
+	});
+});
