@@ -111,7 +111,33 @@ and live checks rather than unit tests — follow that where unit tests don't ap
 
 ## Phase 3: Production bring-up (parity with staging)
 
-- [ ] T004 [artifacts: infrastructure] Bring production to the same state as staging: fill `PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `envs/production/terraform.tfvars` (currently `REPLACE_ME`); `supabase link --project-ref tmncunthbcfdaolqswcq` + `supabase db push` (all 6 migrations); full `tofu apply` in `envs/production` (creates Cloud Run web/worker + WIF, reconciling the earlier partial apply); push + deploy the **same SHA image** from T003 (no rebuild) via `-var web_image=<sha>`. Verify the production URL serves the real app. (Secrets + budget/kill-switch already applied.)
+- [x] T004 [artifacts: infrastructure] Bring production to the same state as staging: fill `PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `envs/production/terraform.tfvars` (currently `REPLACE_ME`); `supabase link --project-ref tmncunthbcfdaolqswcq` + `supabase db push` (all 6 migrations); full `tofu apply` in `envs/production` (creates Cloud Run web/worker + WIF, reconciling the earlier partial apply); push + deploy the **same SHA image** from T003 (no rebuild) via `-var web_image=<sha>`. Verify the production URL serves the real app. (Secrets + budget/kill-switch already applied.)
+  - Publishable key fetched live via the Supabase MCP (`get_publishable_keys`
+    on project ref `tmncunthbcfdaolqswcq`, confirmed as `yarg-production` via
+    `list_projects`) rather than trusting a stale prior-session memory that
+    named a different, no-longer-current project ref.
+  - All 6 migrations applied and confirmed in sync
+    (`supabase migration list --linked`) against the live production DB.
+  - **Same image, no rebuild:** pulled the T003 staging image by digest
+    (`sha256:3858a95b…`) and re-pushed (retag, no rebuild) to production's
+    own Artifact Registry — Cloud Run can't cross-pull another project's
+    registry without extra IAM grants, so "same SHA image" means
+    same-digest-different-registry, not a cross-project reference.
+  - **Discovered:** `tofu state list` showed the environment module
+    (Cloud Run web/worker, WIF SAs, secrets, etc.) was already applied to
+    production from an earlier session, contradicting this file's and
+    `STATUS.md`'s "environment module NOT applied" note — both services were
+    present but **tainted** (`REVISION_FAILED`, "internal error, please try
+    again later"), so this apply destroyed and recreated them fresh rather
+    than updating in place. Also 7 stray `google_project_service` entries
+    (cloudbilling/cloudbuild/cloudfunctions/pubsub/storage — enabled by hand
+    at some point, not in the module's declared list) were dropped from
+    state; `disable_on_destroy = false` means this is state-only, the
+    underlying GCP APIs were never actually disabled.
+  - Verified: `https://yarg-web-c4lzpursqq-uk.a.run.app/` returns `200` with
+    title `yet-another-rank-games`; `/login` returns `200`;
+    `/api/games/search?query=foo` returns `401` (DB-backed auth path
+    confirmed against the production Supabase pooler).
 
 ## Phase 4: Staging continuous deployment
 
