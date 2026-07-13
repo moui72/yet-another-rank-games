@@ -141,8 +141,11 @@ and live checks rather than unit tests — follow that where unit tests don't ap
 
 ## Phase 4: Staging continuous deployment
 
-- [ ] T005 [artifacts: infrastructure] GitHub Actions workflow `deploy-staging.yml`: on push to `main`, authenticate to staging GCP via **Workload Identity Federation** (use `tofu output wif_provider` / `deployer_sa` from `envs/staging`), build the SHA image, push to Artifact Registry, run staging migrations (`supabase db push`), then deploy (`tofu apply -var web_image=<sha> -var worker_image=<sha>` or `gcloud run deploy`). Store non-secret config/secret refs in the `staging` GitHub Environment. Verify a push to `main` lands the new image on staging. (Requires GitHub repo admin to create the `staging` Environment — note the human step in the workflow PR.)
-  - **[partial: workflow + backend written, one human step outstanding]**
+- [x] T005 [artifacts: infrastructure] GitHub Actions workflow `deploy-staging.yml`: on push to `main`, authenticate to staging GCP via **Workload Identity Federation** (use `tofu output wif_provider` / `deployer_sa` from `envs/staging`), build the SHA image, push to Artifact Registry, run staging migrations (`supabase db push`), then deploy (`tofu apply -var web_image=<sha> -var worker_image=<sha>` or `gcloud run deploy`). Store non-secret config/secret refs in the `staging` GitHub Environment. Verify a push to `main` lands the new image on staging. (Requires GitHub repo admin to create the `staging` Environment — note the human step in the workflow PR.)
+  - **Verified end-to-end (2026-07-13):** a push to `main` ran
+    `deploy-staging.yml` successfully — build, push, migrate, `tofu apply`,
+    and the deployed-title check all green. `SUPABASE_ACCESS_TOKEN` was set
+    by the account owner (only they can generate one).
   - **Blocker discovered:** Terraform state was local-only (gitignored
     `.tfstate`), which would make a CI runner start from empty state every
     run and try to recreate everything from scratch. Fixed as a
@@ -164,13 +167,39 @@ and live checks rather than unit tests — follow that where unit tests don't ap
     (vars); `SUPABASE_DB_PASSWORD` (piped from GCP Secret Manager),
     `STAGING_BILLING_ACCOUNT` (piped from `terraform.tfvars`) (secrets) — all
     set without ever displaying the secret values.
-  - **Outstanding, requires the account owner:** `SUPABASE_ACCESS_TOKEN` (a
-    personal access token from
-    https://supabase.com/dashboard/account/tokens) — only a human can
-    generate this. Once set (`gh secret set SUPABASE_ACCESS_TOKEN --env
-    staging`), a push to `main` will exercise the workflow end to end;
-    check it out and fix forward if the run reveals anything, then check
-    this task off.
+  - **Live-run failures hit and fixed, in order** (each surfaced only once
+    the workflow actually ran against real GCP — none were catchable by
+    `tofu validate`):
+    1. `get.opentofu.org/install-sh` 404s; the real script is
+       `install-opentofu.sh`.
+    2. The deployer SA got a 403 listing `module.billing_guard`'s project
+       services (billingbudgets, storage, …) — it was never granted
+       billing-admin permissions, correctly, since `billing_guard` is
+       deliberately self-contained (see its `apis.tf`) for the account
+       owner to apply by hand with elevated credentials. Fixed by scoping
+       CI's apply to `-target=module.environment -target=module.wif`,
+       excluding `billing_guard` entirely — least-privilege, not a broader
+       grant.
+    3. Still failed reading `iam.googleapis.com` (module.environment's own
+       API list) — the deployer SA had only `run.admin` +
+       `artifactregistry.writer`, no permission to even *read*
+       `google_project_service` state, which Terraform needs on every
+       plan/apply regardless of whether anything changes. First attempt:
+       granted `roles/serviceusage.serviceUsageViewer`.
+    4. That wasn't enough either — `-target` scopes *writes*, not *reads*:
+       Terraform still resolves the full dependency graph of every
+       resource a targeted resource's config *interpolates* (service
+       accounts, secret metadata, the Cloud Tasks queue, project IAM
+       bindings), regardless of target scope. Verified this locally before
+       escalating: narrowing `-target` to just the two Cloud Run services
+       still triggered the same reads. Resolved by replacing
+       `serviceUsageViewer` with project-wide `roles/viewer` (standard
+       Viewer + narrow-Editor-writes pattern — read visibility only, write
+       capability stays limited to `run.admin` +
+       `artifactregistry.writer`). Applied to both staging and production
+       with owner credentials before the fix was pushed.
+    - After all four fixes, the run went fully green: build → push →
+      migrate → `tofu apply` → verify.
 
 ## Phase 5: Promotion & production CD
 
