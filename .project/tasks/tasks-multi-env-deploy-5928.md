@@ -203,7 +203,36 @@ and live checks rather than unit tests — follow that where unit tests don't ap
 
 ## Phase 5: Promotion & production CD
 
-- [ ] T006 [artifacts: infrastructure] Set up the promotion path: create the `production` branch as a fast-forward-only pointer from `main`; add `promote-to-production.yml` (`workflow_dispatch`) that hard-requires `main`'s CI green then fast-forwards `production` to `main`'s tip (resolves the plan's "promote gate on CI" open question — lean hard-require). Create the `production` GitHub Environment with a **required reviewer** (the approval gate). Document the human setup steps.
+- [x] T006 [artifacts: infrastructure] Set up the promotion path: create the `production` branch as a fast-forward-only pointer from `main`; add `promote-to-production.yml` (`workflow_dispatch`) that hard-requires `main`'s CI green then fast-forwards `production` to `main`'s tip (resolves the plan's "promote gate on CI" open question — lean hard-require). Create the `production` GitHub Environment with a **required reviewer** (the approval gate). Document the human setup steps.
+  - `production` branch created pointing at `main`'s tip (`git push origin
+    main:production`).
+  - `.github/workflows/promote-to-production.yml` (`workflow_dispatch`):
+    queries the `check-runs` API for `main`'s tip commit, hard-requires both
+    the `quality` and `e2e` check runs (from `ci.yml`) to have
+    `conclusion: success` — missing, pending, or failed blocks the
+    promotion outright, no override. Then `git push origin HEAD:production`
+    with no force flag: a plain push is fast-forward-only by default, so a
+    diverged `production` simply gets rejected rather than needing an
+    explicit `--ff-only` (there is no such flag; rejection-on-divergence is
+    git's normal push behavior).
+  - `production` GitHub Environment created via `gh api`: required reviewer
+    is **moui72** (the account owner — still a meaningful manual checkpoint
+    even as sole reviewer); `deployment_branch_policy` restricted to the
+    `production` branch only, so no other branch can trigger a job
+    declaring `environment: production` (T007's approval gate).
+  - **Verified end-to-end**: pushed T006's own commit, waited for `ci.yml`'s
+    `quality`+`e2e` to go green, then ran `gh workflow run
+    promote-to-production.yml` for real — it correctly found both checks
+    green and fast-forwarded `production` to `main`'s exact tip SHA.
+  - **Human setup steps** (for reference/reproduction): the `production`
+    Environment's required-reviewer + branch-restriction config was set via
+    `gh api --method PUT repos/<owner>/<repo>/environments/production`
+    (reviewers + `deployment_branch_policy`) and `POST
+    .../environments/production/deployment-branch-policies` (the
+    `production` branch entry) — these aren't expressible in the workflow
+    YAML itself; a repo admin would redo them via the GitHub UI (Settings →
+    Environments → production) or the same `gh api` calls if the
+    Environment is ever recreated.
 
 - [ ] T007 [artifacts: infrastructure] Production deploy workflow `deploy-production.yml`: on push to `production`, behind the `production` Environment approval gate, run prod migrations then deploy **the same SHA image** already on staging (resolve the image by the `production` tip commit SHA — no rebuild) to production Cloud Run via WIF (`envs/production` outputs). Document and **exercise rollback** as a Cloud Run traffic shift to the prior revision (`gcloud run services update-traffic`). Add the Production Annotations from the plan (single-region, Supabase free tier, RLS-off) at the relevant points.
 
