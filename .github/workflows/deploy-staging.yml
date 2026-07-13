@@ -81,7 +81,15 @@ jobs:
         run: |
           curl -fsSL https://get.opentofu.org/install-opentofu.sh | sh -s -- --install-method standalone
           tofu init
-          tofu apply -auto-approve
+          # Scoped to environment + wif only — module.billing_guard manages
+          # budgets/the billing kill-switch and is deliberately self-contained
+          # (see infra/terraform/modules/billing-guard/apis.tf) for the
+          # account owner to apply by hand with elevated credentials. CI's
+          # deployer SA has no billing-admin permissions and shouldn't need
+          # any: least-privilege, and it also avoids a real permission gap
+          # this hit on first run (403 listing billing_guard's project
+          # services under the deployer SA).
+          tofu apply -auto-approve -target=module.environment -target=module.wif
 
       - name: Verify staging serves the real app
         run: |
