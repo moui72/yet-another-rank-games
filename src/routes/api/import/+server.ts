@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { importQueue } from '$lib/server/jobs/queue';
+import { getImportQueue } from '$lib/server/jobs/queue';
 import { createCollection, listCollectionsByUser } from '$lib/server/repositories/collections';
 
 /**
@@ -22,7 +22,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	const collection =
 		existing ?? (await createCollection(db, { userId: locals.user.id, bggUsername: username }));
 
-	await importQueue.enqueue({
+	await getImportQueue().enqueue({
 		collectionId: collection.id,
 		username,
 		ownedOnly: Boolean(body?.ownedOnly)

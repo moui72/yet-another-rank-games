@@ -7,6 +7,16 @@ output "worker_name" {
   value = google_cloud_run_v2_service.worker.name
 }
 
+output "worker_url" {
+  description = "Internal URL of the worker Cloud Run service (Cloud Tasks target)."
+  value       = google_cloud_run_v2_service.worker.uri
+}
+
+output "tasks_invoker_sa_email" {
+  description = "Identity Cloud Tasks signs the worker's OIDC token as."
+  value       = google_service_account.tasks_invoker.email
+}
+
 output "runtime_sa_email" {
   value = google_service_account.runtime.email
 }
