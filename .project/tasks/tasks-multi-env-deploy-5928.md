@@ -234,7 +234,71 @@ and live checks rather than unit tests — follow that where unit tests don't ap
     Environments → production) or the same `gh api` calls if the
     Environment is ever recreated.
 
-- [ ] T007 [artifacts: infrastructure] Production deploy workflow `deploy-production.yml`: on push to `production`, behind the `production` Environment approval gate, run prod migrations then deploy **the same SHA image** already on staging (resolve the image by the `production` tip commit SHA — no rebuild) to production Cloud Run via WIF (`envs/production` outputs). Document and **exercise rollback** as a Cloud Run traffic shift to the prior revision (`gcloud run services update-traffic`). Add the Production Annotations from the plan (single-region, Supabase free tier, RLS-off) at the relevant points.
+- [ ] T007 [artifacts: infrastructure] [partial: workflow + rollback docs written; blocked on human GCP/GitHub steps before it can run for real — see below] Production deploy workflow `deploy-production.yml`: on push to `production`, behind the `production` Environment approval gate, run prod migrations then deploy **the same SHA image** already on staging (resolve the image by the `production` tip commit SHA — no rebuild) to production Cloud Run via WIF (`envs/production` outputs). Document and **exercise rollback** as a Cloud Run traffic shift to the prior revision (`gcloud run services update-traffic`). Add the Production Annotations from the plan (single-region, Supabase free tier, RLS-off) at the relevant points.
+  - **Written this run:** `.github/workflows/deploy-production.yml` — WIF auth
+    into `yarg-production-cwqd`, pulls the staging SHA-tagged image from
+    staging's registry and re-pushes (retag only, no rebuild) into
+    production's own registry (Cloud Run can't cross-pull another project's
+    registry — same "same-digest-different-registry" shape as T004's manual
+    precedent), resolves to a digest, runs `supabase db push` against
+    `tmncunthbcfdaolqswcq`, then `tofu apply -target=module.environment
+    -target=module.wif` by digest (mirrors `deploy-staging.yml`'s
+    tag-vs-digest lesson from T003). Production Annotations (single-region,
+    Supabase free tier/pooler, RLS-off) added as comments at the relevant
+    steps, per the plan's Production Annotation Summary.
+  - Rollback documented in `infra/terraform/README.md` (new "Rollback
+    (production)" section): `gcloud run services update-traffic` back to the
+    prior retained revision, plus the migration-contract-step caveat and how
+    a later promotion supersedes a manual shift. **Not yet exercised live**
+    — see blockers below.
+  - **BLOCKED — three things only a human/owner can do, in order:**
+    1. **Cross-project Artifact Registry grant** (owner GCP credentials
+       required — the classifier in this session blocked even a read of the
+       production DB-password secret, so a fortiori it will block IAM writes
+       too): grant the production deployer SA
+       `roles/artifactregistry.reader` on staging's `yarg` repo. Exact
+       command now in `infra/terraform/README.md`'s new bullet under Notes.
+    2. **GitHub `production` Environment vars/secrets** — none exist yet
+       (checked via `gh variable list --env production` / `gh secret list
+       --env production`, both empty). Needed, mirroring the `staging`
+       Environment's shape:
+       - vars: `GCP_WIF_PROVIDER` =
+         `projects/648725502508/locations/global/workloadIdentityPools/github-actions/providers/github`,
+         `GCP_DEPLOYER_SA` =
+         `yarg-deployer@yarg-production-cwqd.iam.gserviceaccount.com`,
+         `PRODUCTION_SUPABASE_URL` = `https://tmncunthbcfdaolqswcq.supabase.co`,
+         `PRODUCTION_SUPABASE_PUBLISHABLE_KEY` =
+         `sb_publishable_wY-eyU3RpNiRQElt0W-_Xw_v-qBiBE7` (all resolved live
+         this run via `tofu output` / the Supabase MCP — safe to paste as-is,
+         none are secret).
+       - secrets: `PRODUCTION_BILLING_ACCOUNT` = `01BE4D-E1BF13-3C90A6`
+         (resolved via `gcloud billing projects describe
+         yarg-production-cwqd`); `SUPABASE_DB_PASSWORD` (production's DB
+         password — pipe from Secret Manager, `gcloud secrets versions
+         access latest --secret=db-password --project=yarg-production-cwqd`,
+         same pattern T005/T006 used for staging, never displayed);
+         `SUPABASE_ACCESS_TOKEN` (the account owner's personal token — same
+         value already set on `staging`, or a fresh one).
+       I resolved every non-secret value above by direct GCP/Supabase MCP
+       calls, but the auto-mode classifier explicitly denied writing GitHub
+       Environment secrets/vars in this session ("agent creating
+       production-environment secrets... without the user naming this
+       specific... change" — Secret Store Writes) even piped without display,
+       and separately denied reading the production DB password from Secret
+       Manager at all ("Production Reads" — even to relay into a CI secret).
+       Both need the user (or a session with those permissions) to run the
+       `gh variable set` / `gh secret set` commands directly.
+    3. **Exercise the rollback** — requires a real production deploy to
+       already be live (so there's a "prior revision" to shift back to),
+       which in turn requires 1 and 2 above. Do this after a real
+       `deploy-production.yml` run has shipped at least once: push a trivial
+       change through promote → production, then run the `gcloud run
+       services update-traffic` commands in the new README section against
+       the two revisions that result, and confirm traffic actually moved
+       (`gcloud run services describe yarg-web --format='value(status.traffic)'`).
+    Once 1–2 are done, push a commit through `promote-to-production.yml` to
+    let `deploy-production.yml` run for real, confirm it goes green, then do
+    3 and check this task off.
 
 ## Phase 6: End-to-end verification
 

@@ -1,0 +1,144 @@
+name: Deploy production
+
+# Fires on push to `production` — which, per infrastructure.md's release flow,
+# only ever happens via promote-to-production.yml fast-forwarding the branch
+# to a commit that already passed staging CI and deploy. This workflow never
+# rebuilds: it resolves the exact image staging already validated (by the
+# `production` tip's commit SHA) and redeploys that same artifact, so
+# production ships the identical bits staging ran (infra "Cut a release =
+# promote, don't rebuild").
+on:
+  push:
+    branches: [production]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: yarg-production-cwqd
+  REGION: us-east4
+  REPOSITORY: us-east4-docker.pkg.dev/yarg-production-cwqd/yarg
+  STAGING_REPOSITORY: us-east4-docker.pkg.dev/yarg-staging-zbch/yarg
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # The `production` GitHub Environment's required reviewer is the approval
+    # gate: this job pauses here until a human approves, even though the
+    # branch push itself was already gated by promote-to-production.yml's
+    # CI-green check. Two independent gates by design (CI-green is automatic;
+    # this is the human go/no-go).
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-east4-docker.pkg.dev --quiet
+
+      # No rebuild: `production`'s tip commit SHA is the exact commit staging
+      # already built and deployed (deploy-staging.yml tags images by
+      # `github.sha`). Pull that SHA-tagged image from staging's registry and
+      # re-push (retag only) into production's own registry — Cloud Run can't
+      # cross-pull another project's registry directly, so "same SHA image"
+      # means same-digest-different-registry, matching the manual T004
+      # precedent (see tasks-multi-env-deploy-5928.md T004).
+      #
+      # Requires: the production deployer SA
+      # (yarg-deployer@yarg-production-cwqd.iam.gserviceaccount.com) must have
+      # artifactregistry.reader on staging's `yarg` repository
+      # (yarg-staging-zbch). This is a one-time cross-project IAM grant a repo
+      # admin/GCP owner must apply by hand (see the blocker note in
+      # tasks-multi-env-deploy-5928.md T007) — CI cannot grant its own
+      # cross-project read access.
+      - name: Resolve and promote the staging image (no rebuild)
+        id: image
+        run: |
+          STAGING_IMAGE="${{ env.STAGING_REPOSITORY }}/web:${{ github.sha }}"
+          docker pull "$STAGING_IMAGE"
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$STAGING_IMAGE" | sed 's/.*@//')
+
+          PROD_IMAGE="${{ env.REPOSITORY }}/web:${{ github.sha }}"
+          docker tag "$STAGING_IMAGE" "$PROD_IMAGE"
+          docker push "$PROD_IMAGE"
+          PROD_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$PROD_IMAGE" | sed 's/.*@//')
+
+          # Deploying by digest, not the mutable SHA tag — the same
+          # stale-redeploy bug from T003/T004 applies here too (see
+          # deploy-staging.yml's comment on the same lesson).
+          echo "image=${{ env.REPOSITORY }}/web@${PROD_DIGEST}" >> "$GITHUB_OUTPUT"
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Push production migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase link --project-ref tmncunthbcfdaolqswcq --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
+          supabase db push --linked --password "${{ secrets.SUPABASE_DB_PASSWORD }}" --yes
+
+      - name: tofu apply
+        working-directory: infra/terraform/envs/production
+        env:
+          TF_VAR_billing_account: ${{ secrets.PRODUCTION_BILLING_ACCOUNT }}
+          TF_VAR_web_image: ${{ steps.image.outputs.image }}
+          TF_VAR_worker_image: ${{ steps.image.outputs.image }}
+          # Production Annotation (infra "Storage & auth — Supabase" / RLS off):
+          # DB_HOST/PORT/USER/NAME below point at the Supavisor **pooler**, not
+          # a direct connection — required because Cloud Run's max-instances
+          # would otherwise exhaust Postgres connections (infra "Connection
+          # pooling"). Production Annotation (infra Production Annotations,
+          # "Supabase free tier"): this pooler connection and the DB itself
+          # run on Supabase's free tier — a revenue-bearing deploy would move
+          # to a paid tier with an explicit backup/restore strategy.
+          TF_VAR_web_env: >-
+            {"PUBLIC_SUPABASE_URL":"${{ vars.PRODUCTION_SUPABASE_URL }}",
+            "PUBLIC_SUPABASE_PUBLISHABLE_KEY":"${{ vars.PRODUCTION_SUPABASE_PUBLISHABLE_KEY }}",
+            "DB_HOST":"aws-0-us-east-1.pooler.supabase.com",
+            "DB_PORT":"6543",
+            "DB_USER":"postgres.tmncunthbcfdaolqswcq",
+            "DB_NAME":"postgres",
+            "DB_SSL":"true"}
+        run: |
+          curl -fsSL https://get.opentofu.org/install-opentofu.sh | sh -s -- --install-method standalone
+          tofu init
+          # Scoped to environment + wif only, same reasoning as staging:
+          # module.billing_guard is deliberately self-contained for the
+          # account owner to apply by hand with elevated billing-admin
+          # credentials (infra/terraform/modules/billing-guard/apis.tf).
+          #
+          # Production Annotation (infra Production Annotations,
+          # "single-region, hobby-scale deploy"): this apply targets one
+          # region (us-east4) with minimal redundancy — a revenue-bearing
+          # deploy would need multi-region and a considered DR/backup
+          # posture.
+          tofu apply -auto-approve -target=module.environment -target=module.wif
+
+      - name: Verify production serves the real app
+        run: |
+          URL=$(cd infra/terraform/envs/production && tofu output -raw web_url)
+          TITLE=$(curl -fsSL "$URL" | grep -o '<title>[^<]*</title>')
+          echo "Title: $TITLE"
+          [[ "$TITLE" == *"yet-another-rank-games"* ]]
+
+      # Production Annotation (infra Production Annotations, "RLS off,
+      # authorization in app code only"): the verification above only checks
+      # that the app serves and reaches the DB-backed auth path — it does not
+      # (and cannot, from CI) verify per-user data isolation, which is
+      # enforced solely in application code with no database-level backstop.
+      # See ROLLBACK.md for the traffic-shift rollback procedure if a bad
+      # revision reaches production.
