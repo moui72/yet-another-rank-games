@@ -81,7 +81,33 @@ and live checks rather than unit tests — follow that where unit tests don't ap
 
 ## Phase 2: Deploy the real image to staging
 
-- [ ] T003 [artifacts: infrastructure] Build the web + worker images, tag by commit SHA, push to the **staging** Artifact Registry (`us-east4-docker.pkg.dev/yarg-staging-zbch/yarg/...`), then `tofu apply -var web_image=<sha> -var worker_image=<sha>` in `infra/terraform/envs/staging`. Verify the staging URL now serves the real app (title is YARG, not "Congratulations | Cloud Run") and that a DB-backed page renders (confirms the pooler connection + secrets are correct).
+- [x] T003 [artifacts: infrastructure] Build the web + worker images, tag by commit SHA, push to the **staging** Artifact Registry (`us-east4-docker.pkg.dev/yarg-staging-zbch/yarg/...`), then `tofu apply -var web_image=<sha> -var worker_image=<sha>` in `infra/terraform/envs/staging`. Verify the staging URL now serves the real app (title is YARG, not "Congratulations | Cloud Run") and that a DB-backed page renders (confirms the pooler connection + secrets are correct).
+  - Image tag used: `789ba3c2ef88` (commit SHA). Web + worker share one image (T002's
+    decision — `/tasks/import` is just another SvelteKit route).
+  - **Gotcha hit and resolved:** a local `docker build` on this Apple Silicon
+    machine produces an `arm64` image; Cloud Run requires `linux/amd64` and
+    fails at container start with `exec format error`. A `--platform
+    linux/amd64` local rebuild then crashed under QEMU emulation (`node` /
+    `libuv` assertion abort during the adapter-node build's analyse step).
+    Fix: build via `gcloud builds submit --tag ...`, which builds natively
+    on GCP (no emulation) — this is also what CI (T005) will do, so it's the
+    right long-term path, not just a workaround.
+  - **Second gotcha:** re-running `tofu apply` after pushing a corrected
+    image to the *same* tag did not actually redeploy the new digest —
+    Terraform saw no diff on the `image` string (tag unchanged) and Cloud
+    Run kept the old (failed) revision's resolved digest. Fix: pin
+    `web_image`/`worker_image` to the image **digest**
+    (`...@sha256:<digest>`) rather than the mutable tag for this apply,
+    which forced the real diff. **Production annotation for T005/T007's CI
+    workflows:** deploy by digest (resolve it from the registry push
+    output), not by tag, to avoid this class of stale-redeploy bug
+    recurring in CI.
+  - Verified: `https://yarg-web-qc5dllhv7q-uk.a.run.app/` returns `200` with
+    title `yet-another-rank-games` (not the placeholder); `/login` returns
+    `200`; `/api/games/search?query=foo` returns `401` (confirms the
+    DB-backed Supabase pooler connection + secrets are correct — an
+    unauthenticated request reaches the DB-backed auth check rather than
+    erroring on connection).
 
 ## Phase 3: Production bring-up (parity with staging)
 
