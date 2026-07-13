@@ -25,13 +25,14 @@ _Updated: 2026-07-13. Keep this current as artifacts are refined and open questi
 
 - `plan-foundation-2026-07-10.md` — approved; `tasks-foundation-cd84.md` **in-progress, 41/46**. Its remaining Phase 6 (T035–T039) is **superseded** by the multi-env-deploy plan below; the file stays as the record of Phases 0–5.
 - `plan-bgg-geeklist-and-search-2026-07-12.md` — approved; `tasks-bgg-geeklist-and-search-2299.md` **completed, 7/7**. Shipped + merged.
-- `plan-multi-env-deploy-2026-07-12.md` — **approved**; `tasks-multi-env-deploy-5928.md` **in-progress, 4/8**. The active work.
+- `plan-multi-env-deploy-2026-07-12.md` — **approved**; `tasks-multi-env-deploy-5928.md` **in-progress, 5/8**. The active work.
   - T001 (web Dockerfile) done — multi-stage build, smoke-tested against local Supabase; real app now containerizes (no longer just the Cloud Run placeholder).
   - T002 (worker deployable) done — `/tasks/import` route (SvelteKit, same image as web — no separate Dockerfile), `verifyCloudTasksAuth` (OIDC signature/issuer/audience + invoker-SA pinning via `google-auth-library`), `CloudTasksJobQueue` (deploy-time swap for `LocalJobQueue`), Terraform IAM (`tasks_invoker` SA, `run.invoker` grant). 5 new integration tests, `tofu validate` clean for both envs. Merged to `main`.
   - T003 done — staging now serves the **real app**, not the placeholder. Two gotchas hit and resolved (documented in the tasks file for T005/T007's CI to avoid repeating): (1) a local Apple Silicon `docker build` produces `arm64`, which Cloud Run rejects (`exec format error`) — fixed via `gcloud builds submit` (native GCP build, no QEMU); (2) re-applying `tofu apply` with the same image *tag* after fixing the image silently kept the stale revision — fixed by pinning `web_image`/`worker_image` to the image **digest**, not the tag. Verified live: title `yet-another-rank-games`, `/login` 200, `/api/games/search` 401 (DB-backed auth path confirmed working against the Supabase pooler).
   - T004 done — **production is now live and at parity with staging.** Publishable key fetched via live Supabase MCP lookup (a prior-session memory named a stale project ref); all 6 migrations pushed to the live prod DB; same T003 image digest retagged (no rebuild) into production's own registry; `tofu apply` discovered and repaired two **tainted** Cloud Run services from an earlier failed attempt (destroy+recreate, no data loss — Cloud Run holds no state) and stood up WIF + `tasks_invoker`. Verified live at `https://yarg-web-c4lzpursqq-uk.a.run.app/` — same checks as staging all pass.
-  - T005 **partial** — `deploy-staging.yml` written and the GitHub `staging` Environment is provisioned (`GCP_WIF_PROVIDER`, `GCP_DEPLOYER_SA`, `STAGING_SUPABASE_URL`, `STAGING_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_DB_PASSWORD`, `STAGING_BILLING_ACCOUNT`), but **blocked on one outstanding human step**: a `SUPABASE_ACCESS_TOKEN` personal access token only the account owner can generate (https://supabase.com/dashboard/account/tokens), then `gh secret set SUPABASE_ACCESS_TOKEN --env staging`. Untested end-to-end until that's set and a push to `main` exercises it.
+  - T005 done — `deploy-staging.yml` verified green end-to-end (two consecutive successful runs) on push to `main`: build → push SHA image → migrate → `tofu apply` → verify deployed title.
     - **Prerequisite fixed along the way:** Terraform state was local-only (gitignored `.tfstate`), which would make CI start from empty state every run. Migrated both staging and production to a versioned GCS bucket backend (`<project_id>-tfstate`) before wiring up CI — did both envs now rather than deferring production's migration to T007.
+    - **Four live-run failures hit and fixed** (none catchable by `tofu validate`): (1) wrong OpenTofu install script URL; (2) deployer SA 403 on `module.billing_guard`'s project services — fixed by scoping CI's apply to `-target=module.environment -target=module.wif`, excluding billing_guard entirely (it's deliberately self-contained for the owner to apply by hand); (3) deployer SA still 403 reading `module.environment`'s own project-service state — granted `serviceusage.serviceUsageViewer`; (4) still failed on secrets/service-account/IAM-binding reads — `-target` scopes writes, not reads, so Terraform still resolves every interpolated reference regardless of target scope. Fixed by replacing (3)'s narrow grant with project-wide `roles/viewer` (read-only; write capability stays limited to `run.admin` + `artifactregistry.writer`), applied to both projects.
   - T006 onward (promotion path, production CD, e2e verify) not yet started — each remaining live/CI-setup step needs explicit user go-ahead.
 
 ## Deploy progress (ops state, applied ad-hoc this session — not yet a completed tasks file)
@@ -60,10 +61,10 @@ No defects — artifacts match the codebase (verified 2026-07-12; infrastructure
 
 ## Recommended Next Step
 
-**Waiting on you:** generate a Supabase personal access token
-(https://supabase.com/dashboard/account/tokens) and run `gh secret set
-SUPABASE_ACCESS_TOKEN --env staging --repo moui72/yet-another-rank-games` —
-that's the only thing blocking T005 from being exercised end-to-end (push to
-`main` triggers `deploy-staging.yml`). Both staging and production are live
-serving the real app, so `custom-domain-mapping` (`https://yarg.ty-pe.com`)
-can also be planned now via `/ardd-plan custom-domain-mapping` in parallel.
+T006 (promotion path: `production` branch, `promote-to-production.yml`
+workflow_dispatch, CI-green hard-require, `production` GitHub Environment
+with a required reviewer) is the next `tasks-multi-env-deploy-5928.md` step
+— requires GitHub repo admin access to create the Environment/reviewer gate.
+`custom-domain-mapping` (`https://yarg.ty-pe.com`) is backlogged and can be
+planned in parallel via `/ardd-plan custom-domain-mapping` — both
+environments are live serving the real app now.
