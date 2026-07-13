@@ -22,7 +22,7 @@ and live checks rather than unit tests — follow that where unit tests don't ap
 
 ## Phase 1: Containerize (SHA-tagged images)
 
-- [ ] T001 [artifacts: infrastructure] Write a production Dockerfile for the **web** service: multi-stage build (install deps, `npm run build` with `adapter-node`, then a slim runtime stage running `node build` on `$PORT`). `.dockerignore` to keep the image lean. Verify by building locally and running the container against the local Supabase stack — it must serve the real YARG app (not the Cloud Run placeholder) and pass a request. Smoke test is the acceptance check.
+- [x] T001 [artifacts: infrastructure] Write a production Dockerfile for the **web** service: multi-stage build (install deps, `npm run build` with `adapter-node`, then a slim runtime stage running `node build` on `$PORT`). `.dockerignore` to keep the image lean. Verify by building locally and running the container against the local Supabase stack — it must serve the real YARG app (not the Cloud Run placeholder) and pass a request. Smoke test is the acceptance check.
 
 - [ ] T002 [artifacts: infrastructure] Provide the **worker** as a deployable that Cloud Tasks can invoke over HTTP: a protected endpoint (or minimal server) that receives an import job and runs `executeImportJob`, plus its Dockerfile (may reuse the web image with a different entrypoint/command, or a separate image — decide per `infrastructure.md`'s "web + worker as separate images"). If the worker's HTTP/invocation contract isn't specified in `infrastructure.md`, stop and surface it before building. Smoke test locally: a simulated Cloud Tasks POST processes a queued import against local Supabase.
 
