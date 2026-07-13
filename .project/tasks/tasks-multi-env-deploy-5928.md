@@ -1,7 +1,7 @@
 ---
 plan: plan-multi-env-deploy-2026-07-12.md
 generated: 2026-07-12
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -300,7 +300,51 @@ and live checks rather than unit tests — follow that where unit tests don't ap
 
 ## Phase 6: End-to-end verification
 
-- [ ] T008 [artifacts: infrastructure, ui] [blocked: real DB-auth bug found on staging, see below] Smoke the full user flow against the **deployed** stack: sign up → import a BGG collection → build a pool → rank (pairwise) → export (incl. GeekList) → BGG search-import — first on **staging**, then promote and repeat on **production**. Confirm auth (GoTrue), the pooled DB connection, the worker/import path, and the BGG token all work end-to-end in each environment.
+- [x] T008 [artifacts: infrastructure, ui] Smoke the full user flow against the **deployed** stack: sign up → import a BGG collection → build a pool → rank (pairwise) → export (incl. GeekList) → BGG search-import — first on **staging**, then promote and repeat on **production**. Confirm auth (GoTrue), the pooled DB connection, the worker/import path, and the BGG token all work end-to-end in each environment.
+  - **Resolved.** The `db-password` trailing-newline bug (found below) was fixed
+    in both environments and the full flow was re-run end-to-end successfully:
+    - **Fix applied:** re-seeded `db-password` in Secret Manager for both
+      `yarg-staging-zbch` and `yarg-production-cwqd` via
+      `gcloud secrets versions access latest | tr -d '\n' | gcloud secrets
+      versions add db-password --data-file=-` (byte length confirmed 20, not
+      21, in both). Forced new Cloud Run revisions for `yarg-web` and
+      `yarg-worker` in both projects to pick up the corrected secret.
+      Production's `yarg-web` traffic spec was pinned to an explicit
+      `revisionName` (not `latestRevision: true`, per this repo's
+      rollback-by-traffic-shift design) so a plain `services update` created
+      a new revision without routing to it — required an explicit
+      `gcloud run services update-traffic yarg-web --to-latest` to actually
+      serve the fix.
+    - **Auth Site URL fixed:** updated Site URL + added a `/**` Redirect URL
+      in both staging and production Supabase projects' Auth → URL
+      Configuration, pointing at each environment's deployed Cloud Run
+      origin instead of `localhost:3000`. Verified live — the production
+      signup confirmation email's `redirect_to` correctly pointed at the
+      deployed origin and the post-confirm redirect landed on the real app.
+    - **Staging, full flow verified:** signed in as the existing
+      `peckenpaugh+yargstagingsmoke@gmail.com` account (session persisted
+      from the earlier run) — `/pools` loaded with a real DB query (no more
+      500). Created pool "Smoke Test Pool", added Catan + Gloomhaven via BGG
+      search-import, created a Pairwise list, judged the one matchup,
+      confirmed the ranking updated, and hit all four export endpoints
+      (`md`, `csv`, `json`, `bbcode`/GeekList) — all returned `200` per
+      Cloud Run access logs.
+    - **Production, full flow verified:** signed up a fresh account
+      (`peckenpaugh+yargprodsmoke@gmail.com`), confirmed via the real email
+      link, imported BGG user `rahdo`'s collection through the worker path
+      (334 games imported successfully, confirmed via `/api/collections`
+      polling and a "Collection imported" status), built a pool from that
+      collection (334 games added via the from-collection filter, proving
+      the collection-backed pool-build path against real data), then a
+      separate 2-game pool (Azul, Wingspan) via BGG search-import, created a
+      Pairwise list, judged the matchup, and hit all four export endpoints —
+      all returned `200` per Cloud Run access logs. No errors in `yarg-web`
+      or `yarg-worker` logs after the fix.
+    - **Worker/import path confirmed working** in both environments (BGG
+      collection import is routed through Cloud Tasks → `yarg-worker`).
+    - **BGG token confirmed working** in both environments (BGG search and
+      collection-fetch both depend on `BGG_API_TOKEN`, which was never the
+      broken secret — only `db-password` had the trailing-newline bug).
   - **Verified so far (staging):** Cloud Run served the real app (`/`, `/login`
     return `200`, real title). Signed up a real account via the app's
     email/password form (`peckenpaugh+yargstagingsmoke@gmail.com`) against the
@@ -374,8 +418,14 @@ and live checks rather than unit tests — follow that where unit tests don't ap
     the corrected secret, fix the Supabase Auth Site URL/redirect config in
     both projects, then re-run this task's flow from where it left off
     (pool build onward) on staging, then repeat on production.
-  - **Test data created this run (for cleanup):** one confirmed staging
-    Supabase Auth user, `peckenpaugh+yargstagingsmoke@gmail.com` (project
-    `ujaxenitxmnmxcqkoddy`), password not recorded here. No pool/list/game
-    data was created (blocked before reaching that step). Production: no
-    test data created at all.
+  - **Test data created across this task's runs (for cleanup):**
+    - Staging (`ujaxenitxmnmxcqkoddy`): Auth user
+      `peckenpaugh+yargstagingsmoke@gmail.com`; pool "Smoke Test Pool" with
+      Catan + Gloomhaven; list "Smoke Test Ranking".
+    - Production (`tmncunthbcfdaolqswcq`): Auth user
+      `peckenpaugh+yargprodsmoke@gmail.com`; BGG collection import for BGG
+      user `rahdo` (334 games); pool "Prod Smoke Test Pool" (334 games, from
+      collection); pool "Prod Ranking Pool" with Azul + Wingspan; list "Prod
+      Smoke Ranking".
+    - None of this is sensitive — safe to leave or delete via the app /
+      Supabase dashboard at the user's discretion.
