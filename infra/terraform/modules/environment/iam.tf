@@ -65,6 +65,17 @@ resource "google_project_iam_member" "deployer_ar_writer" {
   member  = "serviceAccount:${google_service_account.deployer.email}"
 }
 
+# Read-only: lets CI's tofu apply refresh google_project_service state on
+# every run (Terraform must read enabled-services state to plan, even when
+# nothing changes). Deliberately NOT serviceUsageAdmin — CI has no
+# legitimate need to enable/disable APIs, only module.billing_guard's
+# self-contained apply (run by the account owner) manages that.
+resource "google_project_iam_member" "deployer_service_usage_viewer" {
+  project = var.project_id
+  role    = "roles/serviceusage.serviceUsageViewer"
+  member  = "serviceAccount:${google_service_account.deployer.email}"
+}
+
 resource "google_service_account_iam_member" "deployer_act_as_runtime" {
   service_account_id = google_service_account.runtime.name
   role               = "roles/iam.serviceAccountUser"
