@@ -65,14 +65,18 @@ resource "google_project_iam_member" "deployer_ar_writer" {
   member  = "serviceAccount:${google_service_account.deployer.email}"
 }
 
-# Read-only: lets CI's tofu apply refresh google_project_service state on
-# every run (Terraform must read enabled-services state to plan, even when
-# nothing changes). Deliberately NOT serviceUsageAdmin — CI has no
-# legitimate need to enable/disable APIs, only module.billing_guard's
-# self-contained apply (run by the account owner) manages that.
-resource "google_project_iam_member" "deployer_service_usage_viewer" {
+# Read-only, project-wide: Terraform must refresh every resource an applied
+# resource's config *interpolates* — service accounts, secrets (metadata
+# only, not secretAccessor), the Cloud Tasks queue, project IAM bindings —
+# even when -target narrows the apply to just the two Cloud Run services,
+# because those values are referenced directly in web/worker's template.
+# `-target` scopes writes, not reads: it still resolves the full dependency
+# graph a targeted resource's config depends on. Standard Viewer + narrow
+# Editor-scoped-writes pattern: this grants read visibility only — write
+# capability stays limited to run.admin + artifactregistry.writer above.
+resource "google_project_iam_member" "deployer_viewer" {
   project = var.project_id
-  role    = "roles/serviceusage.serviceUsageViewer"
+  role    = "roles/viewer"
   member  = "serviceAccount:${google_service_account.deployer.email}"
 }
 
