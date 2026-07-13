@@ -51,6 +51,16 @@ resource "google_cloud_run_v2_service" "web" {
   ]
 }
 
+# The web service is a public site — allow unauthenticated invocation.
+# (The worker is NOT public: it's invoked by Cloud Tasks with an OIDC token.)
+resource "google_cloud_run_v2_service_iam_member" "web_public" {
+  project  = var.project_id
+  location = var.region
+  name     = google_cloud_run_v2_service.web.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
 resource "google_cloud_run_v2_service" "worker" {
   project             = var.project_id
   name                = "yarg-worker"
