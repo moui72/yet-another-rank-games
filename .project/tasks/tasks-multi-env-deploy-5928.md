@@ -26,6 +26,32 @@ and live checks rather than unit tests — follow that where unit tests don't ap
 
 - [ ] T002 [artifacts: infrastructure] Provide the **worker** as a deployable that Cloud Tasks can invoke over HTTP: a protected endpoint (or minimal server) that receives an import job and runs `executeImportJob`, plus its Dockerfile (may reuse the web image with a different entrypoint/command, or a separate image — decide per `infrastructure.md`'s "web + worker as separate images"). If the worker's HTTP/invocation contract isn't specified in `infrastructure.md`, stop and surface it before building. Smoke test locally: a simulated Cloud Tasks POST processes a queued import against local Supabase.
 
+  **BLOCKED (2026-07-13): invocation contract genuinely undefined.** `infrastructure.md`
+  says the worker is "a separate Cloud Run service" invoked by Cloud Tasks "with
+  built-in retry/backoff" and (per a `run.tf` comment only, not the artifact itself)
+  "with an OIDC token" — but none of the following are specified anywhere in
+  `infrastructure.md`, `datamodel.md`, the plan, or the existing Terraform
+  (`tasks.tf` has no `http_target` block):
+  - The worker's HTTP path/route for receiving a job (e.g. `POST /tasks/import`).
+  - The request body schema Cloud Tasks should send (does it map 1:1 onto
+    `ImportJob { collectionId, username, ownedOnly }` from
+    `src/lib/server/jobs/types.ts`, as JSON?).
+  - How the worker authenticates the caller: which OIDC audience, which service
+    account is expected as token subject, and where that verification happens
+    (Cloud Run's built-in OIDC enforcement at the ingress vs. app-code checking a
+    header) — plus what a request without a valid token should return.
+  - The response-code contract for Cloud Tasks (which codes count as success vs.
+    trigger the queue's own retry, vs. the app's own bounded-retry/dead-letter
+    state already described for BGG's `202`).
+  - No `CloudTasksJobQueue` implementation exists yet in code (only
+    `LocalJobQueue` in `src/lib/server/jobs/localQueue.ts`, explicitly documented
+    as "the production Cloud Tasks queue is the deploy-time swap") and no
+    `google_cloud_tasks_queue.import` `http_target` wiring exists in
+    `infra/terraform/modules/environment/tasks.tf` to point at the worker.
+
+  Per the task's own instruction, stopping here rather than guessing. Surfaced to
+  the coordinator; not resolved in this run. T001 (web Dockerfile) is complete.
+
 ## Phase 2: Deploy the real image to staging
 
 - [ ] T003 [artifacts: infrastructure] Build the web + worker images, tag by commit SHA, push to the **staging** Artifact Registry (`us-east4-docker.pkg.dev/yarg-staging-zbch/yarg/...`), then `tofu apply -var web_image=<sha> -var worker_image=<sha>` in `infra/terraform/envs/staging`. Verify the staging URL now serves the real app (title is YARG, not "Congratulations | Cloud Run") and that a DB-backed page renders (confirms the pooler connection + secrets are correct).
