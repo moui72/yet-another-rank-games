@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 branch: multi-env-deploy
 created: 2026-07-12
 features: []

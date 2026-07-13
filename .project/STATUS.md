@@ -15,34 +15,41 @@ _Updated: 2026-07-12. Keep this current as artifacts are refined and open questi
 ## Open Questions
 
 **ui**
-- Public sharing model — whether a list can be exposed as a read-only shared view (deferred product decision, separate from the export formats).
+- Public sharing model — whether a list can be exposed as a read-only shared view (deferred product decision).
 
 ## Feature Backlog
 
-- 0 backlogged · 0 planned · 0 tasked · **2 implemented** — see `.project/features/`.
-  - `bgg-geeklist-export` — implemented (GeekList/BBCode export).
-  - `bgg-game-search-import` — implemented (add any BGG game to a pool via search).
+- 0 backlogged · 0 planned · 0 tasked · **2 implemented** (`bgg-geeklist-export`, `bgg-game-search-import`) — see `.project/features/`.
 
 ## Plans & Tasks
 
-- `plan-foundation-2026-07-10.md` — **approved**; `tasks-foundation-cd84.md` **in-progress, 41/46**. The remaining Phase 6 deploy tasks (T035–T039) were written for a *single* deploy target and are now **out of date** — `infrastructure.md` defines local / staging / production with a promote-based release flow. Phase 6 needs **re-planning** (new `/ardd-plan`) to cover both hosted environments + the "Promote to production" workflow + GitHub Environments. Still GCP-blocked either way.
-- `plan-bgg-geeklist-and-search-2026-07-12.md` — **approved**; `tasks-bgg-geeklist-and-search-2299.md` **completed, 7/7**. Merged to `main`.
-- `plan-multi-env-deploy-2026-07-12.md` — **draft** (the re-planned Phase 6). Covers local/staging/production deploy + the promote release flow; **blocked** on GCP + two Supabase projects + GitHub Environments (see the plan's Prerequisites). Task it with `/ardd-plan --from plan-multi-env-deploy-2026-07-12.md` once prerequisites are in hand. Its Phase 1 (containerize + local smoke) is **not** GCP-blocked.
+- `plan-foundation-2026-07-10.md` — approved; `tasks-foundation-cd84.md` **in-progress, 41/46**. Its remaining Phase 6 (T035–T039) is **superseded** by the multi-env-deploy plan below; the file stays as the record of Phases 0–5.
+- `plan-bgg-geeklist-and-search-2026-07-12.md` — approved; `tasks-bgg-geeklist-and-search-2299.md` **completed, 7/7**. Shipped + merged.
+- `plan-multi-env-deploy-2026-07-12.md` — **approved**; `tasks-multi-env-deploy-5928.md` **ready, 0/8**. The active work. Ready to `/ardd-implement` (first real task T001 = web Dockerfile).
+
+## Deploy progress (ops state, applied ad-hoc this session — not yet a completed tasks file)
+
+- **GCP:** projects `yarg-staging-zbch` / `yarg-production-cwqd`, billing linked, account + per-project budgets, disable-billing kill-switch **applied in both**.
+- **Terraform:** `infra/terraform/` (modules environment / github-wif / billing-guard), validated + committed.
+- **Secrets:** Secret Manager containers + values loaded in **both** projects.
+- **Staging:** full `tofu apply` done — Cloud Run web (public) + worker, WIF, all 6 migrations pushed. Web currently serves the **Cloud Run placeholder** (real app image not built yet) at `https://yarg-web-qc5dllhv7q-uk.a.run.app`.
+- **Production:** only billing-guard + secrets applied; environment module NOT applied; migrations NOT pushed; `terraform.tfvars` publishable key still `REPLACE_ME`.
+- These map to `tasks-multi-env-deploy-5928.md`'s "already applied" header; the tasks pick up from here (containerize → real image → prod parity → CI/CD → promote → verify).
 
 ## Diagrams
 
-- datamodel.md — stale ⚠️ (run `/ardd-render datamodel`)
-- infrastructure.md — unrendered ⚠️ (run `/ardd-render infrastructure`)
-- ui.md — unrendered ⚠️ (run `/ardd-render ui`)
+- datamodel.md — stale ⚠️ (run `/ardd-diagram datamodel`)
+- infrastructure.md — unrendered ⚠️ (run `/ardd-diagram infrastructure`)
+- ui.md — unrendered ⚠️ (run `/ardd-diagram ui`)
 
 ## Code-vs-Artifact Defects
 
-Last verified 2026-07-12, **before** the GeekList/search implementation landed — no defects then. The new features (`export.ts` `toBbcode`, the BGG `search` client, `/api/games/search`, `addFromSearch`, the pool-builder search UI) were built from the artifacts but haven't been re-verified. Run `/ardd-verify` to cover them.
+No defects — artifacts match the codebase (verified 2026-07-12). Note: the deploy scaffolding in `infra/` is infra-as-code, outside the app artifacts' scope.
 
 ## In Flight
 
-- No worktrees or draft PRs. `main` is pushed and in sync with `origin` through the GeekList/search merge. **Uncommitted:** this run's `infrastructure.md` refine (three-environment release flow) + this STATUS update.
+- Nothing in a worktree or draft PR. `main` is at the latest deploy-scaffolding commit and **in sync with `origin`** (0 unpushed).
 
 ## Recommended Next Step
 
-Prepare the GCP-phase prerequisites (GCP project + billing/budget, two Supabase projects, GitHub Environments — see `plan-multi-env-deploy`'s Prerequisites). Phase 1 (containerize + local smoke test) is unblocked and can be tasked/implemented now via `/ardd-plan --from plan-multi-env-deploy-2026-07-12.md`. Also uncommitted: the draft plan + this STATUS update.
+`/ardd-implement` on `tasks-multi-env-deploy-5928.md` — T001 (web Dockerfile) is self-contained, local, and gets the real app into a container. Note T002 (worker deployable) may surface an `infrastructure.md` gap on the worker's invocation contract.
