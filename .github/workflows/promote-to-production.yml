@@ -1,0 +1,54 @@
+name: Promote to production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  checks: read
+  actions: read
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Hard-require main's CI is green
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA=$(git rev-parse HEAD)
+          echo "Checking CI status for main@${SHA}..."
+
+          # CI (ci.yml) runs two jobs — "quality" and "e2e" — on every push to
+          # main. Both must have completed successfully for this exact commit;
+          # anything else (missing, pending, failure) blocks the promotion.
+          # This is a hard requirement per the plan's "promote gate on CI"
+          # decision (lean hard-require) — no override, no --force option.
+          RUNS=$(gh api "repos/${{ github.repository }}/commits/${SHA}/check-runs" --jq '.check_runs[] | select(.name == "quality" or .name == "e2e") | {name, status, conclusion}')
+
+          for job in quality e2e; do
+            ENTRY=$(echo "$RUNS" | jq -s --arg job "$job" '[.[] | select(.name == $job)] | sort_by(.status) | last')
+            if [ "$ENTRY" = "null" ]; then
+              echo "::error::No '$job' check run found for main@${SHA}. Promotion blocked."
+              exit 1
+            fi
+            CONCLUSION=$(echo "$ENTRY" | jq -r '.conclusion')
+            if [ "$CONCLUSION" != "success" ]; then
+              echo "::error::main@${SHA}'s '$job' check did not succeed (conclusion: ${CONCLUSION}). Promotion blocked."
+              exit 1
+            fi
+            echo "'$job' succeeded for main@${SHA}."
+          done
+
+      - name: Fast-forward production to main's tip
+        run: |
+          # Plain push (no --force*) is fast-forward-only by default: git
+          # rejects it if production has diverged from main. That rejection
+          # is the desired failure mode — production is a pointer, never a
+          # branch with its own history.
+          git push origin HEAD:production
