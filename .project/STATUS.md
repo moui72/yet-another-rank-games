@@ -25,9 +25,9 @@ _Updated: 2026-07-13. Keep this current as artifacts are refined and open questi
 
 - `plan-foundation-2026-07-10.md` — approved; `tasks-foundation-cd84.md` **in-progress, 41/46**. Its remaining Phase 6 (T035–T039) is **superseded** by the multi-env-deploy plan below; the file stays as the record of Phases 0–5.
 - `plan-bgg-geeklist-and-search-2026-07-12.md` — approved; `tasks-bgg-geeklist-and-search-2299.md` **completed, 7/7**. Shipped + merged.
-- `plan-multi-env-deploy-2026-07-12.md` — **approved**; `tasks-multi-env-deploy-5928.md` **in-progress, 1/8**. The active work.
+- `plan-multi-env-deploy-2026-07-12.md` — **approved**; `tasks-multi-env-deploy-5928.md` **in-progress, 2/8**. The active work.
   - T001 (web Dockerfile) done — multi-stage build, smoke-tested against local Supabase; real app now containerizes (no longer just the Cloud Run placeholder).
-  - T002 (worker deployable) was blocked on an undefined invocation contract; now resolved — `infrastructure.md` documents `POST /tasks/import`, the `ImportJob` JSON body, OIDC verification (audience = worker URL, expected invoker SA), and the `2xx`-done / `5xx`-retry response contract. T002 is unblocked, ready to resume.
+  - T002 (worker deployable) done — `/tasks/import` route (SvelteKit, same image as web — no separate Dockerfile), `verifyCloudTasksAuth` (OIDC signature/issuer/audience + invoker-SA pinning via `google-auth-library`), `CloudTasksJobQueue` (deploy-time swap for `LocalJobQueue`), Terraform IAM (`tasks_invoker` SA, `run.invoker` grant). 5 new integration tests, `tofu validate` clean for both envs (not applied). Merged to `main`.
   - T003 onward (real image push, `tofu apply` against staging/production, `production` branch, GitHub Environments) not yet started — each of those steps requires explicit user go-ahead before touching live GCP infra.
 
 ## Deploy progress (ops state, applied ad-hoc this session — not yet a completed tasks file)
@@ -51,10 +51,9 @@ No defects — artifacts match the codebase (verified 2026-07-12; infrastructure
 
 ## In Flight
 
-- Worktree `.claude/worktrees/agent-a86d4a56d7bfe4ff6` (branch `worktree-agent-a86d4a56d7bfe4ff6`) — a background subagent building T002 (worker deployable), not yet merged.
-- Worktree `.claude/worktrees/agent-aa6379495865c92cd` (branch `worktree-agent-aa6379495865c92cd`) — already merged into `main`; the worktree directory is stale and can be cleaned up (not done automatically — destructive).
-- `main` is in sync with `origin` (0 unpushed) other than this session's local commits.
+- Nothing active. Two stale worktrees remain on disk from merged runs — `.claude/worktrees/agent-a86d4a56d7bfe4ff6` and `.claude/worktrees/agent-aa6379495865c92cd` — safe to clean up whenever (not done automatically; deleting a worktree is destructive).
+- `main` is ahead of `origin` by local commits from this session (not pushed).
 
 ## Recommended Next Step
 
-Wait for the in-flight T002 subagent to report back, then merge it. After that, T003 (push the real image to staging + `tofu apply`) is the next `tasks-multi-env-deploy-5928.md` step, and needs explicit go-ahead before touching live GCP infra. `custom-domain-mapping` (`https://yarg.ty-pe.com`) is backlogged and best planned once staging/production actually serve the real app.
+T003 (build+push the SHA-tagged images to staging's Artifact Registry, `tofu apply` in `envs/staging` with the real images) is the next `tasks-multi-env-deploy-5928.md` step. It's the first task in this plan that touches live GCP infra/billing — needs explicit user go-ahead before running. `custom-domain-mapping` (`https://yarg.ty-pe.com`) is backlogged and best planned once staging/production actually serve the real app.
