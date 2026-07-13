@@ -282,6 +282,18 @@ and live checks rather than unit tests — follow that where unit tests don't ap
        the README's Rollback section against the two revisions that result,
        and confirm traffic actually moved
        (`gcloud run services describe yarg-web --format='value(status.traffic)'`).
+  - **Bug found and fixed while running promotion end-to-end:**
+    `promote-to-production.yml` fast-forwards `production` using the default
+    `GITHUB_TOKEN`, and GitHub deliberately does not cascade new workflow
+    runs from `GITHUB_TOKEN`-authored pushes (anti-recursion protection) —
+    so `deploy-production.yml`'s `on: push` listener could never fire, on
+    any promotion, ever. Fixed by adding `workflow_dispatch` to
+    `deploy-production.yml`'s triggers and having
+    `promote-to-production.yml` explicitly run `gh workflow run
+    deploy-production.yml --ref production` right after the fast-forward
+    (needs `actions: write`, added to its permissions). No new credentials
+    introduced. Confirmed working live: a real promotion now visibly
+    triggers `deploy-production.yml`.
     Once `SUPABASE_ACCESS_TOKEN` is set, push a commit through
     `promote-to-production.yml` to let `deploy-production.yml` run for real,
     confirm it goes green, then do step 3 above and check this task off.

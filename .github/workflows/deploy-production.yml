@@ -10,6 +10,13 @@ name: Deploy production
 on:
   push:
     branches: [production]
+  # GITHUB_TOKEN-authored pushes (which is how promote-to-production.yml
+  # fast-forwards this branch) never cascade into new workflow runs — a
+  # GitHub anti-recursion protection. promote-to-production.yml explicitly
+  # triggers this instead via `gh workflow run deploy-production.yml --ref
+  # production`, which resolves `github.sha` below to the same tip commit
+  # a push event would have.
+  workflow_dispatch:
 
 concurrency:
   group: deploy-production

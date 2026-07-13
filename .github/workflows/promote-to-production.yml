@@ -6,7 +6,7 @@ on:
 permissions:
   contents: write
   checks: read
-  actions: read
+  actions: write
 
 jobs:
   promote:
@@ -52,3 +52,15 @@ jobs:
           # is the desired failure mode — production is a pointer, never a
           # branch with its own history.
           git push origin HEAD:production
+
+      - name: Trigger deploy-production.yml
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # A GITHUB_TOKEN-authored push (above) never cascades into a new
+          # workflow run — GitHub's anti-recursion protection means
+          # deploy-production.yml's `on: push` listener would never fire on
+          # its own. Trigger it explicitly instead; workflow_dispatch on the
+          # `production` ref resolves `github.sha` inside that run to the
+          # same tip commit the push just landed.
+          gh workflow run deploy-production.yml --ref production
