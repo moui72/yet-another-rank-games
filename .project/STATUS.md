@@ -19,7 +19,7 @@ _Updated: 2026-07-13. Keep this current as artifacts are refined and open questi
 
 ## Feature Backlog
 
-- 0 backlogged · 0 planned · 0 tasked · **2 implemented** (`bgg-geeklist-export`, `bgg-game-search-import`) — see `.project/features/`.
+- **1 backlogged** (`custom-domain-mapping` — map the web Cloud Run service to `https://yarg.ty-pe.com`) · 0 planned · 0 tasked · **2 implemented** (`bgg-geeklist-export`, `bgg-game-search-import`) — see `.project/features/`. Target it with `/ardd-plan custom-domain-mapping` once the app is actually live on Cloud Run (T003+ below).
 
 ## Plans & Tasks
 
@@ -51,9 +51,10 @@ No defects — artifacts match the codebase (verified 2026-07-12; infrastructure
 
 ## In Flight
 
+- Worktree `.claude/worktrees/agent-a86d4a56d7bfe4ff6` (branch `worktree-agent-a86d4a56d7bfe4ff6`) — a background subagent building T002 (worker deployable), not yet merged.
 - Worktree `.claude/worktrees/agent-aa6379495865c92cd` (branch `worktree-agent-aa6379495865c92cd`) — already merged into `main`; the worktree directory is stale and can be cleaned up (not done automatically — destructive).
 - `main` is in sync with `origin` (0 unpushed) other than this session's local commits.
 
 ## Recommended Next Step
 
-`/ardd-implement` on `tasks-multi-env-deploy-5928.md` to resume at T002 (worker deployable) now that its invocation contract is defined — local/buildable without live infra. T003 onward will need explicit go-ahead before any `tofu apply` or image push against real staging/production GCP projects.
+Wait for the in-flight T002 subagent to report back, then merge it. After that, T003 (push the real image to staging + `tofu apply`) is the next `tasks-multi-env-deploy-5928.md` step, and needs explicit go-ahead before touching live GCP infra. `custom-domain-mapping` (`https://yarg.ty-pe.com`) is backlogged and best planned once staging/production actually serve the real app.
