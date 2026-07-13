@@ -1,10 +1,10 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-07-12
+last_updated: 2026-07-13
 diagram_type: graph TD
 render_section: Infrastructure
-diagram_status: unrendered
+diagram_status: stale
 ---
 
 # Infrastructure
@@ -42,6 +42,20 @@ worker-driven** rather than handled inline in a request.
 - Cloud Run's support for long-running requests absorbs the poll-retry duration
   without the short-timeout problems of Vercel-style serverless (the reason
   serverless-with-10s-caps was rejected).
+- **Worker invocation contract:** Cloud Tasks HTTP-targets a single endpoint,
+  `POST /tasks/import`, on the worker Cloud Run service. The request body is
+  JSON matching the app's `ImportJob` shape — `{ collectionId, username,
+  ownedOnly }` — serialized by the enqueueing `CloudTasksJobQueue` (the
+  deploy-time swap for the dev-only `LocalJobQueue`). Cloud Tasks attaches an
+  OIDC identity token (`audience` = the worker's Cloud Run URL, signed by the
+  dedicated Cloud Tasks invoker service account provisioned in
+  `infra/terraform/modules/environment`); the worker verifies the token's
+  issuer, audience, and signing service account before processing a request,
+  rejecting anything else with `401`. Response codes double as the retry
+  contract Cloud Tasks understands: `2xx` marks the job done (no retry);
+  any `5xx` (including an unhandled exception) tells Cloud Tasks to retry
+  per the queue's bounded backoff/dead-letter config (Principle IV); the
+  worker never returns `2xx` for a job it didn't actually complete.
 
 ## External integration — Board Game Geek (`xmlapi2`)
 
