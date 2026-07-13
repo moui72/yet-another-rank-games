@@ -142,6 +142,35 @@ and live checks rather than unit tests — follow that where unit tests don't ap
 ## Phase 4: Staging continuous deployment
 
 - [ ] T005 [artifacts: infrastructure] GitHub Actions workflow `deploy-staging.yml`: on push to `main`, authenticate to staging GCP via **Workload Identity Federation** (use `tofu output wif_provider` / `deployer_sa` from `envs/staging`), build the SHA image, push to Artifact Registry, run staging migrations (`supabase db push`), then deploy (`tofu apply -var web_image=<sha> -var worker_image=<sha>` or `gcloud run deploy`). Store non-secret config/secret refs in the `staging` GitHub Environment. Verify a push to `main` lands the new image on staging. (Requires GitHub repo admin to create the `staging` Environment — note the human step in the workflow PR.)
+  - **[partial: workflow + backend written, one human step outstanding]**
+  - **Blocker discovered:** Terraform state was local-only (gitignored
+    `.tfstate`), which would make a CI runner start from empty state every
+    run and try to recreate everything from scratch. Fixed as a
+    prerequisite: created a versioned GCS bucket per project
+    (`yarg-staging-zbch-tfstate`, `yarg-production-cwqd-tfstate`), added a
+    `backend "gcs"` block to both `envs/staging` and `envs/production`
+    `main.tf`, migrated both envs' state with `tofu init -migrate-state`
+    (verified zero unexpected drift afterward), granted each project's
+    `yarg-deployer` SA `roles/storage.objectAdmin` on its bucket. Did both
+    envs now rather than deferring production to T007, to avoid repeating
+    this exercise. `infra/terraform/README.md` updated to match.
+  - `.github/workflows/deploy-staging.yml` written: WIF auth
+    (`google-github-actions/auth@v2`), build+push the SHA-tagged image,
+    resolve its digest, `supabase link`/`db push` against staging, `tofu
+    apply` **by digest** (not the mutable tag — same lesson as T003/T004),
+    then verify the deployed title.
+  - GitHub `staging` Environment created and populated: `GCP_WIF_PROVIDER`,
+    `GCP_DEPLOYER_SA`, `STAGING_SUPABASE_URL`, `STAGING_SUPABASE_PUBLISHABLE_KEY`
+    (vars); `SUPABASE_DB_PASSWORD` (piped from GCP Secret Manager),
+    `STAGING_BILLING_ACCOUNT` (piped from `terraform.tfvars`) (secrets) — all
+    set without ever displaying the secret values.
+  - **Outstanding, requires the account owner:** `SUPABASE_ACCESS_TOKEN` (a
+    personal access token from
+    https://supabase.com/dashboard/account/tokens) — only a human can
+    generate this. Once set (`gh secret set SUPABASE_ACCESS_TOKEN --env
+    staging`), a push to `main` will exercise the workflow end to end;
+    check it out and fix forward if the run reveals anything, then check
+    this task off.
 
 ## Phase 5: Promotion & production CD
 
