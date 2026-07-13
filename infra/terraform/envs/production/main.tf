@@ -10,7 +10,10 @@ terraform {
       version = "~> 2.4"
     }
   }
-  # Local state for now (gitignored). Migrate to a GCS backend later.
+  backend "gcs" {
+    bucket = "yarg-production-cwqd-tfstate"
+    prefix = "production"
+  }
 }
 
 provider "google" {

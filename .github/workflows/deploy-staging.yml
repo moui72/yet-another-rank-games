@@ -1,0 +1,91 @@
+name: Deploy staging
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: yarg-staging-zbch
+  REGION: us-east4
+  REPOSITORY: us-east4-docker.pkg.dev/yarg-staging-zbch/yarg
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-east4-docker.pkg.dev --quiet
+
+      - name: Build and push image (SHA-tagged)
+        id: image
+        run: |
+          IMAGE="${{ env.REPOSITORY }}/web:${{ github.sha }}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE" | sed 's/.*@//')
+          echo "image=${{ env.REPOSITORY }}/web@${DIGEST}" >> "$GITHUB_OUTPUT"
+
+      # Deploying by digest (not the mutable SHA tag) avoids the
+      # stale-redeploy bug hit manually during T003/T004: a repeated apply
+      # against an unchanged tag string produces no Terraform diff, so
+      # Cloud Run never re-pulls a corrected image. See infrastructure.md /
+      # tasks-multi-env-deploy-5928.md T003 for the incident.
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Push staging migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase link --project-ref ujaxenitxmnmxcqkoddy --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
+          supabase db push --linked --password "${{ secrets.SUPABASE_DB_PASSWORD }}" --yes
+
+      - name: tofu apply
+        working-directory: infra/terraform/envs/staging
+        env:
+          TF_VAR_billing_account: ${{ secrets.STAGING_BILLING_ACCOUNT }}
+          TF_VAR_web_image: ${{ steps.image.outputs.image }}
+          TF_VAR_worker_image: ${{ steps.image.outputs.image }}
+          # web_env has no secret values (the publishable key is client-safe;
+          # DB_HOST/PORT/USER/NAME are non-secret connection params — the
+          # actual DB password lives in Secret Manager, read by the running
+          # container, never by Terraform).
+          TF_VAR_web_env: >-
+            {"PUBLIC_SUPABASE_URL":"${{ vars.STAGING_SUPABASE_URL }}",
+            "PUBLIC_SUPABASE_PUBLISHABLE_KEY":"${{ vars.STAGING_SUPABASE_PUBLISHABLE_KEY }}",
+            "DB_HOST":"aws-0-us-east-1.pooler.supabase.com",
+            "DB_PORT":"6543",
+            "DB_USER":"postgres.ujaxenitxmnmxcqkoddy",
+            "DB_NAME":"postgres",
+            "DB_SSL":"true"}
+        run: |
+          curl -fsSL https://get.opentofu.org/install-sh | sh -s -- --install-method standalone
+          tofu init
+          tofu apply -auto-approve
+
+      - name: Verify staging serves the real app
+        run: |
+          URL=$(cd infra/terraform/envs/staging && tofu output -raw web_url)
+          TITLE=$(curl -fsSL "$URL" | grep -o '<title>[^<]*</title>')
+          echo "Title: $TITLE"
+          [[ "$TITLE" == *"yet-another-rank-games"* ]]

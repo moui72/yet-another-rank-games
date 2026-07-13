@@ -22,7 +22,7 @@ envs/
 ```
 
 Two separate GCP projects (separate budgets, IAM blast radius, quotas). Each
-env is its own root module with local state.
+env is its own root module with its own GCS-backed state (see Notes below).
 
 ## Bootstrap (by hand, once — before the first apply)
 
@@ -71,5 +71,8 @@ Then repeat in `envs/production`.
 - **WIF, no keys.** `tofu output wif_provider` gives the value for the deploy
   workflow's `google-github-actions/auth@v2` (`workload_identity_provider`);
   `tofu output deployer_sa` gives `service_account`. No JSON key exists.
-- **State** is local for now (gitignored). Move to a GCS backend when you run
-  tofu from more than one place.
+- **State** lives in a per-env GCS bucket (`<project_id>-tfstate`, versioned),
+  configured via the `backend "gcs"` block in each env's `main.tf`. Moved off
+  local state so CI (deploy-staging.yml onward) and local runs share the
+  same state — a CI runner starting from empty local state would otherwise
+  try to recreate everything from scratch on every run.
