@@ -1,7 +1,7 @@
 ---
 plan: plan-custom-domain-mapping-2026-07-13-53ec.md
 generated: 2026-07-13
-status: ready
+status: in-progress
 ---
 
 # Tasks
