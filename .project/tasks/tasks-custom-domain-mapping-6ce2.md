@@ -41,7 +41,7 @@ status: in-progress
   tasks file when done.
 
 ## Phase 3: Verification (depends on T004)
-- [ ] T005 Depends on T004. Poll
+- [x] T005 Depends on T004. Poll
   `gcloud run domain-mappings describe --domain=yarg.ty-pe.com
   --region=<region>` until the mapping's certificate status is `Ready`
   (DNS propagation and managed-cert issuance are not instant — may take
