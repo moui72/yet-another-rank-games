@@ -36,7 +36,7 @@ status: in-progress
   or via `gcloud run domain-mappings describe --domain=yarg.ty-pe.com
   --region=<region>` (CNAME/A/AAAA records per Cloud Run's mapping
   response) and record them in this tasks file for T004.
-- [ ] T004 (human-only) Depends on T003. Add the DNS records captured in
+- [x] T004 (human-only) Depends on T003. Add the DNS records captured in
   T003 at the `ty-pe.com` registrar's DNS management panel. Record in this
   tasks file when done.
 
