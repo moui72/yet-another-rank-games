@@ -19,11 +19,15 @@ status: in-progress
   production's plan shows exactly the one new domain-mapping resource.
 
 ## Phase 2: Human-only prerequisites (blocking, sequential — depends on T001)
-- [ ] T002 (human-only) Verify ownership of `ty-pe.com` (or the
+- [x] T002 (human-only) Verify ownership of `ty-pe.com` (or the
   `yarg.ty-pe.com` subdomain, whichever Search Console requires) in Google
   Search Console, using the Google account associated with the production
   GCP project. `google_cloud_run_domain_mapping`'s apply fails without this
   verification being in place first. Record in this tasks file when done.
+  **Done (2026-07-13):** Ownership of `ty-pe.com` verified in Google Search
+  Console via TXT record
+  `google-site-verification=-wew4xM9zOFBR32cJUe7nETkXTyoIbvon2TgM_hBA7E` added
+  at Namecheap.
 - [ ] T003 Depends on T001 + T002. Run `tofu apply` scoped to the new
   domain-mapping resource in the production environment (mirror the
   `-target=module.environment` scoping used by CI in the multi-env-deploy
