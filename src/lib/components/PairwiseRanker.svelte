@@ -3,15 +3,28 @@
 	import { spineColor } from '$lib/spine';
 	import type { Choice } from '$lib/domain/ranking';
 
-	let { listId, games, log }: { listId: string; games: { id: number; name: string }[]; log: Choice[] } =
-		$props();
+	let {
+		listId,
+		games,
+		log
+	}: {
+		listId: string;
+		games: { id: number; name: string; excludedFromRanking: boolean }[];
+		log: Choice[];
+	} = $props();
 
-	const session = $derived(new PairwiseSession(games.map((g) => g.id), log));
+	const initialExcluded = $derived(games.filter((g) => g.excludedFromRanking).map((g) => g.id));
+	const session = $derived(
+		new PairwiseSession(games.map((g) => g.id), log, new Set(initialExcluded))
+	);
 	const names = $derived(new Map(games.map((g) => [g.id, g.name])));
 	const nameOf = (id: number) => names.get(id) ?? `#${id}`;
 	const compareUrl = $derived(`/api/lists/${listId}/compare`);
 	const undoUrl = $derived(`/api/lists/${listId}/undo`);
 	const dropUrl = $derived(`/api/lists/${listId}/drop`);
+	const excludeUrl = $derived(`/api/lists/${listId}/exclude`);
+
+	let unrankedOpen = $state(false);
 
 	// Serialize persistence so the optimistic UI stays instant and the server
 	// never sees out-of-order recomputes.
@@ -42,6 +55,33 @@
 		persist(() => fetch(url, { method: 'POST' }));
 	}
 
+	/** T014: pull a ranked game out of the active ranking (moves to Unranked). */
+	function excludeGame(gameId: number) {
+		const url = excludeUrl;
+		session.setExcluded(gameId, true);
+		persist(() =>
+			fetch(url, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ gameId, excluded: true })
+			})
+		);
+	}
+
+	/** Restore a manually-excluded game back to the active ranking. */
+	function restoreGame(gameId: number) {
+		const url = excludeUrl;
+		session.setExcluded(gameId, false);
+		persist(() =>
+			fetch(url, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ gameId, excluded: false })
+			})
+		);
+	}
+
+	/** T015: hard-delete a game from the pool entirely (only from Unranked). */
 	function dropGame(gameId: number) {
 		const url = dropUrl;
 		session.gameIds = session.gameIds.filter((id) => id !== gameId);
@@ -107,9 +147,9 @@
 
 <section class="card bg-base-200 border-base-300 border" aria-labelledby="ranking-heading">
 	<div class="card-body gap-3">
-		<h2 id="ranking-heading" class="card-title text-lg">Current ranking</h2>
-		<ol class="flex flex-col gap-1.5">
-			{#each session.order as gameId, i (gameId)}
+		<h2 id="ranking-heading" class="card-title text-lg">Ranked</h2>
+		<ol id="ranked-list" class="flex flex-col gap-1.5">
+			{#each session.ranked as gameId, i (gameId)}
 				<li class="flex items-center gap-2">
 					<span class="spine grow" style="background:{spineColor(i)}">
 						<span class="spine-rank">{String(i + 1).padStart(2, '0')}</span>
@@ -118,14 +158,63 @@
 					<button
 						type="button"
 						class="btn btn-ghost btn-sm btn-square"
-						onclick={() => dropGame(gameId)}
-						aria-label="Drop {nameOf(gameId)} from this list"
-						title="Drop {nameOf(gameId)}"
+						onclick={() => excludeGame(gameId)}
+						aria-label="Exclude {nameOf(gameId)} from ranking"
+						title="Exclude {nameOf(gameId)} from ranking"
 					>
 						✕
 					</button>
 				</li>
+			{:else}
+				<li class="text-sm opacity-70">No games ranked yet.</li>
 			{/each}
 		</ol>
+	</div>
+</section>
+
+<section class="card bg-base-200 border-base-300 border" aria-labelledby="unranked-heading">
+	<div class="card-body gap-3">
+		<button
+			type="button"
+			class="flex items-center justify-between gap-2 text-left"
+			aria-expanded={unrankedOpen}
+			aria-controls="unranked-list"
+			onclick={() => (unrankedOpen = !unrankedOpen)}
+		>
+			<h2 id="unranked-heading" class="card-title text-lg">Unranked ({session.unranked.length})</h2>
+			<span aria-hidden="true">{unrankedOpen ? '▾' : '▸'}</span>
+		</button>
+		{#if unrankedOpen}
+			<ol id="unranked-list" class="flex flex-col gap-1.5">
+				{#each session.unranked as gameId (gameId)}
+					<li class="flex items-center justify-between gap-2 rounded-box bg-base-100 px-3 py-2">
+						<span class="truncate">{nameOf(gameId)}</span>
+						<span class="flex gap-1">
+							{#if session.excludedIds.has(gameId)}
+								<button
+									type="button"
+									class="btn btn-outline btn-xs"
+									onclick={() => restoreGame(gameId)}
+									aria-label="Restore {nameOf(gameId)} to ranking"
+								>
+									Restore
+								</button>
+							{/if}
+							<button
+								type="button"
+								class="btn btn-error btn-outline btn-xs"
+								onclick={() => dropGame(gameId)}
+								aria-label="Delete {nameOf(gameId)} from this list"
+								title="Delete {nameOf(gameId)} from this list's pool entirely"
+							>
+								🗑 Delete
+							</button>
+						</span>
+					</li>
+				{:else}
+					<li class="text-sm opacity-70">Nothing unranked.</li>
+				{/each}
+			</ol>
+		{/if}
 	</div>
 </section>

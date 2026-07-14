@@ -63,15 +63,36 @@ test('pairwise ranking: choose, keyboard, undo, resume — with axe', async ({ p
 	await page.getByRole('button', { name: 'Undo' }).click();
 	await expect(status).toContainText('1 of 3');
 
-	// The ranking lists all three games.
-	const ranking = page.getByRole('list').filter({ hasText: 'Gamma' });
-	await expect(ranking).toContainText('Alpha');
+	// Ranked/Unranked split (T013): Alpha and Beta have a comparison between
+	// them, so they're Ranked; Gamma has never been compared, so it's Unranked.
+	const ranked = page.locator('#ranked-list');
+	await expect(ranked).toContainText('Alpha');
+	await expect(ranked).not.toContainText('Gamma');
+	await page.getByRole('button', { name: /^Unranked \(/ }).click();
+	const unrankedList = page.locator('#unranked-list');
+	await expect(unrankedList).toContainText('Gamma');
 
-	// Drop a game from the pool while ranking — it leaves the ranking, and the
-	// removal persists (wait for the drop request before reloading).
+	// Excluding a ranked game (T014) moves it to Unranked without deleting it.
+	await Promise.all([
+		page.waitForResponse((r) => r.url().includes('/exclude') && r.request().method() === 'POST'),
+		page.getByRole('button', { name: 'Exclude Alpha from ranking' }).click()
+	]);
+	await expect(ranked).not.toContainText('Alpha');
+	await expect(unrankedList).toContainText('Alpha');
+	// Excluded (not just never-compared) games get a Restore control.
+	const restoreAlpha = unrankedList.getByRole('button', { name: 'Restore Alpha to ranking' });
+	await expect(restoreAlpha).toBeVisible();
+	await Promise.all([
+		page.waitForResponse((r) => r.url().includes('/exclude') && r.request().method() === 'POST'),
+		restoreAlpha.click()
+	]);
+	await expect(ranked).toContainText('Alpha');
+
+	// The trash control in Unranked hard-deletes a game from the pool entirely
+	// (only reachable from Unranked) — removal persists (wait for the request).
 	await Promise.all([
 		page.waitForResponse((r) => r.url().includes('/drop') && r.request().method() === 'POST'),
-		page.getByRole('button', { name: 'Drop Gamma from this list' }).click()
+		page.getByRole('button', { name: 'Delete Gamma from this list' }).click()
 	]);
 	await expect(page.getByRole('listitem').filter({ hasText: 'Gamma' })).toHaveCount(0);
 

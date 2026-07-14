@@ -7,6 +7,8 @@ import {
 	pairKey,
 	selectNextPair,
 	pairwiseState,
+	comparedGameIds,
+	splitRankedUnranked,
 	type Ratings,
 	type Choice
 } from './ranking';
@@ -130,5 +132,48 @@ describe('pairwiseState', () => {
 		const s = pairwiseState(games, [{ winnerId: 3, loserId: 1 }]);
 		expect(s.currentPair).not.toEqual([3, 1]);
 		expect(s.currentPair).not.toEqual([1, 3]);
+	});
+});
+
+// Pairwise ranking unranked/ranked split (T013, feedback F002).
+describe('comparedGameIds', () => {
+	it('collects every game id that appears in the log', () => {
+		const log: Choice[] = [
+			{ winnerId: 1, loserId: 2 },
+			{ winnerId: 1, loserId: 3 }
+		];
+		expect(comparedGameIds(log)).toEqual(new Set([1, 2, 3]));
+	});
+
+	it('is empty for an empty log', () => {
+		expect(comparedGameIds([])).toEqual(new Set());
+	});
+});
+
+describe('splitRankedUnranked', () => {
+	const log: Choice[] = [{ winnerId: 1, loserId: 2 }];
+	const ratings = ratingsFromComparisons(log);
+
+	it('a game starts in Unranked until its first comparison', () => {
+		const { ranked, unranked } = splitRankedUnranked([1, 2, 3], ratings, log, new Set());
+		expect(ranked).toEqual([1, 2]);
+		expect(unranked).toEqual([3]);
+	});
+
+	it('an excluded game moves to Unranked even with comparison history', () => {
+		const { ranked, unranked } = splitRankedUnranked([1, 2, 3], ratings, log, new Set([1]));
+		expect(ranked).toEqual([2]);
+		expect(unranked).toEqual([1, 3]);
+	});
+
+	it('ranked preserves best-first order', () => {
+		const threeWayLog: Choice[] = [
+			{ winnerId: 1, loserId: 2 },
+			{ winnerId: 2, loserId: 3 },
+			{ winnerId: 1, loserId: 3 }
+		];
+		const r = ratingsFromComparisons(threeWayLog);
+		const { ranked } = splitRankedUnranked([3, 1, 2], r, threeWayLog, new Set());
+		expect(ranked).toEqual([1, 2, 3]);
 	});
 });

@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { db, sql } from './db';
-import { recomputeListEntries, recordComparisonAndRecompute } from './ranking';
+import {
+	recomputeListEntries,
+	recordComparisonAndRecompute,
+	setPoolGameExcludedAndRecompute
+} from './ranking';
 import { createPool, addPoolGames, removePoolGame } from './repositories/pools';
 import { createList } from './repositories/lists';
 import { listComparisons } from './repositories/comparisons';
@@ -81,5 +85,23 @@ describe('recomputeListEntries', () => {
 		const entries = await listListEntries(db, listId);
 		expect(entries.map((e) => e.gameId)).toEqual([a, b]);
 		expect(entries).toHaveLength(2);
+	});
+
+	it('excludes a manually-excluded game from the snapshot but keeps its comparisons in the rating math (T014)', async () => {
+		const { listId, poolId, a, b, c } = await setup();
+		await recordComparisonAndRecompute(db, { listId, gameA: a, gameB: b, winnerId: a });
+		await recordComparisonAndRecompute(db, { listId, gameA: b, gameB: c, winnerId: b });
+
+		await setPoolGameExcludedAndRecompute(db, listId, poolId, a, true);
+
+		const entries = await listListEntries(db, listId);
+		// a is excluded from the snapshot, but b/c ordering still reflects a's
+		// historical win over b (rating math uses all in-pool comparisons).
+		expect(entries.map((e) => e.gameId)).toEqual([b, c]);
+
+		// Un-excluding restores it to the snapshot.
+		await setPoolGameExcludedAndRecompute(db, listId, poolId, a, false);
+		const restored = await listListEntries(db, listId);
+		expect(restored.map((e) => e.gameId)).toContain(a);
 	});
 });

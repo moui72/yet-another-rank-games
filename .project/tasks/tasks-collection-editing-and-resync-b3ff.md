@@ -84,17 +84,17 @@ status: in-progress
   out of a list's active ranking without losing its `Comparison` history
   (distinct from having zero comparisons). Write a migration/model test
   first, then implement. [feedback: F002]
-- [ ] T013 [artifacts: ui] Split the pairwise ranking view into a **Ranked**
+- [x] T013 [artifacts: ui] Split the pairwise ranking view into a **Ranked**
   section (pool games with ≥1 `Comparison` in this list and
   `excluded_from_ranking = false`) and a collapsible **Unranked** section
   (everything else); a game starts in Unranked until its first comparison.
   Write a test first covering the ranked/unranked split logic, then
   implement. [feedback: F002]
-- [ ] T014 [artifacts: ui] Change the ranked-section "x" to set
+- [x] T014 [artifacts: ui] Change the ranked-section "x" to set
   `excluded_from_ranking = true` (moves the game to Unranked, keeps its
   `PoolGame`/`Comparison` rows intact) instead of deleting it from the pool.
   Write a test first, then implement. [feedback: F001]
-- [ ] T015 [artifacts: ui] Add a visually-distinct "trash" control to the
+- [x] T015 [artifacts: ui] Add a visually-distinct "trash" control to the
   Unranked section that hard-deletes the `PoolGame` row (removes the game
   from the list's pool entirely — affects every list built from that pool).
   Write a test first, then implement. [feedback: F003]

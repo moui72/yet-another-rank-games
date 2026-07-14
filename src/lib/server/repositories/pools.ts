@@ -22,14 +22,41 @@ export function listPoolsByUser(db: Kysely<Database>, userId: string): Promise<P
 		.execute();
 }
 
-/** The games currently in a pool, with their catalogue details. */
-export function listPoolGames(db: Kysely<Database>, poolId: string): Promise<Game[]> {
+/**
+ * The games currently in a pool, with their catalogue details plus whether
+ * each has been manually excluded from ranking (T012/feedback F002) — most
+ * callers ignore that field; the pairwise ranking view uses it for the
+ * Ranked/Unranked split.
+ */
+export function listPoolGames(
+	db: Kysely<Database>,
+	poolId: string
+): Promise<(Game & { excludedFromRanking: boolean })[]> {
 	return db
 		.selectFrom('poolGames as pg')
 		.innerJoin('games as g', 'g.id', 'pg.gameId')
 		.where('pg.poolId', '=', poolId)
 		.orderBy('g.name', 'asc')
 		.selectAll('g')
+		.select('pg.excludedFromRanking as excludedFromRanking')
+		.execute();
+}
+
+/**
+ * Set/clear a pool game's ranking exclusion (T014): moves it to the Unranked
+ * section without touching its `PoolGame`/`Comparison` rows.
+ */
+export async function setPoolGameExcluded(
+	db: Kysely<Database>,
+	poolId: string,
+	gameId: number,
+	excluded: boolean
+): Promise<void> {
+	await db
+		.updateTable('poolGames')
+		.set({ excludedFromRanking: excluded })
+		.where('poolId', '=', poolId)
+		.where('gameId', '=', gameId)
 		.execute();
 }
 

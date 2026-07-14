@@ -1,4 +1,7 @@
+import { SvelteSet } from 'svelte/reactivity';
 import { pairwiseState, type Choice } from './domain/ranking';
+
+const EMPTY_SET: ReadonlySet<number> = new SvelteSet();
 
 /**
  * The single reactive store for a pairwise ranking session (constitution
@@ -8,24 +11,40 @@ import { pairwiseState, type Choice } from './domain/ranking';
  */
 export class PairwiseSession {
 	gameIds = $state<number[]>([]);
+	/**
+	 * Games manually excluded from ranking (feedback F001-F002) — kept in the
+	 * pool with their comparison history intact, but not offered for new
+	 * matchups and shown in Unranked instead of Ranked.
+	 */
+	excludedIds = $state<SvelteSet<number>>(new SvelteSet());
 	log = $state<Choice[]>([]);
-	#state = $derived(pairwiseState(this.gameIds, this.log));
+	#state = $derived(pairwiseState(this.gameIds, this.log, this.excludedIds));
 
-	constructor(gameIds: number[], log: Choice[] = []) {
+	constructor(gameIds: number[], log: Choice[] = [], excludedIds: ReadonlySet<number> = EMPTY_SET) {
 		this.gameIds = gameIds;
 		this.log = [...log];
+		this.excludedIds = new SvelteSet(excludedIds);
 	}
 
 	get ratings() {
 		return this.#state.ratings;
 	}
+	/** Best-first order over Ranked games only (has ≥1 comparison, not excluded). */
 	get order() {
-		return this.#state.order;
+		return this.#state.ranked;
+	}
+	/** Games with ≥1 comparison and not manually excluded. */
+	get ranked() {
+		return this.#state.ranked;
+	}
+	/** Never-compared games, plus manually-excluded games regardless of history. */
+	get unranked() {
+		return this.#state.unranked;
 	}
 	get comparedKeys() {
 		return this.#state.comparedKeys;
 	}
-	/** The next matchup to show, or null when fewer than two games. */
+	/** The next matchup to show (from non-excluded games only), or null. */
 	get currentPair() {
 		return this.#state.currentPair;
 	}
@@ -43,6 +62,12 @@ export class PairwiseSession {
 	/** Undo the most recent choice. */
 	undo() {
 		this.log.pop();
+	}
+
+	/** Exclude/un-exclude a game from ranking (T014) — a client-side mirror of the persisted flag. */
+	setExcluded(gameId: number, excluded: boolean) {
+		if (excluded) this.excludedIds.add(gameId);
+		else this.excludedIds.delete(gameId);
 	}
 
 	/** The serializable source of truth. */

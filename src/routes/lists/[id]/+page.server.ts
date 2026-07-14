@@ -35,5 +35,10 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		winnerId: c.winnerId,
 		loserId: c.winnerId === c.gameA ? c.gameB : c.gameA
 	}));
-	return { list, mode: 'pairwise' as const, games: games.map((g) => ({ id: g.id, name: g.name })), log };
+	return {
+		list,
+		mode: 'pairwise' as const,
+		games: games.map((g) => ({ id: g.id, name: g.name, excludedFromRanking: g.excludedFromRanking })),
+		log
+	};
 };

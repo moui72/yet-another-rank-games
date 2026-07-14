@@ -72,14 +72,21 @@ export interface Choice {
  * log, so a session serialized to its log and reconstructed is identical
  * (stop-early/resume).
  */
-export function pairwiseState(gameIds: readonly number[], log: readonly Choice[]) {
+export function pairwiseState(
+	gameIds: readonly number[],
+	log: readonly Choice[],
+	excludedIds: ReadonlySet<number> = new Set()
+) {
 	const ratings = ratingsFromComparisons(log);
 	const comparedKeys = new Set(log.map((c) => pairKey(c.winnerId, c.loserId)));
+	// Manually-excluded games (T014) aren't offered for new comparisons.
+	const activeIds = gameIds.filter((id) => !excludedIds.has(id));
 	return {
 		ratings,
 		comparedKeys,
 		order: rankGames(gameIds, ratings),
-		currentPair: selectNextPair(gameIds, ratings, comparedKeys)
+		currentPair: selectNextPair(activeIds, ratings, comparedKeys),
+		...splitRankedUnranked(gameIds, ratings, log, excludedIds)
 	};
 }
 
@@ -119,4 +126,34 @@ export function selectNextPair(
 	const candidates = unseen.length > 0 ? unseen : pairs;
 	candidates.sort((x, y) => y.info - x.info || x.a - y.a || x.b - y.b);
 	return [candidates[0].a, candidates[0].b];
+}
+
+/** Every game id that appears (as winner or loser) anywhere in the log. */
+export function comparedGameIds(log: readonly Choice[]): Set<number> {
+	const ids = new Set<number>();
+	for (const c of log) {
+		ids.add(c.winnerId);
+		ids.add(c.loserId);
+	}
+	return ids;
+}
+
+/**
+ * Split a list's pool games into **Ranked** (has ≥1 comparison in this list
+ * and isn't manually excluded) and **Unranked** (everything else — a game
+ * starts here until its first comparison, and a manually-excluded game moves
+ * back here regardless of comparison history) — feedback F001-F003. Ranked
+ * preserves the best-first order; Unranked keeps the given `gameIds` order.
+ */
+export function splitRankedUnranked(
+	gameIds: readonly number[],
+	ratings: Ratings,
+	log: readonly Choice[],
+	excludedIds: ReadonlySet<number>
+): { ranked: number[]; unranked: number[] } {
+	const compared = comparedGameIds(log);
+	const isRanked = (id: number) => compared.has(id) && !excludedIds.has(id);
+	const ranked = rankGames(gameIds, ratings).filter(isRanked);
+	const unranked = gameIds.filter((id) => !isRanked(id));
+	return { ranked, unranked };
 }
