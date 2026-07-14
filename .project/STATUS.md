@@ -1,6 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-14. Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-14 (bgg-cover-art-and-card-view backlogged). Keep this current as artifacts are refined and open questions are resolved._
 
 ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/ardd-update`.
 
@@ -21,7 +21,7 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
 
 ## Feature Backlog
 
-- 0 backlogged · 0 planned · 0 tasked · 3 implemented (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`) — see `.project/features/`.
+- **1 backlogged** (`bgg-cover-art-and-card-view` — BGG cover art, a card display option, art in comparison cards, and a no-images preference) · 0 planned · 0 tasked · 3 implemented (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`) — see `.project/features/`. Target it with `/ardd-plan bgg-cover-art-and-card-view` when ready to design it.
 
 ## Plans & Tasks
 
@@ -46,4 +46,4 @@ Nothing in flight — all worktrees from this session have been merged and remov
 
 ## Recommended Next Step
 
-All planned work is shipped. Remaining lower-priority items: the `ui.md` open question (public sharing model) is a deferred product decision with no urgency, and the ARDD tool itself has an update available (`/ardd-update`). Consider whether new feature ideas should be logged via `/ardd-backlog` or whether this is a good point to pause.
+`bgg-cover-art-and-card-view` is freshly backlogged — run `/ardd-plan bgg-cover-art-and-card-view` when ready to design it (affects `ui.md` for the card view/comparison art and no-images preference, and likely `datamodel.md`/`infrastructure.md` for caching cover-image URLs from BGG). Otherwise, remaining lower-priority items: the `ui.md` open question (public sharing model) is a deferred product decision with no urgency, and the ARDD tool itself has an update available (`/ardd-update`).
