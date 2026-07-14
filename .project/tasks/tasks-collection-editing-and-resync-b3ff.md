@@ -67,13 +67,13 @@ status: in-progress
 
 ## Phase 4: Collection management UI
 
-- [ ] T009 [artifacts: ui] [parallel] Build the Collection management view:
+- [x] T009 [artifacts: ui] [parallel] Build the Collection management view:
   active items list + collapsible Removed section (`removed`/`pending_delete`
   items), each Removed item showing an undo control and, for
   `pending_delete` items, a confirm-hard-delete control.
-- [ ] T010 [artifacts: ui] [parallel] Wire the add-to-collection flow through
+- [x] T010 [artifacts: ui] [parallel] Wire the add-to-collection flow through
   the existing BGG search-import UI (reuse, don't duplicate, per Principle IX).
-- [ ] T011 [artifacts: ui] Wire a re-pull/resync action that triggers T006–T007
+- [x] T011 [artifacts: ui] Wire a re-pull/resync action that triggers T006–T007
   and, when it produces any `CollectionItemDuplicate` rows, surfaces the
   possible-duplicates review step (confirm-merge / reject-distinct per T008).
 

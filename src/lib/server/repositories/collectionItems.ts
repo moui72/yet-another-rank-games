@@ -1,6 +1,46 @@
 import type { Kysely } from 'kysely';
 import type { Database } from '../schema';
-import type { CollectionItem } from '$lib/types/entities';
+import type { CollectionItem, CollectionItemStatus } from '$lib/types/entities';
+
+/** A `CollectionItem` joined to its game's name, for display. */
+export interface CollectionItemWithGame {
+	id: string;
+	gameId: number;
+	name: string;
+	status: CollectionItemStatus;
+	removedAt: string | null;
+}
+
+function itemsWithGameByStatus(
+	db: Kysely<Database>,
+	collectionId: string,
+	statuses: CollectionItemStatus[]
+): Promise<CollectionItemWithGame[]> {
+	return db
+		.selectFrom('collectionItems as ci')
+		.innerJoin('games as g', 'g.id', 'ci.gameId')
+		.where('ci.collectionId', '=', collectionId)
+		.where('ci.status', 'in', statuses)
+		.orderBy('g.name', 'asc')
+		.select(['ci.id as id', 'ci.gameId as gameId', 'g.name as name', 'ci.status as status', 'ci.removedAt as removedAt'])
+		.execute();
+}
+
+/** Active items with game names, for the collection management view (T009). */
+export function listActiveItemsWithGame(
+	db: Kysely<Database>,
+	collectionId: string
+): Promise<CollectionItemWithGame[]> {
+	return itemsWithGameByStatus(db, collectionId, ['active']);
+}
+
+/** Removed/pending_delete items with game names, for the "Removed" section (T009). */
+export function listRemovedItemsWithGame(
+	db: Kysely<Database>,
+	collectionId: string
+): Promise<CollectionItemWithGame[]> {
+	return itemsWithGameByStatus(db, collectionId, ['removed', 'pending_delete']);
+}
 
 /**
  * Insert or update the item for a (collection, game) pair — an import re-runs

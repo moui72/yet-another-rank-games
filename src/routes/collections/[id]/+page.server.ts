@@ -3,15 +3,19 @@ import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { getOwnedCollection, AccessDeniedError } from '$lib/server/ownership';
 import {
-	listActiveItemsByCollection,
+	listActiveItemsWithGame,
+	listRemovedItemsWithGame,
 	softDeleteCollectionItem,
 	undoCollectionItemRemoval,
 	confirmHardDeleteCollectionItem,
 	addLocalCollectionItem
 } from '$lib/server/repositories/collectionItems';
+import { listPendingDuplicatesForCollection } from '$lib/server/repositories/collectionItemDuplicates';
 import { resolveGameFromSearch, type FetchThing } from '$lib/server/addFromSearch';
 import { fetchThingXml } from '$lib/server/bgg/client';
 import { parseThingXml } from '$lib/server/bgg/parse';
+import { getImportQueue } from '$lib/server/jobs/queue';
+import { confirmDuplicateMerge, rejectDuplicateMerge } from '$lib/server/duplicateResolution';
 
 function str(v: FormDataEntryValue | null): string | undefined {
 	return typeof v === 'string' ? v : undefined;
@@ -29,8 +33,18 @@ async function requireCollection(userId: string, collectionId: string) {
 export const load: PageServerLoad = async ({ locals, params }) => {
 	if (!locals.user) error(401, 'Not authenticated');
 	const collection = await requireCollection(locals.user.id, params.id);
-	const items = await listActiveItemsByCollection(db, params.id);
-	return { collection, gameCount: items.length };
+	const [activeItems, removedItems, duplicates] = await Promise.all([
+		listActiveItemsWithGame(db, params.id),
+		listRemovedItemsWithGame(db, params.id),
+		listPendingDuplicatesForCollection(db, params.id)
+	]);
+	return {
+		collection,
+		gameCount: activeItems.length,
+		activeItems,
+		removedItems,
+		duplicates
+	};
 };
 
 export const actions: Actions = {
@@ -68,9 +82,9 @@ export const actions: Actions = {
 	},
 
 	/**
-	 * T005: add a game to the collection via the same BGG search-import flow
-	 * as the pool builder (reuse, not duplicate — Principle IX); stamps the
-	 * new row `source = local_add`.
+	 * T005/T010: add a game to the collection via the same BGG search-import
+	 * flow as the pool builder (reuse, not duplicate — Principle IX); stamps
+	 * the new row `source = local_add`.
 	 */
 	addFromSearch: async ({ locals, params, request }) => {
 		if (!locals.user) error(401, 'Not authenticated');
@@ -88,5 +102,43 @@ export const actions: Actions = {
 		const game = await resolveGameFromSearch(db, pick, fetchThing);
 		const item = await addLocalCollectionItem(db, { collectionId: collection.id, gameId: game.id });
 		return { searchAdded: true, itemId: item.id };
+	},
+
+	/**
+	 * T011: re-pull/resync — re-importing the same username re-pulls into this
+	 * existing Collection (ui.md), so this reuses the same enqueue path as the
+	 * initial import (`/api/import`). The worker's `runImport` does the actual
+	 * reconciliation (T006 pending_delete flips, T007 fuzzy-duplicate detection).
+	 */
+	resync: async ({ locals, params }) => {
+		if (!locals.user) error(401, 'Not authenticated');
+		const collection = await requireCollection(locals.user.id, params.id);
+		await getImportQueue().enqueue({
+			collectionId: collection.id,
+			username: collection.bggUsername
+		});
+		return { resyncQueued: true };
+	},
+
+	/** T011/T008: confirm a possible duplicate — repoints this user's own pool/list references. */
+	confirmDuplicate: async ({ locals, params, request }) => {
+		if (!locals.user) error(401, 'Not authenticated');
+		await requireCollection(locals.user.id, params.id);
+		const form = await request.formData();
+		const duplicateId = str(form.get('duplicateId')) ?? '';
+		if (!duplicateId) return fail(400, { error: 'Missing duplicate.' });
+		const merged = await confirmDuplicateMerge(db, locals.user.id, duplicateId);
+		return { duplicateResolved: merged };
+	},
+
+	/** T011/T008: reject a possible duplicate as distinct — leaves both items untouched. */
+	rejectDuplicate: async ({ locals, params, request }) => {
+		if (!locals.user) error(401, 'Not authenticated');
+		await requireCollection(locals.user.id, params.id);
+		const form = await request.formData();
+		const duplicateId = str(form.get('duplicateId')) ?? '';
+		if (!duplicateId) return fail(400, { error: 'Missing duplicate.' });
+		const rejected = await rejectDuplicateMerge(db, locals.user.id, duplicateId);
+		return { duplicateResolved: rejected };
 	}
 };
