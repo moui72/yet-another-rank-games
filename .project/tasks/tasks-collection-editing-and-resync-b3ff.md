@@ -22,19 +22,19 @@ status: in-progress
 
 ## Phase 2: Collection edit backend
 
-- [ ] T002 [artifacts: datamodel] [parallel] Add a soft-delete endpoint/action:
+- [x] T002 [artifacts: datamodel] [parallel] Add a soft-delete endpoint/action:
   sets `CollectionItem.status = removed`, `removed_at = now()`. Write a test
   first: an active item becomes `removed` and is excluded from the default
   active-item query; then implement.
-- [ ] T003 [artifacts: datamodel] [parallel] Add an undo endpoint/action:
+- [x] T003 [artifacts: datamodel] [parallel] Add an undo endpoint/action:
   `removed`/`pending_delete` → `active`, clears `removed_at`. Write a test
   first: undo restores an item to the active list; then implement.
-- [ ] T004 [artifacts: datamodel] [parallel] Add a confirm-hard-delete
+- [x] T004 [artifacts: datamodel] [parallel] Add a confirm-hard-delete
   endpoint/action, only valid from `pending_delete`: physically deletes the
   `CollectionItem` row. Write a test first: a `pending_delete` item can be
   confirmed and is gone; an `active` or `removed` item cannot be
   hard-deleted directly; then implement.
-- [ ] T005 [artifacts: datamodel] Extend the collection add flow to reuse
+- [x] T005 [artifacts: datamodel] Extend the collection add flow to reuse
   `bgg-game-search-import` and stamp new rows `source = local_add`. Write a
   test first: an item added this way has `source = local_add` and a real
   `game_id`; then implement.

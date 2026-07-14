@@ -25,14 +25,30 @@ function minimalThing(pick: BggSearchResult): BggThing {
 }
 
 /**
+ * Resolve a BGG search pick into a shared-catalogue `Game` row (feature
+ * `bgg-game-search-import`): fetch the `thing` and `upsertGame` it (stamping
+ * `lastFetchedAt`); if BGG has no detail available, fall back to a minimal
+ * game from the search pick with a null `lastFetchedAt` (treated as stale, so
+ * a later import enriches it) — mirroring the import job. This is the single
+ * reusable entry point for "add a game from BGG search" (Principle IX): the
+ * pool builder attaches the resolved game to a pool, collection editing
+ * attaches it to a collection — both upsert through this same path so neither
+ * duplicates the fetch/fallback logic.
+ */
+export async function resolveGameFromSearch(
+	db: Kysely<Database>,
+	pick: BggSearchResult,
+	fetchThing: FetchThing
+): Promise<import('$lib/types/entities').Game> {
+	const thing = await fetchThing(pick.bggId);
+	return thing ? await upsertGame(db, thing) : await upsertGame(db, minimalThing(pick), null);
+}
+
+/**
  * Import a BGG game picked from search into the shared catalogue and attach it
- * to a pool. Same upsert-by-`bgg_id` path as collection import: fetch the
- * `thing` and `upsertGame` it (stamping `lastFetchedAt`); if BGG has no detail
- * available, fall back to a minimal game from the search pick with a null
- * `lastFetchedAt` (treated as stale, so a later import enriches it) — mirroring
- * the import job. Then `addPoolGames` to attach it, so a pool can include any
- * BGG game, not just ones already in some collection. Returns the catalogue
- * game id and how many pool rows were newly added (0 if already in the pool).
+ * to a pool, so a pool can include any BGG game, not just ones already in some
+ * collection. Returns the catalogue game id and how many pool rows were newly
+ * added (0 if already in the pool).
  */
 export async function addGameFromSearch(
 	db: Kysely<Database>,
@@ -40,10 +56,7 @@ export async function addGameFromSearch(
 	pick: BggSearchResult,
 	fetchThing: FetchThing
 ): Promise<{ gameId: number; added: number }> {
-	const thing = await fetchThing(pick.bggId);
-	const game = thing
-		? await upsertGame(db, thing)
-		: await upsertGame(db, minimalThing(pick), null);
+	const game = await resolveGameFromSearch(db, pick, fetchThing);
 	const added = await addPoolGames(db, poolId, [game.id]);
 	return { gameId: game.id, added };
 }
