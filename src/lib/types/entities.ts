@@ -55,6 +55,17 @@ export interface Collection {
 	createdAt: string;
 }
 
+/** Provenance of a `CollectionItem`: BGG-sourced vs. a local hand-add. */
+export type CollectionItemSource = 'bgg_import' | 'local_add';
+
+/**
+ * A `CollectionItem`'s local-edit lifecycle. `active` is normal; `removed` is
+ * a user soft-delete (undoable back to `active`); `pending_delete` is
+ * `removed` **and** a re-pull confirmed it's no longer in the source
+ * collection (confirm to hard-delete, or undo back to `active`).
+ */
+export type CollectionItemStatus = 'active' | 'removed' | 'pending_delete';
+
 /** Join of collection ↔ game, plus BGG collection-specific facts. */
 export interface CollectionItem {
 	id: string;
@@ -63,6 +74,26 @@ export interface CollectionItem {
 	owned: boolean;
 	userRating: number | null;
 	numPlays: number | null;
+	source: CollectionItemSource;
+	status: CollectionItemStatus;
+	/** When the item entered `removed` (nullable; for display, e.g. "removed 3 days ago"). */
+	removedAt: string | null;
+}
+
+/** Lifecycle of a surfaced possible duplicate. */
+export type CollectionItemDuplicateStatus = 'pending' | 'confirmed_same' | 'rejected_distinct';
+
+/**
+ * A possible duplicate surfaced by a collection re-pull: a `local_add`
+ * `CollectionItem` whose title fuzzy-matched a newly-pulled game under a
+ * different `bgg_id`. See `datamodel.md`.
+ */
+export interface CollectionItemDuplicate {
+	id: string;
+	collectionItemId: string;
+	candidateGameId: number;
+	status: CollectionItemDuplicateStatus;
+	createdAt: string;
 }
 
 /** A reusable, user-owned curated group of games (see Pool builder). */

@@ -68,3 +68,42 @@ describe('initial schema', () => {
 		expect(fk.count).toBeGreaterThan(0);
 	});
 });
+
+// collection-editing-and-resync (T001): Collection unique (user_id,
+// bgg_username); CollectionItem.source/status/removed_at; CollectionItemDuplicate.
+describe('collection editing & resync schema', () => {
+	async function makeUser(): Promise<string> {
+		const [row] = await sql<{ id: string }[]>`
+			insert into auth.users (id) values (gen_random_uuid()) returning id`;
+		return row.id;
+	}
+
+	it('rejects a duplicate (user_id, bgg_username) collection insert', async () => {
+		const userId = await makeUser();
+		await sql`insert into collections (user_id, bgg_username) values (${userId}, 'tyler')`;
+		await expect(
+			sql`insert into collections (user_id, bgg_username) values (${userId}, 'tyler')`
+		).rejects.toThrow();
+	});
+
+	it('backfills existing collection_items to source=bgg_import, status=active', async () => {
+		const userId = await makeUser();
+		const [collection] = await sql<{ id: string }[]>`
+			insert into collections (user_id, bgg_username) values (${userId}, 'someoneelse') returning id`;
+		const [game] = await sql<{ id: number }[]>`
+			insert into games (bgg_id, name) values (999001, 'Backfill Game') returning id`;
+		const [item] = await sql<{ id: string; source: string; status: string; removed_at: string | null }[]>`
+			insert into collection_items (collection_id, game_id) values (${collection.id}, ${game.id})
+			returning id, source, status, removed_at`;
+		expect(item.source).toBe('bgg_import');
+		expect(item.status).toBe('active');
+		expect(item.removed_at).toBeNull();
+	});
+
+	it('creates the collection_item_duplicates table with expected columns', async () => {
+		const cols = await columns('collection_item_duplicates');
+		for (const c of ['id', 'collection_item_id', 'candidate_game_id', 'status', 'created_at']) {
+			expect(cols, `collection_item_duplicates.${c}`).toContain(c);
+		}
+	});
+});

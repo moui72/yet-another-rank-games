@@ -1,5 +1,12 @@
 import type { Generated } from 'kysely';
-import type { RankingMethod, ListStatus, ImportStatus } from '$lib/types/entities';
+import type {
+	RankingMethod,
+	ListStatus,
+	ImportStatus,
+	CollectionItemSource,
+	CollectionItemStatus,
+	CollectionItemDuplicateStatus
+} from '$lib/types/entities';
 
 /**
  * Kysely database interface — the typed view of the Postgres schema
@@ -49,6 +56,17 @@ interface CollectionItemsTable {
 	owned: Generated<boolean>;
 	userRating: number | null;
 	numPlays: number | null;
+	source: Generated<CollectionItemSource>;
+	status: Generated<CollectionItemStatus>;
+	removedAt: string | null;
+}
+
+interface CollectionItemDuplicatesTable {
+	id: Generated<string>;
+	collectionItemId: string;
+	candidateGameId: number;
+	status: Generated<CollectionItemDuplicateStatus>;
+	createdAt: Generated<string>;
 }
 
 interface PoolsTable {
@@ -99,6 +117,7 @@ export interface Database {
 	games: GamesTable;
 	collections: CollectionsTable;
 	collectionItems: CollectionItemsTable;
+	collectionItemDuplicates: CollectionItemDuplicatesTable;
 	pools: PoolsTable;
 	poolGames: PoolGamesTable;
 	lists: ListsTable;

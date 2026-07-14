@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Data model migration
 
-- [ ] T001 [artifacts: datamodel] Write a migration adding: `Collection`
+- [x] T001 [artifacts: datamodel] Write a migration adding: `Collection`
   unique `(user_id, bgg_username)`; `CollectionItem.source` enum
   (`bgg_import`/`local_add`, backfilled `bgg_import` for existing rows);
   `CollectionItem.status` enum (`active`/`removed`/`pending_delete`,
