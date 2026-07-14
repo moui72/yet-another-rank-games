@@ -1,6 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-14 (collection-editing-and-resync planned + tasked). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-14 (post-ship follow-up: diagrams refreshed, datamodel.md refined, defects re-verified). Keep this current as artifacts are refined and open questions are resolved._
 
 ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/ardd-update`.
 
@@ -9,27 +9,24 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
 | Artifact | Status | Open questions |
 |---|---|---|
 | constitution.md | stable ✅ | — |
-| datamodel.md | draft ⚠️ | 1 |
+| datamodel.md | stable ✅ | — |
 | infrastructure.md | stable ✅ | — |
 | design.md | stable ✅ | — |
 | ui.md | draft ⚠️ | 1 |
 
 ## Open Questions
 
-**datamodel**
-- Title-matching heuristic for the collection-resync "might be" duplicate detection (similarity threshold, edition/subtitle normalization) — explicitly deferred, to be tuned during implementation (task T007 of `tasks-collection-editing-and-resync-b3ff.md`).
-
 **ui**
 - Public sharing model — whether a list can be exposed as a read-only shared view (deferred product decision).
 
 ## Feature Backlog
 
-- **2 backlogged** (`bgg-cover-art-and-card-view` — BGG cover art, a card display option, art in comparison cards, and a no-images preference; `pool-completion-celebration` — confetti animation and hiding comparison controls once a pool becomes fully deterministically ordered) · 0 planned · **1 tasked** (`collection-editing-and-resync` — view/edit an imported collection, re-pull to resync, and reconcile local edits against BGG via soft-delete + fuzzy-match "might be" relations; plan approved, tasks ready) · 3 implemented (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`) — see `.project/features/`. Target a backlogged slug with `/ardd-plan <slug>` when ready to design it.
+- **2 backlogged** (`bgg-cover-art-and-card-view` — BGG cover art, a card display option, art in comparison cards, and a no-images preference; `pool-completion-celebration` — confetti animation and hiding comparison controls once a pool becomes fully deterministically ordered) · 0 planned · 0 tasked · **4 implemented** (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`, `collection-editing-and-resync`) — see `.project/features/`. Target a backlogged slug with `/ardd-plan <slug>` when ready to design it.
 
 ## Plans & Tasks
 
 - `research-collection-editing-and-resync-reconciliation-2026-07-14-47f7.md` — proposal-vetting research, consumed by the plan below.
-- `plan-collection-editing-and-resync-2026-07-14-d0af.md` — **approved**; `tasks-collection-editing-and-resync-b3ff.md` **ready, 0/15**. Covers the collection editing/resync feature (5 phases) plus feedback F001–F003 (Phase 5, pairwise ranking view's unranked/ranked split). Not yet implemented — run `/ardd-implement` when ready to start.
+- `plan-collection-editing-and-resync-2026-07-14-d0af.md` — approved; `tasks-collection-editing-and-resync-b3ff.md` **completed, 15/15**. Merged to `main`. Delivered: collection soft-delete/undo/hard-delete lifecycle, username-keyed collection dedup, re-pull resync reconciliation, fuzzy-title duplicate detection + user-scoped confirm-merge/reject-distinct, a new Collection management view (reusing a shared `BggSearchAdd` widget with the pool builder), and the pairwise ranking view's Ranked/Unranked split (feedback F001–F003, `PoolGame.excludedFromRanking`). Full suite green: 124 unit + 63 integration (real local Postgres) + 14 e2e tests; lint/typecheck clean.
 - `plan-foundation-2026-07-10.md` — approved; `tasks-foundation-cd84.md` **in-progress, 41/46**. Its remaining Phase 6 (T035–T039) is **superseded** by the multi-env-deploy plan; the file stays as the record of Phases 0–5.
 - `plan-bgg-geeklist-and-search-2026-07-12.md` — approved; `tasks-bgg-geeklist-and-search-2299.md` **completed, 7/7**. Shipped + merged.
 - `plan-multi-env-deploy-2026-07-12.md` — approved; `tasks-multi-env-deploy-5928.md` **completed, 8/8**. Merged to `main`.
@@ -37,18 +34,18 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
 
 ## Diagrams
 
-- datamodel.md — stale ⚠️ (run `/ardd-diagram datamodel`) — new `CollectionItemDuplicate` entity and `CollectionItem` field additions from this plan
+- datamodel.md — current ✅ (regenerated: `CollectionItemDuplicate` entity, `CollectionItem.source/status/removed_at`, `PoolGame.excluded_from_ranking`)
 - infrastructure.md — current ✅
-- ui.md — stale ⚠️ (run `/ardd-diagram ui`) — new Collection editing & resync section from this plan
+- ui.md — current ✅ (regenerated: Collection import & management view, resync flow)
 
 ## Code-vs-Artifact Defects
 
-No defects — last checked 2026-07-12. Run `/ardd-defects` to refresh (artifacts have changed significantly since — the collection-editing-and-resync schema/UI additions are plan-only so far, not yet implemented, so no drift is expected until `/ardd-implement` runs).
+No defects — last checked 2026-07-14. One finding from this pass (`PoolGame.excluded_from_ranking` implemented but undocumented on `PoolGame` in `datamodel.md`) was fixed immediately via `/ardd-refine datamodel`; re-verified clean afterward.
 
 ## In Flight
 
-Nothing in flight — all worktrees from this session have been merged and removed.
+Nothing in flight — the collection-editing-and-resync worktree merged and was removed this run.
 
 ## Recommended Next Step
 
-`collection-editing-and-resync` now has an approved plan and a ready tasks file (`tasks-collection-editing-and-resync-b3ff.md`, 0/15) — run `/ardd-implement` to start executing it. Two other features remain backlogged and unplanned: `bgg-cover-art-and-card-view` and `pool-completion-celebration` — run `/ardd-plan <slug>` on either when ready to design it. Lower-priority: the `ui.md` open question (public sharing model) is a deferred product decision with no urgency, the new `datamodel.md` open question (title-matching heuristic) is intentionally deferred to T007's implementation, both `datamodel.md` and `ui.md` diagrams are now stale (`/ardd-diagram <name>` to refresh), and the ARDD tool itself has an update available (`/ardd-update`).
+All post-ship follow-up for `collection-editing-and-resync` is done: defects checked (and the one finding fixed), both diagrams regenerated, and `datamodel.md`'s open question closed (now `stable`, no open questions). Two features remain backlogged and unplanned: `bgg-cover-art-and-card-view` and `pool-completion-celebration` — run `/ardd-plan <slug>` on either when ready to design it. Lower priority: `ui.md`'s public-sharing open question has no urgency, and the ARDD tool itself has an update available (`/ardd-update`).

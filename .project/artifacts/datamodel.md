@@ -1,10 +1,10 @@
 ---
 name: datamodel
-status: draft
+status: stable
 last_updated: 2026-07-14
 diagram_type: erDiagram
 render_section: Datamodel
-diagram_status: stale
+diagram_status: current
 ---
 
 # Data Model
@@ -139,8 +139,11 @@ and never touches any other user's data.
 | status | enum | `pending` \| `confirmed_same` \| `rejected_distinct` |
 | created_at | timestamptz | |
 
-[OPEN: the title-matching heuristic itself (similarity threshold, edition/subtitle
-normalization) is left for implementation to tune — not a blocker to planning.]
+**Matching heuristic (v1, implemented):** case-insensitive exact match, plus
+an edit-distance threshold over normalized titles (see
+`src/lib/domain/duplicateMatch.ts`). No edition/subtitle-specific
+normalization beyond that yet — revisit with real usage if it proves too
+loose or too strict.
 
 ### Pool
 
@@ -163,6 +166,7 @@ Membership of the pool — the explicit, editable set of eligible games.
 | id | uuid | |
 | pool_id | uuid | → Pool |
 | game_id | bigint | → Game |
+| excluded_from_ranking | boolean | default `false`; lets a game be manually pulled out of a list's active ranking (the pairwise view's "x") without losing its `Comparison` history — distinct from simply having zero comparisons yet (feedback F001–F003) |
 | — | — | unique `(pool_id, game_id)` |
 
 ### List

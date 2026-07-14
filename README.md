@@ -76,6 +76,8 @@ erDiagram
     List ||--o{ ListEntry : orders
     Game ||--o{ Comparison : "compared as"
     Game ||--o{ ListEntry : ranks
+    CollectionItem ||--o| CollectionItemDuplicate : "might be"
+    Game ||--o{ CollectionItemDuplicate : "candidate match"
 
     User {
         uuid id PK
@@ -100,6 +102,15 @@ erDiagram
         bigint game_id FK
         boolean owned
         numeric user_rating
+        enum source
+        enum status
+        timestamptz removed_at
+    }
+    CollectionItemDuplicate {
+        uuid id PK
+        uuid collection_item_id FK
+        bigint candidate_game_id FK
+        enum status
     }
     Pool {
         uuid id PK
@@ -110,6 +121,7 @@ erDiagram
         uuid id PK
         uuid pool_id FK
         bigint game_id FK
+        boolean excluded_from_ranking
     }
     List {
         uuid id PK
@@ -133,7 +145,6 @@ erDiagram
         numeric score
     }
 ```
-
 
 ## Infrastructure
 
@@ -177,14 +188,17 @@ graph TD
 
 ```mermaid
 graph TD
-    Import["Collection import view\n(queued → fetching → processing → done)"]
+    Import["Collection import & management view\n(queued → fetching → processing → done;\nview/edit active + removed items)"]
+    Resync["Collection resync\n(re-pull, reconcile removed/pending-delete,\npossible-duplicates review)"]
     PoolBuilder["Pool builder view\n(filter bulk-add, hand-edit,\nBGG search-import)"]
     ListMgmt["List management view\n(create list from pool,\nchoose ranking method)"]
-    Pairwise["Pairwise ranking view\n(novelty-preferring matchups,\nkeyboard-operable)"]
+    Pairwise["Pairwise ranking view\n(Ranked / Unranked split,\nnovelty-preferring matchups,\nkeyboard-operable)"]
     Manual["Manual drag-to-order view\n(override / fallback)"]
     Result["List result & export view\n(Markdown / CSV / JSON / GeekList)"]
 
     Import -->|collection populated| PoolBuilder
+    Import -->|re-pull triggered| Resync
+    Resync -->|reconciled| Import
     PoolBuilder -->|pool created| ListMgmt
     ListMgmt -->|method = pairwise| Pairwise
     ListMgmt -->|method = manual| Manual
