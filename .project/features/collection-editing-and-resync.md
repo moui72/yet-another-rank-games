@@ -1,6 +1,6 @@
 ---
 slug: collection-editing-and-resync
-status: tasked
+status: implemented
 logged: 2026-07-14
 plan: plan-collection-editing-and-resync-2026-07-14-d0af.md
 tasks: tasks-collection-editing-and-resync-b3ff.md

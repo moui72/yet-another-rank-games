@@ -1,7 +1,7 @@
 ---
 plan: plan-collection-editing-and-resync-2026-07-14-d0af.md
 generated: 2026-07-14
-status: in-progress
+status: completed
 ---
 
 # Tasks
