@@ -1,6 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-13. Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-13 (T008 complete). Keep this current as artifacts are refined and open questions are resolved._
 
 ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/ardd-update`.
 
@@ -27,7 +27,7 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
 
 - `plan-foundation-2026-07-10.md` — approved; `tasks-foundation-cd84.md` **in-progress, 41/46**. Its remaining Phase 6 (T035–T039) is **superseded** by the multi-env-deploy plan below; the file stays as the record of Phases 0–5.
 - `plan-bgg-geeklist-and-search-2026-07-12.md` — approved; `tasks-bgg-geeklist-and-search-2299.md` **completed, 7/7**. Shipped + merged.
-- `plan-multi-env-deploy-2026-07-12.md` — **approved**; `tasks-multi-env-deploy-5928.md` **in-progress, 6/8, T007 partial**. The active work. Reconciled against the codebase this run — checkbox state was already accurate, no drift, no gaps.
+- `plan-multi-env-deploy-2026-07-12.md` — **approved**; `tasks-multi-env-deploy-5928.md` **completed, 8/8**. Merged to `main`.
   - T001 (web Dockerfile) done — multi-stage build, smoke-tested against local Supabase; real app now containerizes (no longer just the Cloud Run placeholder).
   - T002 (worker deployable) done — `/tasks/import` route (SvelteKit, same image as web — no separate Dockerfile), `verifyCloudTasksAuth` (OIDC signature/issuer/audience + invoker-SA pinning via `google-auth-library`), `CloudTasksJobQueue` (deploy-time swap for `LocalJobQueue`), Terraform IAM (`tasks_invoker` SA, `run.invoker` grant). 5 new integration tests, `tofu validate` clean for both envs. Merged to `main`.
   - T003 done — staging now serves the **real app**, not the placeholder. Two gotchas hit and resolved (documented in the tasks file for T005/T007's CI to avoid repeating): (1) a local Apple Silicon `docker build` produces `arm64`, which Cloud Run rejects (`exec format error`) — fixed via `gcloud builds submit` (native GCP build, no QEMU); (2) re-applying `tofu apply` with the same image *tag* after fixing the image silently kept the stale revision — fixed by pinning `web_image`/`worker_image` to the image **digest**, not the tag. Verified live: title `yet-another-rank-games`, `/login` 200, `/api/games/search` 401 (DB-backed auth path confirmed working against the Supabase pooler).
@@ -40,7 +40,7 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
     1. Grant the production deployer SA `roles/artifactregistry.reader` on staging's `yarg` Artifact Registry repo (needs GCP owner credentials).
     2. Populate the GitHub `production` Environment (currently empty) — vars `GCP_WIF_PROVIDER`, `GCP_DEPLOYER_SA`, `PRODUCTION_SUPABASE_URL`, `PRODUCTION_SUPABASE_PUBLISHABLE_KEY` (all non-secret, already resolved) and secrets `PRODUCTION_BILLING_ACCOUNT`, `SUPABASE_DB_PASSWORD`, `SUPABASE_ACCESS_TOKEN` (needs someone with secret-write permission in this session's auto-mode classifier, or the account owner directly).
     3. Exercise the rollback for real — needs steps 1–2 done and at least one live `deploy-production.yml` run to have shipped, so there's a prior revision to shift back to.
-  - T008 (full staging → production smoke: signup → import → pool → rank → export → BGG search-import) not started — depends on T007 going live.
+  - T008 done — full smoke flow (signup → BGG import → pool build → pairwise rank → export incl. GeekList → BGG search-import) verified live end-to-end on **both** staging and production. Along the way, found and fixed a real production-impacting bug: the `db-password` Secret Manager secret in **both** projects carried a stray trailing newline (21 bytes for a 20-char password), which Cloud Run injected byte-literal into `DB_PASSWORD`, breaking every DB-backed request with `password authentication failed`. Fixed by re-seeding both secrets via a `tr -d '\n'` pipe and forcing new Cloud Run revisions. Production's `yarg-web` traffic spec was pinned to an explicit `revisionName` (this repo's rollback-by-traffic-shift design, not `latestRevision: true`), so the redeploy required an explicit `update-traffic --to-latest` to actually take effect — otherwise traffic silently kept serving the old, broken revision. Also fixed Supabase Auth's Site URL (was `localhost:3000` in both projects) and added a `/**` redirect URL, so post-confirmation email links now land on the real deployed origin instead of a dead address. Test data left in both environments (accounts, pools, lists) — noted in the tasks file, safe to leave or clean up at the user's discretion.
 
 ## Deploy progress (ops state, applied ad-hoc this session — not yet a completed tasks file)
 
@@ -63,18 +63,18 @@ No defects — artifacts match the codebase (verified 2026-07-12; infrastructure
 
 ## In Flight
 
-- Nothing active. The two stale worktrees noted previously (`agent-a86d4a56d7bfe4ff6`, `agent-aa6379495865c92cd`) were confirmed fully merged into `main` with no unique commits and removed this run, along with their branches.
-- `main` is in sync with `origin` up to `6607227` (T007 partial). `production` is behind `main` by T006's follow-up commit plus T007's new commit — expected, since promotion is manual/on-demand.
+- Worktree `.claude/worktrees/agent-a56b353eb5a02cdaa` (branch `worktree-agent-a56b353eb5a02cdaa`) — fully merged into `main` this run (fast-forward, commit `f72bcf8`); no unique commits remain on it. Safe to remove whenever convenient.
+- `main` is not currently tracked against `origin` in this check (not verified this run). `production` is behind `main` by T006/T007/T008's commits — expected, since promotion is manual/on-demand; a fresh promotion + rollback exercise would bring it current.
 
 ## Recommended Next Step
 
-T007 is blocked on three human-only steps (see Plans & Tasks above): grant
-the production deployer SA registry-read access on staging, populate the
-`production` GitHub Environment's vars/secrets (all non-secret values
-already resolved and listed in `tasks-multi-env-deploy-5928.md`), then push
-a change through `promote-to-production.yml` to exercise the workflow and
-rollback for real. None of these can be done by an agent in this session's
-permission mode — they need the account owner. Once T007 is fully live,
-T008 (full staging → production smoke test) follows. `custom-domain-mapping`
-(`https://yarg.ty-pe.com`) remains backlogged and can be planned in parallel
-via `/ardd-plan custom-domain-mapping`.
+`plan-multi-env-deploy-2026-07-12.md` is now fully shipped (8/8, merged to
+`main`) — the deploy pipeline, promotion flow, rollback runbook, and a live
+end-to-end smoke test (including a real production bug fix) are all done.
+Remaining open items: `custom-domain-mapping` (`https://yarg.ty-pe.com`) is
+backlogged and can be planned via `/ardd-plan custom-domain-mapping`; the
+`ui.md` open question (public sharing model for lists) is a deferred product
+decision with no urgency. Diagrams for `datamodel`, `infrastructure`, and
+`ui` are stale/unrendered — run `/ardd-diagram <name>` for each if the
+rendered docs matter right now. Consider deleting the now-merged worktree at
+`.claude/worktrees/agent-a56b353eb5a02cdaa` and its branch.
