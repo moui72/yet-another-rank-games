@@ -56,7 +56,7 @@ status: in-progress
   edit-distance threshold is sufficient for v1. Write a test first: a
   `local_add` item with a near-identical title to a pulled game produces a
   pending duplicate; an unrelated title does not; then implement.
-- [ ] T008 [artifacts: datamodel] Implement confirm-merge and reject-distinct
+- [x] T008 [artifacts: datamodel] Implement confirm-merge and reject-distinct
   for a `CollectionItemDuplicate`: confirm repoints the confirming user's own
   `PoolGame`/`Comparison` rows referencing the `local_add` item's `game_id`
   to `candidate_game_id`, then deletes the now-redundant `CollectionItem`;
