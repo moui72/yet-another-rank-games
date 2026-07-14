@@ -28,7 +28,7 @@ status: in-progress
   Console via TXT record
   `google-site-verification=-wew4xM9zOFBR32cJUe7nETkXTyoIbvon2TgM_hBA7E` added
   at Namecheap.
-- [ ] T003 Depends on T001 + T002. Run `tofu apply` scoped to the new
+- [x] T003 Depends on T001 + T002. Run `tofu apply` scoped to the new
   domain-mapping resource in the production environment (mirror the
   `-target=module.environment` scoping used by CI in the multi-env-deploy
   plan, e.g. `-target=module.environment.google_cloud_run_domain_mapping.<name>`).
