@@ -1,10 +1,10 @@
 ---
 name: ui
 status: draft
-last_updated: 2026-07-12
+last_updated: 2026-07-14
 diagram_type: graph TD
 render_section: UI
-diagram_status: current
+diagram_status: stale
 ---
 
 # UI
@@ -23,13 +23,42 @@ primarily) → view/export the result.**
 Heavy comparison state lives in **one reactive store per runtime**
 (constitution Principle XII), not threaded between components by reference.
 
-## Collection import view
+## Collection import & management view
 
 - User enters/confirms a BGG username and triggers an import.
 - Import is asynchronous (Cloud Tasks + worker; see `infrastructure.md`), so
   this view shows **live progress**, not a frozen spinner: queued → fetching →
   processing → done, with a clear failure state if BGG gives up.
-- Re-import is explicit and user-initiated (data is cached otherwise).
+- Re-import is explicit and user-initiated (data is cached otherwise). A given
+  BGG username can only be imported once per user — re-importing the same
+  username **re-pulls into the existing `Collection`** (see resync below)
+  rather than creating a second one.
+
+### Collection editing & resync (feature `collection-editing-and-resync`)
+
+Unlike the pool builder's hand-edit (which is per-pool and
+collection-agnostic — see `datamodel.md`), editing here is a curation layer
+**upstream** of every pool built from this collection: e.g. "I no longer own
+this expansion" should stop it being offered by every pool filter over this
+collection, which a per-pool edit can't express since it only affects one pool.
+
+- **View:** active items, plus a collapsible **"Removed"** section for items
+  in `removed`/`pending_delete` status.
+- **Remove** an active item: soft-delete (`status → removed`). Reversible —
+  the Removed section offers an **undo** back to `active`.
+- **Add** an item: same BGG search-import flow as the pool builder
+  (`bgg-game-search-import`) — every locally-added item always has a real
+  `bgg_id`/`Game` row, never a free-text placeholder.
+- **Re-pull / resync:** re-fetches the collection from BGG and reconciles:
+  - A `removed` item no longer present in the pulled collection additionally
+    becomes `pending_delete` — the Removed section then offers **confirm
+    (hard-delete)** alongside undo.
+  - A `local_add` item whose title fuzzy-matches a newly-pulled game under a
+    different `bgg_id` produces a `CollectionItemDuplicate` (see
+    `datamodel.md`); the resync surfaces a **possible-duplicates review**
+    step: for each, **confirm merge** (repoints this user's own pool/list
+    references to the pulled game and drops the local duplicate) or **reject,
+    keep distinct**.
 
 ## Pool builder view
 

@@ -1,10 +1,10 @@
 ---
 name: datamodel
-status: stable
-last_updated: 2026-07-12
+status: draft
+last_updated: 2026-07-14
 diagram_type: erDiagram
 render_section: Datamodel
-diagram_status: current
+diagram_status: stale
 ---
 
 # Data Model
@@ -97,10 +97,16 @@ A user's imported BGG collection.
 | import_status | enum | `idle` \| `importing` \| `complete` \| `failed`; import lifecycle |
 | import_error | string | failure message when `import_status = failed` (app-side dead-letter); nullable |
 | created_at | timestamptz | |
+| — | — | unique `(user_id, bgg_username)` — a user can't import the same BGG username twice |
 
 ### CollectionItem
 
-Join of Collection ↔ Game, plus BGG collection-specific facts.
+Join of Collection ↔ Game, plus BGG collection-specific facts. A collection is a
+**one-way sync from BGG**, but items can be edited locally (feature
+`collection-editing-and-resync`); `source`/`status` track that editing layer so a
+later re-pull can reconcile rather than silently overwrite local changes. This
+lifecycle applies to `CollectionItem` only — `Game` rows stay global/shared and
+are never soft- or hard-deleted by this feature (see Production Annotations).
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -110,6 +116,31 @@ Join of Collection ↔ Game, plus BGG collection-specific facts.
 | owned | boolean | from BGG collection status |
 | user_rating | numeric | the user's BGG rating, nullable |
 | num_plays | integer | nullable |
+| source | enum | `bgg_import` \| `local_add`; provenance. Only `local_add` items are candidates for the re-pull fuzzy-match reconciliation below — a `bgg_import` item is matched by `game_id`/`bgg_id` directly. `local_add` items are always added via BGG search-import (feature `bgg-game-search-import`), so they always carry a definite `game_id` — never a free-text/unlinked placeholder. |
+| status | enum | `active` \| `removed` \| `pending_delete`; the local edit lifecycle. `active` is normal. `removed`: user soft-deleted it (undoable back to `active`); the item is still visible in a "Removed" view. `pending_delete`: was `removed` **and** the next re-pull confirmed it's no longer present in the source collection — the user can confirm to hard-delete the row, or undo back to `active`. |
+| removed_at | timestamptz | nullable; when the item entered `removed` (for display, e.g. "removed 3 days ago") |
+
+### CollectionItemDuplicate
+
+Records a possible duplicate surfaced by a collection re-pull: a `local_add`
+`CollectionItem` whose title fuzzy-matches a newly-pulled game under a
+different `bgg_id` (e.g. a reprint/alternate edition entered as a distinct BGG
+game). Confirming a match is **scoped to the confirming user only** — it
+repoints that user's own `PoolGame`/`Comparison` rows that reference the
+`local_add` item's game to `candidate_game_id`, and removes the now-redundant
+`CollectionItem`. It never merges the shared `Game` catalogue rows themselves
+and never touches any other user's data.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| id | uuid | |
+| collection_item_id | uuid | → CollectionItem (the `local_add` item) |
+| candidate_game_id | bigint | → Game (the newly-pulled game the title matched) |
+| status | enum | `pending` \| `confirmed_same` \| `rejected_distinct` |
+| created_at | timestamptz | |
+
+[OPEN: the title-matching heuristic itself (similarity threshold, edition/subtitle
+normalization) is left for implementation to tune — not a blocker to planning.]
 
 ### Pool
 
@@ -240,6 +271,9 @@ rather than silently ignored.
 - `Game.bgg_id` — unique (import upsert, lookups).
 - `CollectionItem (collection_id, game_id)` — unique; index on `collection_id`
   for listing a collection.
+- `CollectionItem.status` — filtering the active/removed/pending-delete views.
+- `CollectionItemDuplicate.collection_item_id` — looking up a `local_add`
+  item's pending duplicate, if any.
 - `Comparison.list_id` — comparisons are read/written per list constantly by the
   ranking algorithm.
 - `ListEntry (list_id, position)` — rendering a list in order.
@@ -254,6 +288,11 @@ rather than silently ignored.
   Security is deliberately off (see `infrastructure.md`), so there is no
   database-level backstop — a hardened production posture would enable RLS as
   defense-in-depth.
-- **No soft-delete / audit history**: entities are hard-deleted and comparison
-  history is not versioned beyond `created_at` — a production system handling
-  valuable user data might add soft-deletes and an audit trail.
+- **No soft-delete / audit history, except `CollectionItem`**: all other
+  entities are hard-deleted and comparison history is not versioned beyond
+  `created_at` — a production system handling valuable user data might add
+  soft-deletes and an audit trail more broadly. `CollectionItem` is the one
+  deliberate exception (feature `collection-editing-and-resync`): its
+  `removed`/`pending_delete` lifecycle exists specifically so a BGG re-pull can
+  reconcile local edits instead of silently overwriting them, not as a general
+  audit-trail policy.
