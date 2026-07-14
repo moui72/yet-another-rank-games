@@ -4,7 +4,12 @@ import { runImport, executeImportJob, type ImportDeps } from './importJob';
 import { BggQueuedTimeoutError } from '../bgg/collection';
 import { createUser } from '../repositories/users';
 import { createCollection } from '../repositories/collections';
-import { listItemsByCollection } from '../repositories/collectionItems';
+import {
+	listItemsByCollection,
+	softDeleteCollectionItem,
+	addLocalCollectionItem
+} from '../repositories/collectionItems';
+import { upsertGame } from '../repositories/games';
 import type { BggCollectionItem, BggThing } from '../bgg/types';
 
 async function makeUserAndCollection(): Promise<{ userId: string; collectionId: string }> {
@@ -125,6 +130,103 @@ describe('runImport', () => {
 			select name, weight from games where bgg_id = 13`;
 		expect(name).toBe('Catan');
 		expect(weight).toBeNull();
+	});
+});
+
+describe('runImport resync reconciliation (T006)', () => {
+	it('flips a removed item to pending_delete when its bggId is absent from the re-pull', async () => {
+		const { collectionId } = await makeUserAndCollection();
+		await runImport(deps([CATAN_ITEM, CARC_ITEM], [CATAN_THING, CARC_THING]), {
+			collectionId,
+			username: 'tyler'
+		});
+		const items = await listItemsByCollection(db, collectionId);
+		const catanItem = items.find((i) => i.userRating === 9)!;
+		await softDeleteCollectionItem(db, catanItem.id);
+
+		// Re-pull with only Carcassonne present — Catan is gone from BGG.
+		await runImport(deps([CARC_ITEM], [CARC_THING]), { collectionId, username: 'tyler' });
+
+		const after = await listItemsByCollection(db, collectionId);
+		const catanAfter = after.find((i) => i.id === catanItem.id)!;
+		expect(catanAfter.status).toBe('pending_delete');
+	});
+
+	it('leaves a removed item that is still present in the re-pull as removed (not un-removed)', async () => {
+		const { collectionId } = await makeUserAndCollection();
+		await runImport(deps([CATAN_ITEM, CARC_ITEM], [CATAN_THING, CARC_THING]), {
+			collectionId,
+			username: 'tyler'
+		});
+		const items = await listItemsByCollection(db, collectionId);
+		const catanItem = items.find((i) => i.userRating === 9)!;
+		await softDeleteCollectionItem(db, catanItem.id);
+
+		// Re-pull with Catan still present — BGG re-adding it shouldn't un-remove it.
+		await runImport(deps([CATAN_ITEM, CARC_ITEM], [CATAN_THING, CARC_THING]), {
+			collectionId,
+			username: 'tyler'
+		});
+
+		const after = await listItemsByCollection(db, collectionId);
+		const catanAfter = after.find((i) => i.id === catanItem.id)!;
+		expect(catanAfter.status).toBe('removed');
+	});
+});
+
+describe('runImport fuzzy-title duplicate detection (T007)', () => {
+	async function pendingDuplicatesFor(collectionItemId: string) {
+		return sql<{ candidate_game_id: number; status: string }[]>`
+			select candidate_game_id, status from collection_item_duplicates
+			where collection_item_id = ${collectionItemId}`;
+	}
+
+	it('flags a local_add item whose title fuzzy-matches a newly-pulled game', async () => {
+		const { collectionId } = await makeUserAndCollection();
+		// A local add for a reprint edition, entered under its own bggId.
+		const reprint = await upsertGame(db, {
+			bggId: 90013,
+			name: 'Catan',
+			yearPublished: 2015,
+			weight: null,
+			minPlayers: null,
+			maxPlayers: null,
+			playingTime: null,
+			thumbnailUrl: null,
+			mechanics: [],
+			categories: [],
+			isExpansion: false
+		});
+		const localItem = await addLocalCollectionItem(db, { collectionId, gameId: reprint.id });
+
+		// Re-pull brings in the original Catan under a different bggId (13).
+		await runImport(deps([CATAN_ITEM], [CATAN_THING]), { collectionId, username: 'tyler' });
+
+		const dups = await pendingDuplicatesFor(localItem.id);
+		expect(dups).toHaveLength(1);
+		expect(dups[0].status).toBe('pending');
+	});
+
+	it('does not flag an unrelated local_add title', async () => {
+		const { collectionId } = await makeUserAndCollection();
+		const unrelated = await upsertGame(db, {
+			bggId: 90014,
+			name: 'Some Totally Different Game',
+			yearPublished: 2015,
+			weight: null,
+			minPlayers: null,
+			maxPlayers: null,
+			playingTime: null,
+			thumbnailUrl: null,
+			mechanics: [],
+			categories: [],
+			isExpansion: false
+		});
+		const localItem = await addLocalCollectionItem(db, { collectionId, gameId: unrelated.id });
+
+		await runImport(deps([CATAN_ITEM], [CATAN_THING]), { collectionId, username: 'tyler' });
+
+		expect(await pendingDuplicatesFor(localItem.id)).toHaveLength(0);
 	});
 });
 

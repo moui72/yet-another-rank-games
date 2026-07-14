@@ -3,7 +3,14 @@ import type { Database } from '../schema';
 import type { ImportJob } from './types';
 import type { BggCollectionItem, BggThing } from '../bgg/types';
 import { upsertGame, findFreshGameIds } from '../repositories/games';
-import { upsertCollectionItem } from '../repositories/collectionItems';
+import {
+	upsertCollectionItem,
+	listRemovedItemsWithBggId,
+	markItemsPendingDelete,
+	listActiveLocalAddItemsWithTitle,
+	upsertPendingDuplicate
+} from '../repositories/collectionItems';
+import { findFuzzyDuplicate, type DuplicateCandidate } from '$lib/domain/duplicateMatch';
 import {
 	markCollectionSynced,
 	markCollectionImporting,
@@ -86,6 +93,39 @@ export async function runImport(
 			userRating: item.userRating,
 			numPlays: item.numPlays
 		});
+	}
+
+	// Resync reconciliation (T006): a `removed` item whose game is no longer in
+	// the freshly-pulled set becomes `pending_delete` — the source confirmed
+	// it's gone, so the user can now confirm the hard-delete (or still undo).
+	// A `removed` item BGG still reports stays `removed`: re-appearing in the
+	// pull must not silently un-remove a user's local edit.
+	const pulledBggIds = new Set(bggIds);
+	const removedItems = await listRemovedItemsWithBggId(deps.db, job.collectionId);
+	const toPendingDelete = removedItems
+		.filter((r) => !pulledBggIds.has(r.bggId))
+		.map((r) => r.id);
+	await markItemsPendingDelete(deps.db, toPendingDelete);
+
+	// Fuzzy-title duplicate detection (T007): for each active `local_add` item,
+	// compare its title against this pull's games (excluding its own game) —
+	// a match (e.g. a reprint/alternate edition entered as a distinct BGG game)
+	// surfaces a `CollectionItemDuplicate` for the user to confirm or reject.
+	const pulledCandidates: DuplicateCandidate[] = items
+		.map((item) => {
+			const gameId = gameIdByBggId.get(item.bggId);
+			return gameId !== undefined ? { gameId, title: item.name } : null;
+		})
+		.filter((c): c is DuplicateCandidate => c !== null);
+	const localAddItems = await listActiveLocalAddItemsWithTitle(deps.db, job.collectionId);
+	for (const local of localAddItems) {
+		const match = findFuzzyDuplicate(local.title, local.gameId, pulledCandidates);
+		if (match) {
+			await upsertPendingDuplicate(deps.db, {
+				collectionItemId: local.id,
+				candidateGameId: match.gameId
+			});
+		}
 	}
 
 	await markCollectionSynced(deps.db, job.collectionId);

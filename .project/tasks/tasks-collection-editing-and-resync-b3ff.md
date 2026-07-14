@@ -41,14 +41,14 @@ status: in-progress
 
 ## Phase 3: Re-pull / resync reconciliation
 
-- [ ] T006 [artifacts: datamodel, infrastructure] Implement resync
+- [x] T006 [artifacts: datamodel, infrastructure] Implement resync
   reconciliation: on re-pull, for each currently-`removed` `CollectionItem`
   whose `bgg_id` is absent from the freshly-pulled set, flip it to
   `pending_delete`. Write a test first: a removed item missing from a
   simulated re-pull becomes `pending_delete`; a removed item still present
   in the pull stays `removed` (BGG re-adding it doesn't silently un-remove
   it); then implement.
-- [ ] T007 [artifacts: datamodel] Implement the fuzzy-title match: for each
+- [x] T007 [artifacts: datamodel] Implement the fuzzy-title match: for each
   `local_add` item, compare its title against newly-pulled games not already
   linked by `bgg_id`; on a match, create a `CollectionItemDuplicate` row
   (`status: pending`). Heuristic itself stays simple/placeholder per the

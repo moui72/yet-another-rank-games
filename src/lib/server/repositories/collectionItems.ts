@@ -129,6 +129,80 @@ export async function confirmHardDeleteCollectionItem(
 }
 
 /**
+ * The `removed` items in a collection, with the game's `bggId` (T006) — the
+ * resync reconciliation needs `bggId` to compare against the freshly-pulled
+ * BGG membership set.
+ */
+export function listRemovedItemsWithBggId(
+	db: Kysely<Database>,
+	collectionId: string
+): Promise<{ id: string; bggId: number }[]> {
+	return db
+		.selectFrom('collectionItems as ci')
+		.innerJoin('games as g', 'g.id', 'ci.gameId')
+		.where('ci.collectionId', '=', collectionId)
+		.where('ci.status', '=', 'removed')
+		.select(['ci.id as id', 'g.bggId as bggId'])
+		.execute();
+}
+
+/**
+ * Flip `removed -> pending_delete` for the given items (T006): a re-pull
+ * confirmed they're no longer in the source collection. A no-op for ids not
+ * currently `removed`.
+ */
+export async function markItemsPendingDelete(db: Kysely<Database>, ids: string[]): Promise<void> {
+	if (ids.length === 0) return;
+	await db
+		.updateTable('collectionItems')
+		.set({ status: 'pending_delete' })
+		.where('id', 'in', ids)
+		.where('status', '=', 'removed')
+		.execute();
+}
+
+/**
+ * Active `local_add` items in a collection, with their game's title (T007) —
+ * the resync fuzzy-match compares this title against newly-pulled games.
+ */
+export function listActiveLocalAddItemsWithTitle(
+	db: Kysely<Database>,
+	collectionId: string
+): Promise<{ id: string; gameId: number; title: string }[]> {
+	return db
+		.selectFrom('collectionItems as ci')
+		.innerJoin('games as g', 'g.id', 'ci.gameId')
+		.where('ci.collectionId', '=', collectionId)
+		.where('ci.status', '=', 'active')
+		.where('ci.source', '=', 'local_add')
+		.select(['ci.id as id', 'ci.gameId as gameId', 'g.name as title'])
+		.execute();
+}
+
+/**
+ * Record a possible duplicate (T007), skipping if a `pending` row already
+ * exists for this exact (item, candidate) pair — a re-pull is idempotent, so
+ * it shouldn't pile up repeat rows for the same still-unresolved match.
+ */
+export async function upsertPendingDuplicate(
+	db: Kysely<Database>,
+	input: { collectionItemId: string; candidateGameId: number }
+): Promise<void> {
+	const existing = await db
+		.selectFrom('collectionItemDuplicates')
+		.select('id')
+		.where('collectionItemId', '=', input.collectionItemId)
+		.where('candidateGameId', '=', input.candidateGameId)
+		.where('status', '=', 'pending')
+		.executeTakeFirst();
+	if (existing) return;
+	await db
+		.insertInto('collectionItemDuplicates')
+		.values({ collectionItemId: input.collectionItemId, candidateGameId: input.candidateGameId })
+		.execute();
+}
+
+/**
  * Add a locally-added item (T005): reuses `bgg-game-search-import` upstream
  * (the caller upserts the `Game` row), then stamps `source = local_add` so a
  * later re-pull knows to fuzzy-match it rather than treat it as BGG-owned.
