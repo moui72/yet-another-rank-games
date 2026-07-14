@@ -33,3 +33,8 @@ output "artifact_registry" {
 output "import_queue" {
   value = google_cloud_tasks_queue.import.id
 }
+
+output "custom_domain_dns_records" {
+  description = "DNS records (CNAME/A/AAAA) Cloud Run requires for the custom domain mapping, if one is configured. Empty when custom_domain is unset (staging)."
+  value       = try(google_cloud_run_domain_mapping.web[0].status[0].resource_records, [])
+}

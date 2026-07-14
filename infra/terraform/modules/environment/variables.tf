@@ -43,6 +43,12 @@ variable "web_env" {
   default     = {}
 }
 
+variable "custom_domain" {
+  type        = string
+  description = "Custom domain to map to the web Cloud Run service (e.g. yarg.ty-pe.com). Empty string (default) skips the domain mapping entirely — used by staging, which keeps its default *.run.app URL. Requires the domain be verified in Google Search Console for this project before apply (see infrastructure.md 'Custom domain (production)')."
+  default     = ""
+}
+
 variable "secret_env" {
   type        = map(string)
   description = "ENV_VAR_NAME => Secret Manager secret id. Containers are created empty; values are added out-of-band from 1Password (never in tofu state)."

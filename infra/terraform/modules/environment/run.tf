@@ -83,6 +83,27 @@ resource "google_cloud_run_v2_service_iam_member" "web_public" {
   member   = "allUsers"
 }
 
+# Custom domain mapping for the web service (production only — var.custom_domain
+# is "" for staging, which keeps its default *.run.app URL). Requires the domain
+# be verified in Google Search Console for this project first (human-only
+# prerequisite — see infrastructure.md "Custom domain (production)"); apply
+# fails otherwise. Cloud Run auto-provisions a managed TLS cert once DNS is
+# pointed at the records this resource reports.
+resource "google_cloud_run_domain_mapping" "web" {
+  count    = var.custom_domain != "" ? 1 : 0
+  project  = var.project_id
+  location = var.region
+  name     = var.custom_domain
+
+  metadata {
+    namespace = var.project_id
+  }
+
+  spec {
+    route_name = google_cloud_run_v2_service.web.name
+  }
+}
+
 resource "google_cloud_run_v2_service" "worker" {
   project             = var.project_id
   name                = "yarg-worker"

@@ -7,7 +7,7 @@ status: in-progress
 # Tasks
 
 ## Phase 1: Terraform domain mapping (production only)
-- [ ] T001 [artifacts: infrastructure] Add a `google_cloud_run_domain_mapping`
+- [x] T001 [artifacts: infrastructure] Add a `google_cloud_run_domain_mapping`
   resource to `infra/terraform/modules/environment`, gated by a new
   `custom_domain` variable (string, default `""`/null) so it is created only
   when set — pass `"yarg.ty-pe.com"` for the production environment's module

@@ -36,6 +36,7 @@ module "environment" {
   web_image         = var.web_image
   worker_image      = var.worker_image
   web_env           = var.web_env
+  custom_domain     = "yarg.ty-pe.com"
 }
 
 module "wif" {
@@ -66,4 +67,9 @@ output "deployer_sa" {
 output "wif_provider" {
   description = "Set as workload_identity_provider in the production deploy workflow."
   value       = module.wif.provider_name
+}
+
+output "custom_domain_dns_records" {
+  description = "DNS records required at the ty-pe.com registrar for the yarg.ty-pe.com Cloud Run domain mapping."
+  value       = module.environment.custom_domain_dns_records
 }
