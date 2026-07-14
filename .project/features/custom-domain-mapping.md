@@ -1,6 +1,6 @@
 ---
 slug: custom-domain-mapping
-status: tasked
+status: implemented
 logged: 2026-07-13
 plan: plan-custom-domain-mapping-2026-07-13-53ec.md
 tasks: tasks-custom-domain-mapping-6ce2.md

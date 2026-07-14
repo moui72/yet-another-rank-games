@@ -1,7 +1,7 @@
 ---
 plan: plan-custom-domain-mapping-2026-07-13-53ec.md
 generated: 2026-07-13
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -49,14 +49,14 @@ status: in-progress
   app: check the page title matches the deployed app and `GET
   /api/games/search` returns `401` unauthenticated (the same DB-backed-auth
   smoke check used for staging/production in multi-env-deploy T003/T004).
-- [ ] T006 [artifacts: infrastructure] Depends on T005. Update the
+- [x] T006 [artifacts: infrastructure] Depends on T005. Update the
   production Supabase project's Auth **Site URL** and add
   `https://yarg.ty-pe.com/**` to **Redirect URLs** (currently the production
   `*.run.app` origin, set in multi-env-deploy T008). Sign up a fresh test
   account against `https://yarg.ty-pe.com` and confirm the email
   confirmation link redirects back to `https://yarg.ty-pe.com`, not the old
   `*.run.app` origin or `localhost`.
-- [ ] T007 Depends on T006. Smoke-test the full flow against
+- [x] T007 Depends on T006. Smoke-test the full flow against
   `https://yarg.ty-pe.com` — signup → BGG import → pool build → pairwise
   rank → export (Markdown/CSV/JSON/GeekList) — mirroring multi-env-deploy
   T008's smoke flow, to confirm full parity with the `*.run.app` origin
