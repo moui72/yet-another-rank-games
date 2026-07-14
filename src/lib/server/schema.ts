@@ -81,6 +81,7 @@ interface PoolGamesTable {
 	id: Generated<string>;
 	poolId: string;
 	gameId: number;
+	excludedFromRanking: Generated<boolean>;
 }
 
 interface ListsTable {

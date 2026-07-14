@@ -107,3 +107,21 @@ describe('collection editing & resync schema', () => {
 		}
 	});
 });
+
+// pairwise ranking unranked/ranked split (T012, feedback F002): PoolGame gains
+// excluded_from_ranking, defaulted false, so a game can be manually pulled out
+// of the active ranking without losing its Comparison history.
+describe('PoolGame.excludedFromRanking schema (T012)', () => {
+	it('defaults new pool_games rows to excluded_from_ranking = false', async () => {
+		const [row] = await sql<{ id: string }[]>`
+			insert into auth.users (id) values (gen_random_uuid()) returning id`;
+		const [pool] = await sql<{ id: string }[]>`
+			insert into pools (user_id, name) values (${row.id}, 'Test pool') returning id`;
+		const [game] = await sql<{ id: number }[]>`
+			insert into games (bgg_id, name) values (999002, 'Excluded Test Game') returning id`;
+		const [pg] = await sql<{ excluded_from_ranking: boolean }[]>`
+			insert into pool_games (pool_id, game_id) values (${pool.id}, ${game.id})
+			returning excluded_from_ranking`;
+		expect(pg.excluded_from_ranking).toBe(false);
+	});
+});

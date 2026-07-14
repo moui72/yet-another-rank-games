@@ -79,7 +79,7 @@ status: in-progress
 
 ## Phase 5: Pairwise ranking view — unranked/ranked split (feedback F001–F003)
 
-- [ ] T012 [artifacts: datamodel] Add `PoolGame.excluded_from_ranking`
+- [x] T012 [artifacts: datamodel] Add `PoolGame.excluded_from_ranking`
   boolean (default `false`) via migration — lets a game be manually pulled
   out of a list's active ranking without losing its `Comparison` history
   (distinct from having zero comparisons). Write a migration/model test

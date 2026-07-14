@@ -110,6 +110,12 @@ export interface PoolGame {
 	id: string;
 	poolId: string;
 	gameId: number;
+	/**
+	 * Manually pulled out of a list's active ranking (feedback F002) while
+	 * keeping its `Comparison` history — distinct from a game that's simply
+	 * never been compared yet. Drives the Unranked/Ranked split (T013).
+	 */
+	excludedFromRanking: boolean;
 }
 
 /** A named ranking over a pool's games. Many lists can rank one pool. */
