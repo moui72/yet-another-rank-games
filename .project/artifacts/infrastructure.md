@@ -4,7 +4,7 @@ status: stable
 last_updated: 2026-07-13
 diagram_type: graph TD
 render_section: Infrastructure
-diagram_status: stale
+diagram_status: current
 ---
 
 # Infrastructure
@@ -265,6 +265,34 @@ variables are injected from Secret Manager as env vars at container start.
   values inside Terraform too — simpler apply, but the resolved values then live
   in Terraform state, requiring an encrypted, access-controlled remote backend
   (GCS + CMEK). Chosen split keeps values out of state entirely.
+
+## Custom domain (production)
+
+Production's web Cloud Run service is mapped to `https://yarg.ty-pe.com`
+(feature `custom-domain-mapping`) instead of users bookmarking the default
+`*.run.app` URL. Staging keeps its default `*.run.app` URL — the custom
+domain is production-only.
+
+- **Domain ownership verification is a human-only prerequisite.** Cloud Run
+  domain mapping requires the domain be verified in **Google Search
+  Console** for the GCP account before Terraform can create the mapping —
+  this step cannot be automated and must be done once, by hand, before the
+  `google_cloud_run_domain_mapping` resource can apply successfully.
+- **Terraform owns the mapping**, added to `infra/terraform/modules/environment`
+  (applied for production only): a `google_cloud_run_domain_mapping` resource
+  binding `yarg.ty-pe.com` to the `web` Cloud Run service.
+- **DNS records** (at the `ty-pe.com` registrar, outside GCP) must point the
+  domain at Cloud Run per the records the domain mapping resource outputs
+  (typically CNAME/A/AAAA to Google's mapping targets) — another human-only
+  step, since it requires registrar access this repo has no automation path
+  to.
+- **TLS is managed automatically**: Cloud Run auto-provisions a managed SSL
+  certificate for the mapped domain once DNS resolves correctly: not
+  instant, and status should be polled/verified rather than assumed.
+- **Supabase Auth's Site URL and redirect URLs** (see T008 — currently the
+  production `*.run.app` origin) must be updated to `https://yarg.ty-pe.com`
+  once the mapping is live, so post-auth redirects land on the durable
+  domain rather than the Cloud Run default.
 
 ## Cost guardrails (cross-cutting)
 

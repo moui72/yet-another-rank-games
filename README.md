@@ -60,3 +60,136 @@ src/
 e2e/          Playwright accessibility / end-to-end specs
 scripts/      Repo tooling (e.g. the coverage ratchet)
 ```
+
+## Datamodel
+
+```mermaid
+erDiagram
+    User ||--o{ Collection : imports
+    User ||--o{ Pool : owns
+    Collection ||--o{ CollectionItem : contains
+    Game ||--o{ CollectionItem : "referenced by"
+    Game ||--o{ PoolGame : "referenced by"
+    Pool ||--o{ PoolGame : contains
+    Pool ||--o{ List : "ranked by"
+    List ||--o{ Comparison : records
+    List ||--o{ ListEntry : orders
+    Game ||--o{ Comparison : "compared as"
+    Game ||--o{ ListEntry : ranks
+
+    User {
+        uuid id PK
+        string bgg_username
+    }
+    Game {
+        bigint id PK
+        integer bgg_id UK
+        string name
+        boolean is_expansion
+        timestamptz last_fetched_at
+    }
+    Collection {
+        uuid id PK
+        uuid user_id FK
+        string bgg_username
+        enum import_status
+    }
+    CollectionItem {
+        uuid id PK
+        uuid collection_id FK
+        bigint game_id FK
+        boolean owned
+        numeric user_rating
+    }
+    Pool {
+        uuid id PK
+        uuid user_id FK
+        string name
+    }
+    PoolGame {
+        uuid id PK
+        uuid pool_id FK
+        bigint game_id FK
+    }
+    List {
+        uuid id PK
+        uuid pool_id FK
+        uuid user_id FK
+        enum ranking_method
+        enum status
+    }
+    Comparison {
+        uuid id PK
+        uuid list_id FK
+        bigint game_a FK
+        bigint game_b FK
+        bigint winner_id FK
+    }
+    ListEntry {
+        uuid id PK
+        uuid list_id FK
+        bigint game_id FK
+        integer position
+        numeric score
+    }
+```
+
+
+## Infrastructure
+
+```mermaid
+graph TD
+    User[Browser / User]
+
+    subgraph GCP["Google Cloud Platform"]
+        Web["Cloud Run: web\n(SvelteKit, min-instances=1)"]
+        Worker["Cloud Run: worker\n(private, OIDC-only)"]
+        Tasks["Cloud Tasks queue\n(bounded retry + dead-letter)"]
+        SM["Secret Manager\n(DB_PASSWORD, SUPABASE_SECRET_KEY, BGG_API_TOKEN)"]
+    end
+
+    subgraph Supabase["Supabase (per-environment project)"]
+        Auth["Supabase Auth (GoTrue)"]
+        DB["PostgreSQL\n(via Supavisor pooler)"]
+    end
+
+    BGG["Board Game Geek xmlapi2"]
+
+    Domain["yarg.ty-pe.com\n(Cloud Run domain mapping,\nproduction only)"]
+
+    User -->|HTTPS| Domain
+    Domain --> Web
+    User -.->|or default *.run.app URL| Web
+    Web -->|JWT validate| Auth
+    Web -->|direct Postgres\nvia Kysely| DB
+    Web -->|enqueue import job| Tasks
+    Tasks -->|OIDC-signed\nPOST /tasks/import| Worker
+    Worker -->|fetch collection/thing/search| BGG
+    Worker -->|write imported games| DB
+    Web -.->|reads secrets at start| SM
+    Worker -.->|reads secrets at start| SM
+
+    CI["GitHub Actions CI/CD"] -->|build + push SHA image,\nmigrate, tofu apply| GCP
+    CI -->|supabase db push| Supabase
+```
+
+## UI
+
+```mermaid
+graph TD
+    Import["Collection import view\n(queued → fetching → processing → done)"]
+    PoolBuilder["Pool builder view\n(filter bulk-add, hand-edit,\nBGG search-import)"]
+    ListMgmt["List management view\n(create list from pool,\nchoose ranking method)"]
+    Pairwise["Pairwise ranking view\n(novelty-preferring matchups,\nkeyboard-operable)"]
+    Manual["Manual drag-to-order view\n(override / fallback)"]
+    Result["List result & export view\n(Markdown / CSV / JSON / GeekList)"]
+
+    Import -->|collection populated| PoolBuilder
+    PoolBuilder -->|pool created| ListMgmt
+    ListMgmt -->|method = pairwise| Pairwise
+    ListMgmt -->|method = manual| Manual
+    Pairwise -->|stop early or complete| Result
+    Manual -->|reorder complete| Result
+    Pairwise -.->|override order| Manual
+```
+
