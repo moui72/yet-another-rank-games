@@ -1,10 +1,11 @@
 import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { getOwnedList, AccessDeniedError } from '$lib/server/ownership';
 import { listPoolGames } from '$lib/server/repositories/pools';
 import { listComparisons } from '$lib/server/repositories/comparisons';
 import { listListEntries } from '$lib/server/repositories/listEntries';
+import { getUserById, setShowCoverArt } from '$lib/server/repositories/users';
 import type { Choice } from '$lib/domain/ranking';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -17,7 +18,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		throw e;
 	}
 
-	const games = await listPoolGames(db, list.poolId);
+	const [games, user] = await Promise.all([
+		listPoolGames(db, list.poolId),
+		getUserById(db, locals.user.id)
+	]);
+	const showCoverArt = user?.showCoverArt ?? true;
 
 	if (list.rankingMethod === 'manual') {
 		// Order pool games by their saved position (unsaved ones at the end).
@@ -26,7 +31,12 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		const ordered = [...games].sort(
 			(a, b) => (posOf.get(a.id) ?? Infinity) - (posOf.get(b.id) ?? Infinity)
 		);
-		return { list, mode: 'manual' as const, games: ordered.map((g) => ({ id: g.id, name: g.name })) };
+		return {
+			list,
+			mode: 'manual' as const,
+			games: ordered.map((g) => ({ id: g.id, name: g.name })),
+			showCoverArt
+		};
 	}
 
 	// Pairwise: resume by replaying persisted comparisons into the choice log.
@@ -38,7 +48,28 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	return {
 		list,
 		mode: 'pairwise' as const,
-		games: games.map((g) => ({ id: g.id, name: g.name, excludedFromRanking: g.excludedFromRanking })),
-		log
+		games: games.map((g) => ({
+			id: g.id,
+			name: g.name,
+			excludedFromRanking: g.excludedFromRanking,
+			imageUrl: g.imageUrl,
+			thumbnailUrl: g.thumbnailUrl
+		})),
+		log,
+		showCoverArt
 	};
+};
+
+function str(v: FormDataEntryValue | null): string | undefined {
+	return typeof v === 'string' ? v : undefined;
+}
+
+export const actions: Actions = {
+	toggleCoverArt: async ({ locals, request }) => {
+		if (!locals.user) error(401, 'Not authenticated');
+		const form = await request.formData();
+		const showCoverArt = str(form.get('showCoverArt')) === 'true';
+		await setShowCoverArt(db, locals.user.id, showCoverArt);
+		return { coverArtToggled: true, showCoverArt };
+	}
 };

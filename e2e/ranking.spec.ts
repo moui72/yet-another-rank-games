@@ -36,6 +36,31 @@ async function seedList(userId: string): Promise<string> {
 	}
 }
 
+/** Seed a pool + pairwise list with one game carrying cover art. */
+async function seedListWithCoverArt(userId: string): Promise<string> {
+	const sql = postgres(process.env.DATABASE_URL as string);
+	const base = 900000 + Math.floor(Math.random() * 90000);
+	try {
+		const games = await sql<{ id: number }[]>`
+			insert into games (bgg_id, name, image_url, thumbnail_url)
+			values
+				(${base + 1}, 'Cover Alpha', 'https://example.com/alpha-full.jpg', 'https://example.com/alpha-thumb.jpg'),
+				(${base + 2}, 'Cover Beta', null, null)
+			returning id`;
+		const [pool] = await sql<{ id: string }[]>`
+			insert into pools (user_id, name) values (${userId}, 'E2E cover pool') returning id`;
+		for (const g of games) {
+			await sql`insert into pool_games (pool_id, game_id) values (${pool.id}, ${g.id})`;
+		}
+		const [list] = await sql<{ id: string }[]>`
+			insert into lists (pool_id, user_id, name, ranking_method)
+			values (${pool.id}, ${userId}, 'E2E cover ranking', 'pairwise') returning id`;
+		return list.id;
+	} finally {
+		await sql.end();
+	}
+}
+
 test('pairwise ranking: choose, keyboard, undo, resume — with axe', async ({ page }) => {
 	const userId = await signUp(page);
 	const listId = await seedList(userId);
@@ -118,4 +143,44 @@ test('pairwise ranking: choose, keyboard, undo, resume — with axe', async ({ p
 	const bbcodeResp = await page.request.get(`/api/lists/${listId}/export?format=bbcode`);
 	expect(bbcodeResp.headers()['content-type']).toContain('text/plain');
 	expect(await bbcodeResp.text()).toMatch(/^\[thing=\d+\]\[\/thing\]/);
+});
+
+// bgg-cover-art-and-card-view (T007/T008): pairwise comparison cards show
+// cover art (via T004's resolveCoverArt, falling back to thumbnail/placeholder),
+// and the same "Show cover art" toggle (persisted field shared with the pool
+// builder) suppresses image requests when off.
+test('pairwise cards show cover art and the toggle suppresses image requests', async ({ page }) => {
+	const userId = await signUp(page);
+	const listId = await seedListWithCoverArt(userId);
+
+	await page.goto(`/lists/${listId}`);
+	await page.waitForLoadState('networkidle');
+	await expect(page.getByRole('heading', { name: 'Which is better?' })).toBeVisible();
+
+	const matchup = page.locator('section', { has: page.getByRole('heading', { name: 'Which is better?' }) });
+	await expect(matchup.locator('img[alt="Cover Alpha"]')).toHaveAttribute(
+		'src',
+		'https://example.com/alpha-full.jpg'
+	);
+	// Beta has no image_url/thumbnail_url -> placeholder, not a missing <img>.
+	await expect(matchup.locator('img[alt="Cover Beta"]')).toBeVisible();
+
+	const results = await new AxeBuilder({ page })
+		.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+		.analyze();
+	expect(results.violations).toEqual([]);
+
+	const toggle = page.getByLabel('Show cover art');
+	await expect(toggle).toBeChecked();
+
+	const imageRequests: string[] = [];
+	page.on('request', (req) => {
+		if (req.url().includes('example.com')) imageRequests.push(req.url());
+	});
+	await Promise.all([
+		page.waitForResponse((r) => r.url().includes('?/toggleCoverArt')),
+		toggle.uncheck()
+	]);
+	await expect(matchup.locator('img')).toHaveCount(0);
+	expect(imageRequests).toEqual([]);
 });

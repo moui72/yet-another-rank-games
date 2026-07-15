@@ -51,10 +51,10 @@ status: in-progress
 
 ## Phase 5: Pairwise comparison cards
 
-- [ ] T007 [artifacts: ui] Show cover art on pairwise comparison cards (via
+- [x] T007 [artifacts: ui] Show cover art on pairwise comparison cards (via
   T004's helper), respecting `User.show_cover_art`. Write a test first,
   confirm it fails, then implement.
-- [ ] T008 [artifacts: ui] Add the same "Show cover art" toggle to the
+- [x] T008 [artifacts: ui] Add the same "Show cover art" toggle to the
   pairwise ranking view (same persisted field as T006 — one preference,
   surfaced in both places). Write a test first, confirm it fails, then
   implement.

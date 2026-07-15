@@ -1,16 +1,25 @@
 <script lang="ts">
 	import { PairwiseSession } from '$lib/pairwiseSession.svelte';
 	import { spineColor } from '$lib/spine';
+	import { resolveCoverArt } from '$lib/domain/coverArt';
 	import type { Choice } from '$lib/domain/ranking';
 
 	let {
 		listId,
 		games,
-		log
+		log,
+		showCoverArt = true
 	}: {
 		listId: string;
-		games: { id: number; name: string; excludedFromRanking: boolean }[];
+		games: {
+			id: number;
+			name: string;
+			excludedFromRanking: boolean;
+			imageUrl?: string | null;
+			thumbnailUrl?: string | null;
+		}[];
 		log: Choice[];
+		showCoverArt?: boolean;
 	} = $props();
 
 	const initialExcluded = $derived(games.filter((g) => g.excludedFromRanking).map((g) => g.id));
@@ -19,6 +28,12 @@
 	);
 	const names = $derived(new Map(games.map((g) => [g.id, g.name])));
 	const nameOf = (id: number) => names.get(id) ?? `#${id}`;
+	const gamesById = $derived(new Map(games.map((g) => [g.id, g])));
+	const coverOf = (id: number) => {
+		const g = gamesById.get(id);
+		if (!g) return null;
+		return resolveCoverArt({ imageUrl: g.imageUrl ?? null, thumbnailUrl: g.thumbnailUrl ?? null }, showCoverArt);
+	};
 	const compareUrl = $derived(`/api/lists/${listId}/compare`);
 	const undoUrl = $derived(`/api/lists/${listId}/undo`);
 	const dropUrl = $derived(`/api/lists/${listId}/drop`);
@@ -117,6 +132,7 @@
 		</div>
 		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 			{#each [pair[0], pair[1]] as gameId, i (gameId)}
+				{@const cover = coverOf(gameId)}
 				<button
 					type="button"
 					class="group bg-base-100 border-base-300 hover:border-primary hover:bg-primary/5 focus-visible:border-primary flex min-h-28 items-center gap-3 rounded-box border-2 p-4 text-left transition-colors"
@@ -127,6 +143,9 @@
 						class="kbd kbd-sm font-mono opacity-70 transition-colors group-hover:opacity-100"
 						aria-hidden="true">{i + 1}</span
 					>
+					{#if cover}
+						<img src={cover} alt={nameOf(gameId)} class="h-16 w-16 rounded-box object-cover" />
+					{/if}
 					<span class="font-display text-xl font-bold">{nameOf(gameId)}</span>
 				</button>
 			{/each}
