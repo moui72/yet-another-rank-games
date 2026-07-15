@@ -4,7 +4,7 @@ status: draft
 last_updated: 2026-07-14
 diagram_type: graph TD
 render_section: UI
-diagram_status: stale
+diagram_status: current
 ---
 
 # UI
@@ -90,8 +90,8 @@ An alternative to the pool builder's default list view — a grid of cards
 showing each game's cover art (`Game.image_url`, falling back to
 `thumbnail_url`, then a placeholder if neither exists) alongside name, weight,
 and player count. A view-level toggle switches between list and card view; the
-list view stays the default. [OPEN: exact grid layout/breakpoints — a
-presentation detail, left for implementation.]
+list view stays the default. **Grid (implemented):** 2 columns on small
+screens, 3 at `sm`, 4 at `md` and up.
 
 ## List management view
 

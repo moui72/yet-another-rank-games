@@ -82,12 +82,14 @@ erDiagram
     User {
         uuid id PK
         string bgg_username
+        boolean show_cover_art
     }
     Game {
         bigint id PK
         integer bgg_id UK
         string name
         boolean is_expansion
+        string image_url
         timestamptz last_fetched_at
     }
     Collection {
@@ -190,9 +192,9 @@ graph TD
 graph TD
     Import["Collection import & management view\n(queued → fetching → processing → done;\nview/edit active + removed items)"]
     Resync["Collection resync\n(re-pull, reconcile removed/pending-delete,\npossible-duplicates review)"]
-    PoolBuilder["Pool builder view\n(filter bulk-add, hand-edit,\nBGG search-import)"]
+    PoolBuilder["Pool builder view\n(filter bulk-add, hand-edit,\nBGG search-import,\nlist/card view toggle + cover art)"]
     ListMgmt["List management view\n(create list from pool,\nchoose ranking method)"]
-    Pairwise["Pairwise ranking view\n(Ranked / Unranked split,\nnovelty-preferring matchups,\nkeyboard-operable)"]
+    Pairwise["Pairwise ranking view\n(Ranked / Unranked split,\ncomparison cards show cover art,\nnovelty-preferring matchups,\nkeyboard-operable)"]
     Manual["Manual drag-to-order view\n(override / fallback)"]
     Result["List result & export view\n(Markdown / CSV / JSON / GeekList)"]
 
