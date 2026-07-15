@@ -20,6 +20,7 @@ import type {
 interface UsersTable {
 	id: string;
 	bggUsername: string | null;
+	showCoverArt: Generated<boolean>;
 	createdAt: Generated<string>;
 }
 
@@ -33,6 +34,7 @@ interface GamesTable {
 	maxPlayers: number | null;
 	playingTime: number | null;
 	thumbnailUrl: string | null;
+	imageUrl: string | null;
 	mechanics: Generated<string[]>;
 	categories: Generated<string[]>;
 	isExpansion: Generated<boolean>;

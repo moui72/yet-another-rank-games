@@ -125,3 +125,27 @@ describe('PoolGame.excludedFromRanking schema (T012)', () => {
 		expect(pg.excluded_from_ranking).toBe(false);
 	});
 });
+
+// bgg-cover-art-and-card-view (T001): games.image_url (nullable) alongside
+// the existing thumbnail_url, and users.show_cover_art (default true) so
+// existing users get cover art shown until they opt out.
+describe('bgg cover art & show-cover-art preference schema (T001)', () => {
+	it('adds a nullable games.image_url column', async () => {
+		const cols = await columns('games');
+		expect(cols, 'games.image_url').toContain('image_url');
+		const [game] = await sql<{ image_url: string | null }[]>`
+			insert into games (bgg_id, name) values (999003, 'Image URL Test Game')
+			returning image_url`;
+		expect(game.image_url).toBeNull();
+	});
+
+	it('defaults users.show_cover_art to true and backfills existing rows', async () => {
+		const cols = await columns('users');
+		expect(cols, 'users.show_cover_art').toContain('show_cover_art');
+		const [row] = await sql<{ id: string }[]>`
+			insert into auth.users (id) values (gen_random_uuid()) returning id`;
+		const [user] = await sql<{ show_cover_art: boolean }[]>`
+			select show_cover_art from users where id = ${row.id}`;
+		expect(user.show_cover_art).toBe(true);
+	});
+});

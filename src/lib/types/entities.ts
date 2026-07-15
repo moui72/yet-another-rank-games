@@ -19,6 +19,8 @@ export type ListStatus = 'in_progress' | 'complete';
 export interface User {
 	id: string;
 	bggUsername: string | null;
+	/** Whether cover art is shown in the pool card view and pairwise comparison cards. */
+	showCoverArt: boolean;
 	createdAt: string;
 }
 
@@ -33,6 +35,8 @@ export interface Game {
 	maxPlayers: number | null;
 	playingTime: number | null;
 	thumbnailUrl: string | null;
+	/** BGG's full-size `<image>` (nullable until enrichment fetches it). */
+	imageUrl: string | null;
 	mechanics: string[];
 	categories: string[];
 	/** True for expansions/promos (BGG subtype "boardgameexpansion"). */

@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Data model migration
 
-- [ ] T001 [artifacts: datamodel] Write a migration adding `games.image_url`
+- [x] T001 [artifacts: datamodel] Write a migration adding `games.image_url`
   (nullable text) and `users.show_cover_art` (boolean, not null, default
   `true`). Write a migration test first verifying both columns exist with
   the correct defaults and that existing rows backfill `show_cover_art =
