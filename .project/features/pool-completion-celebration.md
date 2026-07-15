@@ -1,6 +1,6 @@
 ---
 slug: pool-completion-celebration
-status: tasked
+status: implemented
 logged: 2026-07-14
 plan: plan-pool-completion-celebration-2026-07-14-0bde.md
 tasks: tasks-pool-completion-celebration-11a1.md

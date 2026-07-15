@@ -1,7 +1,7 @@
 ---
 plan: plan-pool-completion-celebration-2026-07-14-0bde.md
 generated: 2026-07-14
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -46,7 +46,7 @@ status: in-progress
 
 ## Phase 4: Artifact clarification
 
-- [ ] T005 [artifacts: ui] Verify the `ui.md` wording already applied this
+- [x] T005 [artifacts: ui] Verify the `ui.md` wording already applied this
   session (coverage signal scoped to active games, completion celebration
   description) matches what T001–T004 actually ship; adjust the artifact
   text only if implementation reveals a discrepancy (e.g. a different
