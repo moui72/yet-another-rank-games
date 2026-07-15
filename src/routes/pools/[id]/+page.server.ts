@@ -15,6 +15,7 @@ import { parseListFilter } from '$lib/domain/listFilter';
 import { addGameFromSearch, type FetchThing } from '$lib/server/addFromSearch';
 import { fetchThingXml } from '$lib/server/bgg/client';
 import { parseThingXml } from '$lib/server/bgg/parse';
+import { getUserById, setShowCoverArt } from '$lib/server/repositories/users';
 
 function str(v: FormDataEntryValue | null): string | undefined {
 	return typeof v === 'string' ? v : undefined;
@@ -32,12 +33,13 @@ async function requirePool(userId: string, poolId: string) {
 export const load: PageServerLoad = async ({ locals, params }) => {
 	if (!locals.user) error(401, 'Not authenticated');
 	const pool = await requirePool(locals.user.id, params.id);
-	const [games, collections, lists] = await Promise.all([
+	const [games, collections, lists, user] = await Promise.all([
 		listPoolGames(db, params.id),
 		listCollectionsByUser(db, locals.user.id),
-		listListsByPool(db, params.id)
+		listListsByPool(db, params.id),
+		getUserById(db, locals.user.id)
 	]);
-	return { pool, games, collections, lists };
+	return { pool, games, collections, lists, showCoverArt: user?.showCoverArt ?? true };
 };
 
 export const actions: Actions = {
@@ -101,6 +103,14 @@ export const actions: Actions = {
 		const gameId = Number(str(form.get('gameId')));
 		if (Number.isFinite(gameId)) await removePoolGame(db, params.id, gameId);
 		return { removed: true };
+	},
+
+	toggleCoverArt: async ({ locals, request }) => {
+		if (!locals.user) error(401, 'Not authenticated');
+		const form = await request.formData();
+		const showCoverArt = str(form.get('showCoverArt')) === 'true';
+		await setShowCoverArt(db, locals.user.id, showCoverArt);
+		return { coverArtToggled: true, showCoverArt };
 	},
 
 	createList: async ({ locals, params, request }) => {

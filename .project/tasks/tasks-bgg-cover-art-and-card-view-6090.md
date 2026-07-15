@@ -38,12 +38,12 @@ status: in-progress
 
 ## Phase 4: Pool builder card view
 
-- [ ] T005 [artifacts: ui] [parallel] Add a card-view grid to the pool
+- [x] T005 [artifacts: ui] [parallel] Add a card-view grid to the pool
   builder as a toggle alongside the existing list view (list stays default):
   each card shows cover art (via T004's helper), name, weight, and player
   count. Write a test first covering the toggle and card rendering, confirm
   it fails, then implement.
-- [ ] T006 [artifacts: ui] [parallel] Add the "Show cover art" toggle to the
+- [x] T006 [artifacts: ui] [parallel] Add the "Show cover art" toggle to the
   pool builder view, persisting to `User.show_cover_art` via a form action;
   when off, the card view falls back to a compact text-only layout and no
   image requests are made. Write a test first, confirm it fails, then

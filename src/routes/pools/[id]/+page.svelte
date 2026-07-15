@@ -2,10 +2,16 @@
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import { listStatusLabel, rankingMethodLabel } from '$lib/domain/listView';
+	import { resolveCoverArt } from '$lib/domain/coverArt';
 	import BggSearchAdd from '$lib/components/BggSearchAdd.svelte';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+
+	let view = $state<'list' | 'cards'>('list');
+	// Optimistic: flips immediately (writable $derived), form action persists
+	// it in the background; re-syncs whenever load data changes.
+	let showCoverArt = $derived(data.showCoverArt);
 </script>
 
 <svelte:head>
@@ -30,28 +36,102 @@
 
 	<section class="card bg-base-200 shadow-sm" aria-labelledby="games-heading">
 		<div class="card-body gap-3">
-			<h2 id="games-heading" class="card-title text-lg">Games in this pool ({data.games.length})</h2>
-			<ul class="flex flex-col divide-y divide-base-300">
-				{#each data.games as game (game.id)}
-					<li class="flex items-center justify-between gap-3 py-2">
-						<div>
-							<span class="font-medium">{game.name}</span>
-							<span class="text-xs opacity-60">
-								{#if game.weight}· weight {game.weight.toFixed(1)}{/if}
-								{#if game.minPlayers}· {game.minPlayers}–{game.maxPlayers} players{/if}
-							</span>
-						</div>
-						<form method="POST" action="?/removeGame" use:enhance>
-							<input type="hidden" name="gameId" value={game.id} />
-							<button type="submit" class="btn btn-ghost btn-xs" aria-label="Remove {game.name}">
-								Remove
-							</button>
-						</form>
-					</li>
-				{:else}
-					<li class="py-2 text-sm opacity-70">No games yet — add some by filter below.</li>
-				{/each}
-			</ul>
+			<div class="flex flex-wrap items-center justify-between gap-2">
+				<h2 id="games-heading" class="card-title text-lg">Games in this pool ({data.games.length})</h2>
+				<div class="flex items-center gap-3">
+					<form
+						method="POST"
+						action="?/toggleCoverArt"
+						use:enhance={() => {
+							return async ({ update }) => {
+								await update({ reset: false });
+							};
+						}}
+					>
+						<input type="hidden" name="showCoverArt" value={(!showCoverArt).toString()} />
+						<label class="label cursor-pointer gap-2">
+							<input
+								type="checkbox"
+								class="checkbox checkbox-sm"
+								checked={showCoverArt}
+								onchange={(e) => {
+									showCoverArt = e.currentTarget.checked;
+									e.currentTarget.closest('form')?.requestSubmit();
+								}}
+							/>
+							<span class="label-text">Show cover art</span>
+						</label>
+					</form>
+					<div class="join" role="group" aria-label="View">
+						<button
+							type="button"
+							class="btn btn-xs join-item"
+							class:btn-active={view === 'list'}
+							onclick={() => (view = 'list')}
+						>
+							List
+						</button>
+						<button
+							type="button"
+							class="btn btn-xs join-item"
+							class:btn-active={view === 'cards'}
+							onclick={() => (view = 'cards')}
+						>
+							Cards
+						</button>
+					</div>
+				</div>
+			</div>
+
+			{#if view === 'list'}
+				<ul class="flex flex-col divide-y divide-base-300">
+					{#each data.games as game (game.id)}
+						<li class="flex items-center justify-between gap-3 py-2">
+							<div>
+								<span class="font-medium">{game.name}</span>
+								<span class="text-xs opacity-60">
+									{#if game.weight}· weight {game.weight.toFixed(1)}{/if}
+									{#if game.minPlayers}· {game.minPlayers}–{game.maxPlayers} players{/if}
+								</span>
+							</div>
+							<form method="POST" action="?/removeGame" use:enhance>
+								<input type="hidden" name="gameId" value={game.id} />
+								<button type="submit" class="btn btn-ghost btn-xs" aria-label="Remove {game.name}">
+									Remove
+								</button>
+							</form>
+						</li>
+					{:else}
+						<li class="py-2 text-sm opacity-70">No games yet — add some by filter below.</li>
+					{/each}
+				</ul>
+			{:else}
+				<ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4" aria-label="Games (card view)">
+					{#each data.games as game (game.id)}
+						{@const cover = resolveCoverArt(game, showCoverArt)}
+						<li class="card bg-base-100 border-base-300 border">
+							{#if cover}
+								<img src={cover} alt="" class="aspect-square w-full rounded-t-box object-cover" />
+							{/if}
+							<div class="card-body gap-1 p-3">
+								<span class="text-sm font-medium">{game.name}</span>
+								<span class="text-xs opacity-60">
+									{#if game.weight}weight {game.weight.toFixed(1)}{/if}
+									{#if game.minPlayers}· {game.minPlayers}–{game.maxPlayers} players{/if}
+								</span>
+								<form method="POST" action="?/removeGame" use:enhance>
+									<input type="hidden" name="gameId" value={game.id} />
+									<button type="submit" class="btn btn-ghost btn-xs self-start" aria-label="Remove {game.name}">
+										Remove
+									</button>
+								</form>
+							</div>
+						</li>
+					{:else}
+						<li class="py-2 text-sm opacity-70">No games yet — add some by filter below.</li>
+					{/each}
+				</ul>
+			{/if}
 		</div>
 	</section>
 

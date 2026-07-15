@@ -35,3 +35,21 @@ export function setUserBggUsername(
 		.returningAll()
 		.executeTakeFirstOrThrow();
 }
+
+/**
+ * Persist the "Show cover art" preference (bgg-cover-art-and-card-view,
+ * T006/T008) — one field, surfaced by an inline toggle in both the pool
+ * builder and the pairwise ranking view.
+ */
+export function setShowCoverArt(
+	db: Kysely<Database>,
+	id: string,
+	showCoverArt: boolean
+): Promise<User> {
+	return db
+		.updateTable('users')
+		.set({ showCoverArt })
+		.where('id', '=', id)
+		.returningAll()
+		.executeTakeFirstOrThrow();
+}
