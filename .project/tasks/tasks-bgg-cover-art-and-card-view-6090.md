@@ -1,7 +1,7 @@
 ---
 plan: plan-bgg-cover-art-and-card-view-2026-07-14-3c32.md
 generated: 2026-07-14
-status: in-progress
+status: completed
 ---
 
 # Tasks

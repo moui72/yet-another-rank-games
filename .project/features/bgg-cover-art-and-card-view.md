@@ -1,6 +1,6 @@
 ---
 slug: bgg-cover-art-and-card-view
-status: tasked
+status: implemented
 logged: 2026-07-14
 plan: plan-bgg-cover-art-and-card-view-2026-07-14-3c32.md
 tasks: tasks-bgg-cover-art-and-card-view-6090.md
