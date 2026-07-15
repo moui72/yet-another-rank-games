@@ -71,6 +71,39 @@
 		persist(() => fetch(url, { method: 'POST' }));
 	}
 
+	/**
+	 * Manual reordering (feature `manual-pairwise-ranking-adjust`): nudge a
+	 * ranked game up/down one spot. Delegates the swap to the session (which
+	 * emits it as a synthetic comparison via `choose()`), then persists that
+	 * comparison through the same `/compare` endpoint a real pick uses — no
+	 * new persisted field, `ui.md`.
+	 */
+	function moveUp(gameId: number) {
+		const choice = session.moveUp(gameId);
+		if (!choice) return;
+		const url = compareUrl;
+		persist(() =>
+			fetch(url, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ gameA: choice.winnerId, gameB: choice.loserId, winnerId: choice.winnerId })
+			})
+		);
+	}
+
+	function moveDown(gameId: number) {
+		const choice = session.moveDown(gameId);
+		if (!choice) return;
+		const url = compareUrl;
+		persist(() =>
+			fetch(url, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ gameA: choice.winnerId, gameB: choice.loserId, winnerId: choice.winnerId })
+			})
+		);
+	}
+
 	/** T014: pull a ranked game out of the active ranking (moves to Unranked). */
 	function excludeGame(gameId: number) {
 		const url = excludeUrl;
@@ -195,6 +228,26 @@
 						<span class="spine-rank">{String(i + 1).padStart(2, '0')}</span>
 						<span class="truncate">{nameOf(gameId)}</span>
 					</span>
+					<button
+						type="button"
+						class="btn btn-ghost btn-sm btn-square"
+						onclick={() => moveUp(gameId)}
+						disabled={i === 0}
+						aria-label="Move {nameOf(gameId)} up"
+						title="Move {nameOf(gameId)} up"
+					>
+						▲
+					</button>
+					<button
+						type="button"
+						class="btn btn-ghost btn-sm btn-square"
+						onclick={() => moveDown(gameId)}
+						disabled={i === session.ranked.length - 1}
+						aria-label="Move {nameOf(gameId)} down"
+						title="Move {nameOf(gameId)} down"
+					>
+						▼
+					</button>
 					<button
 						type="button"
 						class="btn btn-ghost btn-sm btn-square"

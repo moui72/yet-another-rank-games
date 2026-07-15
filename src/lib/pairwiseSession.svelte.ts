@@ -73,6 +73,36 @@ export class PairwiseSession {
 		this.log.pop();
 	}
 
+	/**
+	 * Manual reordering (feature `manual-pairwise-ranking-adjust`, `ui.md`):
+	 * nudge `gameId` one position up in `ranked` by emitting a synthetic
+	 * comparison against its immediate neighbor (the moved game "beats" the
+	 * neighbor it swaps past) through the same `choose()` path a real pick
+	 * uses — order stays fully derived from the log, never authored. No-op
+	 * (returns null) if `gameId` is already first, or isn't in `ranked` at
+	 * all (e.g. unranked/excluded).
+	 */
+	moveUp(gameId: number): Choice | null {
+		const ranked = this.ranked;
+		const index = ranked.indexOf(gameId);
+		if (index <= 0) return null;
+		const neighbor = ranked[index - 1];
+		const choice: Choice = { winnerId: gameId, loserId: neighbor };
+		this.choose(choice.winnerId, choice.loserId);
+		return choice;
+	}
+
+	/** The move-down mirror of {@link moveUp} — no-op if `gameId` is last (or absent). */
+	moveDown(gameId: number): Choice | null {
+		const ranked = this.ranked;
+		const index = ranked.indexOf(gameId);
+		if (index === -1 || index >= ranked.length - 1) return null;
+		const neighbor = ranked[index + 1];
+		const choice: Choice = { winnerId: neighbor, loserId: gameId };
+		this.choose(choice.winnerId, choice.loserId);
+		return choice;
+	}
+
 	/** Exclude/un-exclude a game from ranking (T014) — a client-side mirror of the persisted flag. */
 	setExcluded(gameId: number, excluded: boolean) {
 		if (excluded) this.excludedIds.add(gameId);

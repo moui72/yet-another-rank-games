@@ -1,14 +1,14 @@
 ---
 plan: plan-manual-pairwise-ranking-adjust-2026-07-15-3db7.md
 generated: 2026-07-15
-status: in-progress
+status: completed
 ---
 
 # Tasks
 
 ## Phase 1: Move logic
 
-- [ ] T001 [artifacts: ui] Add `moveUp(gameId)`/`moveDown(gameId)` to
+- [x] T001 [artifacts: ui] Add `moveUp(gameId)`/`moveDown(gameId)` to
   `PairwiseSession` (`src/lib/pairwiseSession.svelte.ts`): each looks up
   `gameId`'s neighbor in `session.ranked` and calls the existing `choose()`
   with the swap's winner/loser (moving up: `gameId` beats the neighbor
@@ -20,7 +20,7 @@ status: in-progress
 
 ## Phase 2: UI controls
 
-- [ ] T002 [artifacts: ui] Add move-up/move-down buttons per row in the
+- [x] T002 [artifacts: ui] Add move-up/move-down buttons per row in the
   Ranked section (`src/lib/components/PairwiseRanker.svelte`), alongside
   the existing exclude ("✕") button — same keyboard-operable,
   aria-labeled pattern. Disable move-up on the first row and move-down on
@@ -30,7 +30,7 @@ status: in-progress
 
 ## Phase 3: Artifact clarification
 
-- [ ] T003 [artifacts: ui] Verify `ui.md`'s "Manual reordering" wording
+- [x] T003 [artifacts: ui] Verify `ui.md`'s "Manual reordering" wording
   (move up/down, one synthetic comparison per move) matches what T001–T002
   actually ship; adjust the artifact text only if implementation reveals a
   discrepancy — do not re-litigate the design.

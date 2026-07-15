@@ -1,6 +1,6 @@
 ---
 slug: manual-pairwise-ranking-adjust
-status: tasked
+status: implemented
 logged: 2026-07-14
 plan: plan-manual-pairwise-ranking-adjust-2026-07-15-3db7.md
 tasks: tasks-manual-pairwise-ranking-adjust-97c6.md

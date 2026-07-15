@@ -254,3 +254,57 @@ test('pool completion celebration: confetti fires once, controls hide, and reapp
 	await page.getByRole('button', { name: 'Restore Gamma to ranking' }).click();
 	await expect(heading).toBeVisible();
 });
+
+// manual-pairwise-ranking-adjust (T001/T002): move-up/move-down controls per
+// row in the Ranked section emit a synthetic comparison swapping the game
+// with its immediate neighbor; the edge buttons (top row's move-up, bottom
+// row's move-down) are disabled and don't act.
+test('manual reordering: move up/down swaps neighbors, edge buttons are disabled and inert', async ({ page }) => {
+	const userId = await signUp(page);
+	const listId = await seedList(userId);
+
+	await page.goto(`/lists/${listId}`);
+	await page.waitForLoadState('networkidle'); // let hydration finish before clicking
+	await expect(page.getByRole('heading', { name: 'Which is better?' })).toBeVisible();
+
+	// Judge Alpha vs Beta so both land in Ranked (Gamma stays Unranked, out of the way).
+	await page.getByRole('button', { name: 'Alpha', exact: true }).click();
+
+	const ranked = page.locator('#ranked-list');
+	const rankedItems = ranked.getByRole('listitem');
+	await expect(rankedItems).toHaveCount(2);
+	await expect(rankedItems.nth(0)).toContainText('Alpha');
+	await expect(rankedItems.nth(1)).toContainText('Beta');
+
+	// Top row's move-up is disabled and does nothing.
+	const moveUpAlpha = rankedItems.nth(0).getByRole('button', { name: 'Move Alpha up' });
+	await expect(moveUpAlpha).toBeDisabled();
+
+	// Bottom row's move-down is disabled and does nothing.
+	const moveDownBeta = rankedItems.nth(1).getByRole('button', { name: 'Move Beta down' });
+	await expect(moveDownBeta).toBeDisabled();
+
+	// Moving Beta up swaps it with Alpha.
+	const moveUpBeta = rankedItems.nth(1).getByRole('button', { name: 'Move Beta up' });
+	await Promise.all([
+		page.waitForResponse((r) => r.url().includes('/compare') && r.request().method() === 'POST'),
+		moveUpBeta.click()
+	]);
+	await expect(rankedItems.nth(0)).toContainText('Beta');
+	await expect(rankedItems.nth(1)).toContainText('Alpha');
+
+	// Moving Alpha (now at the bottom) up swaps it back with Beta.
+	const moveUpAlphaAgain = rankedItems.nth(1).getByRole('button', { name: 'Move Alpha up' });
+	await Promise.all([
+		page.waitForResponse((r) => r.url().includes('/compare') && r.request().method() === 'POST'),
+		moveUpAlphaAgain.click()
+	]);
+	await expect(rankedItems.nth(0)).toContainText('Alpha');
+	await expect(rankedItems.nth(1)).toContainText('Beta');
+
+	// No accessibility regressions from the new controls.
+	const results = await new AxeBuilder({ page })
+		.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+		.analyze();
+	expect(results.violations).toEqual([]);
+});
