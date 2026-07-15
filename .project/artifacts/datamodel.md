@@ -4,7 +4,7 @@ status: stable
 last_updated: 2026-07-14
 diagram_type: erDiagram
 render_section: Datamodel
-diagram_status: current
+diagram_status: stale
 ---
 
 # Data Model
@@ -62,6 +62,7 @@ Backed by Supabase Auth; the app row references the auth user id.
 |-------|------|-------|
 | id | uuid | = Supabase Auth user id |
 | bgg_username | string | default BGG username to import from (nullable) |
+| show_cover_art | boolean | default `true`; the no-images preference (feature `bgg-cover-art-and-card-view`) — when `false`, card views and the pairwise comparison cards fall back to a compact text-only layout and no cover-art images are requested (the actual network-savings mechanism, not just a CSS hide) |
 | created_at | timestamptz | |
 
 ### Game
@@ -78,7 +79,8 @@ One row per distinct BGG game, shared across all users.
 | min_players | integer | nullable |
 | max_players | integer | nullable |
 | playing_time | integer | minutes, nullable |
-| thumbnail_url | string | nullable |
+| thumbnail_url | string | nullable; BGG's small `<thumbnail>` image |
+| image_url | string | nullable; BGG's full-size `<image>` — the cover art shown in card views and pairwise comparison cards (feature `bgg-cover-art-and-card-view`); falls back to `thumbnail_url`, then a placeholder, when absent |
 | mechanics | text[] | for filtering (e.g. "Cooperative Game") |
 | categories | text[] | for filtering |
 | is_expansion | boolean | true for BGG `boardgameexpansion` items; drives the `expansions` pool filter |

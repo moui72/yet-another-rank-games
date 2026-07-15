@@ -4,7 +4,7 @@ status: draft
 last_updated: 2026-07-14
 diagram_type: graph TD
 render_section: UI
-diagram_status: current
+diagram_status: stale
 ---
 
 # UI
@@ -84,6 +84,15 @@ A **pool** is a reusable, curated group of games that lists rank (see
 - See the pool's current games and its size.
 - Pools are reusable: the same pool can feed several lists.
 
+### Card view (feature `bgg-cover-art-and-card-view`)
+
+An alternative to the pool builder's default list view — a grid of cards
+showing each game's cover art (`Game.image_url`, falling back to
+`thumbnail_url`, then a placeholder if neither exists) alongside name, weight,
+and player count. A view-level toggle switches between list and card view; the
+list view stays the default. [OPEN: exact grid layout/breakpoints — a
+presentation detail, left for implementation.]
+
 ## List management view
 
 - Create a list **from a pool**: choose a pool, name, optional description, and
@@ -102,6 +111,14 @@ A **pool** is a reusable, curated group of games that lists rank (see
 - Keyboard-operable (choose left/right, undo) for speed and accessibility.
 - Progress indication toward a resolved ordering; the user can stop early and
   resume later (an incomplete ranking is valid and persisted).
+- **Comparison cards show cover art** (feature `bgg-cover-art-and-card-view`):
+  each card displays `Game.image_url` (same fallback chain as the card view —
+  `thumbnail_url`, then a placeholder) alongside the name.
+- **"Show cover art" toggle**: a view-level toggle (present here and in the
+  pool builder's card view — see above) that persists to
+  `User.show_cover_art`; when off, no images are shown or requested anywhere
+  in the app, for users minimizing network usage. There is no separate
+  settings page for this — the toggle lives inline wherever images appear.
 
 ### Ranking engine & matchup selection (decided)
 
