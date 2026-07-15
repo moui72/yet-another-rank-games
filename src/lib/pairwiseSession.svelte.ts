@@ -48,6 +48,15 @@ export class PairwiseSession {
 	get currentPair() {
 		return this.#state.currentPair;
 	}
+	/**
+	 * Every pair among currently-active (non-excluded) games has been judged
+	 * at least once (feature `pool-completion-celebration`). Fully derived
+	 * from `gameIds`/`log`/`excludedIds` — recomputes automatically when the
+	 * active set changes, no separate "unhide" mechanism needed.
+	 */
+	get isFullyOrdered() {
+		return this.#state.remainingPairs === 0;
+	}
 	/** How many distinct pairs have been judged, and the total possible. */
 	get progress() {
 		const n = this.gameIds.length;

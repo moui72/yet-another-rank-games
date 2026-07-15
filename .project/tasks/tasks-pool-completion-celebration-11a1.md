@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Derived completion signal
 
-- [ ] T001 [artifacts: ui] Add `remainingPairs` to `pairwiseState`
+- [x] T001 [artifacts: ui] Add `remainingPairs` to `pairwiseState`
   (`src/lib/domain/ranking.ts`) — count of unseen pairs among `activeIds`,
   factored from the same pair-enumeration `selectNextPair` uses (no
   duplicated logic). Expose `isFullyOrdered` on `PairwiseSession`

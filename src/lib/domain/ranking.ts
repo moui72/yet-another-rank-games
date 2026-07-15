@@ -86,8 +86,28 @@ export function pairwiseState(
 		comparedKeys,
 		order: rankGames(gameIds, ratings),
 		currentPair: selectNextPair(activeIds, ratings, comparedKeys),
+		// pool-completion-celebration T001: count of unseen pairs among active
+		// games — the same pair enumeration selectNextPair uses, so "done"
+		// can't drift from the matchup selector's own definition of "unseen".
+		remainingPairs: countUnseenPairs(activeIds, comparedKeys),
 		...splitRankedUnranked(gameIds, ratings, log, excludedIds)
 	};
+}
+
+/** Every distinct pair among `gameIds`, i < j, order-stable. */
+function enumeratePairs(gameIds: readonly number[]): { a: number; b: number }[] {
+	const pairs: { a: number; b: number }[] = [];
+	for (let i = 0; i < gameIds.length; i++) {
+		for (let j = i + 1; j < gameIds.length; j++) {
+			pairs.push({ a: gameIds[i], b: gameIds[j] });
+		}
+	}
+	return pairs;
+}
+
+/** Count of not-yet-compared pairs among the given (already-active) game ids. */
+function countUnseenPairs(gameIds: readonly number[], comparedKeys: ReadonlySet<string>): number {
+	return enumeratePairs(gameIds).filter((p) => !comparedKeys.has(pairKey(p.a, p.b))).length;
 }
 
 /**
@@ -113,14 +133,12 @@ export function selectNextPair(
 ): [number, number] | null {
 	if (gameIds.length < 2) return null;
 
-	const pairs: { a: number; b: number; seen: boolean; info: number }[] = [];
-	for (let i = 0; i < gameIds.length; i++) {
-		for (let j = i + 1; j < gameIds.length; j++) {
-			const a = gameIds[i];
-			const b = gameIds[j];
-			pairs.push({ a, b, seen: comparedKeys.has(pairKey(a, b)), info: informativeness(a, b, ratings) });
-		}
-	}
+	const pairs = enumeratePairs(gameIds).map(({ a, b }) => ({
+		a,
+		b,
+		seen: comparedKeys.has(pairKey(a, b)),
+		info: informativeness(a, b, ratings)
+	}));
 
 	const unseen = pairs.filter((p) => !p.seen);
 	const candidates = unseen.length > 0 ? unseen : pairs;

@@ -133,6 +133,40 @@ describe('pairwiseState', () => {
 		expect(s.currentPair).not.toEqual([3, 1]);
 		expect(s.currentPair).not.toEqual([1, 3]);
 	});
+
+	// pool-completion-celebration T001: remainingPairs counts unseen pairs
+	// among active (non-excluded) games only — the same enumeration
+	// selectNextPair already does, not a separate "done" algorithm.
+	describe('remainingPairs', () => {
+		it('is the full pair count when nothing has been judged', () => {
+			const s = pairwiseState(games, []);
+			expect(s.remainingPairs).toBe(3); // 1-2, 1-3, 2-3
+		});
+
+		it('is zero once every active pair has been judged', () => {
+			const log: Choice[] = [
+				{ winnerId: 1, loserId: 2 },
+				{ winnerId: 1, loserId: 3 },
+				{ winnerId: 2, loserId: 3 }
+			];
+			const s = pairwiseState(games, log);
+			expect(s.remainingPairs).toBe(0);
+		});
+
+		it('is nonzero when any active pair remains unseen', () => {
+			const log: Choice[] = [{ winnerId: 1, loserId: 2 }];
+			const s = pairwiseState(games, log);
+			expect(s.remainingPairs).toBe(2); // 1-3, 2-3 still unseen
+		});
+
+		it('excludes a manually-excluded game\'s unseen pairs from the count', () => {
+			// Only 1-2 has been judged; excluding game 3 removes 1-3 and 2-3
+			// from consideration entirely, leaving nothing remaining.
+			const log: Choice[] = [{ winnerId: 1, loserId: 2 }];
+			const s = pairwiseState(games, log, new Set([3]));
+			expect(s.remainingPairs).toBe(0);
+		});
+	});
 });
 
 // Pairwise ranking unranked/ranked split (T013, feedback F002).
