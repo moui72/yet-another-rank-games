@@ -1,6 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-14 (bgg-cover-art-and-card-view implemented + merged; post-ship follow-up done). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-14 (pool-completion-celebration planned + tasked). Keep this current as artifacts are refined and open questions are resolved._
 
 ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/ardd-update`.
 
@@ -21,11 +21,12 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
 
 ## Feature Backlog
 
-- **1 backlogged** (`pool-completion-celebration` — confetti animation and hiding comparison controls once a pool becomes fully deterministically ordered) · 0 planned · 0 tasked · **5 implemented** (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`, `collection-editing-and-resync`, `bgg-cover-art-and-card-view`) — see `.project/features/`. Target `pool-completion-celebration` with `/ardd-plan pool-completion-celebration` when ready to design it.
+- **0 backlogged** · 0 planned · **1 tasked** (`pool-completion-celebration` — confetti animation and hiding comparison controls once a pool becomes fully deterministically ordered; plan approved, tasks ready) · 5 implemented (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`, `collection-editing-and-resync`, `bgg-cover-art-and-card-view`) — see `.project/features/`. All previously-backlogged features are now in flight or shipped.
 
 ## Plans & Tasks
 
-- `plan-bgg-cover-art-and-card-view-2026-07-14-3c32.md` — approved; `tasks-bgg-cover-art-and-card-view-6090.md` **completed, 8/8**. Merged to `main`. Delivered: `Game.image_url`/`User.show_cover_art`, BGG `<image>` ingestion, a shared cover-art fallback helper (`image_url → thumbnail_url → placeholder`), a pool builder List/Cards view toggle, and cover art on pairwise comparison cards. Full suite green: 128 unit + 69 integration + 17 e2e (incl. axe a11y checks); lint/typecheck clean.
+- `plan-pool-completion-celebration-2026-07-14-0bde.md` — approved; `tasks-pool-completion-celebration-11a1.md` **ready, 0/5**. Covers a derived `isFullyOrdered` signal (scoped to active/non-excluded games), a one-time confetti animation on completion (checking for an existing library per Principle IX before writing custom code), hiding/auto-reappearing comparison controls, and an artifact-clarification pass. No `datamodel.md` changes — purely derived UI state. Not yet implemented — run `/ardd-implement` when ready to start.
+- `plan-bgg-cover-art-and-card-view-2026-07-14-3c32.md` — approved; `tasks-bgg-cover-art-and-card-view-6090.md` **completed, 8/8**. Merged to `main`.
 - `research-collection-editing-and-resync-reconciliation-2026-07-14-47f7.md` — proposal-vetting research, consumed by the plan below.
 - `plan-collection-editing-and-resync-2026-07-14-d0af.md` — approved; `tasks-collection-editing-and-resync-b3ff.md` **completed, 15/15**. Merged to `main`.
 - `plan-foundation-2026-07-10.md` — approved; `tasks-foundation-cd84.md` **in-progress, 41/46**. Its remaining Phase 6 (T035–T039) is **superseded** by the multi-env-deploy plan; the file stays as the record of Phases 0–5.
@@ -35,18 +36,18 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
 
 ## Diagrams
 
-- datamodel.md — current ✅ (regenerated: `Game.image_url`, `User.show_cover_art`)
+- datamodel.md — current ✅
 - infrastructure.md — current ✅
-- ui.md — current ✅ (regenerated: card view + cover art in pool builder/pairwise flow)
+- ui.md — stale ⚠️ (run `/ardd-diagram ui`) — new completion-celebration behavior (no new nodes/flow, but worth a refresh pass after this ships)
 
 ## Code-vs-Artifact Defects
 
-No defects — last checked 2026-07-14 (re-verified after `bgg-cover-art-and-card-view` shipped). All new schema/UI additions match the artifacts exactly.
+No defects — last checked 2026-07-14 (after `bgg-cover-art-and-card-view` shipped). This plan's artifact changes are plan-only so far, not yet implemented.
 
 ## In Flight
 
-Nothing in flight — the bgg-cover-art-and-card-view worktree merged and was removed this run.
+Nothing in flight.
 
 ## Recommended Next Step
 
-All post-ship follow-up for `bgg-cover-art-and-card-view` is done: defects checked (clean), both diagrams regenerated, and `ui.md`'s card-view-layout open question resolved (implemented grid: 2/3/4 columns at base/sm/md) — `ui.md` now has only the pre-existing public-sharing question left. One feature remains backlogged and unplanned: `pool-completion-celebration` — run `/ardd-plan pool-completion-celebration` when ready. Lower priority: the `ui.md` public-sharing question has no urgency, and the ARDD tool itself has an update available (`/ardd-update`).
+`pool-completion-celebration` now has an approved plan and a ready tasks file (`tasks-pool-completion-celebration-11a1.md`, 0/5) — run `/ardd-implement` to start executing it. This is the last backlogged feature — once it ships, the feature register will be fully caught up (0 backlogged, 0 planned, 0 tasked, 6 implemented). Lower priority: `ui.md`'s diagram is stale (a cosmetic gap — the graph nodes/flow don't actually change for this feature, so low urgency), the public-sharing open question has no urgency, and the ARDD tool itself has an update available (`/ardd-update`).
