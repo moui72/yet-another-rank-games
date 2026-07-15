@@ -25,7 +25,7 @@ status: in-progress
   any custom animation code; add it as a dependency once confirmed
   appropriate (lightweight, no heavy runtime cost, TypeScript-friendly or
   has types available).
-- [ ] T003 [artifacts: ui] In `PairwiseRanker.svelte`, fire the confetti
+- [x] T003 [artifacts: ui] In `PairwiseRanker.svelte`, fire the confetti
   animation once on the false→true transition of `session.isFullyOrdered`
   (track the previous value; only fire when it flips from false to true —
   never on initial mount if already complete from a prior session, and
@@ -34,7 +34,7 @@ status: in-progress
 
 ## Phase 3: Hide/reappear comparison controls
 
-- [ ] T004 [artifacts: ui] Guard the comparison controls (choose
+- [x] T004 [artifacts: ui] Guard the comparison controls (choose
   left/right, undo) in `PairwiseRanker.svelte` with
   `!session.isFullyOrdered`, so they hide once fully ordered and reappear
   automatically when the active set changes (game added, un-excluded, or

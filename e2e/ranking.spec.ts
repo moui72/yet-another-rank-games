@@ -36,6 +36,34 @@ async function seedList(userId: string): Promise<string> {
 	}
 }
 
+/**
+ * Seed a pool + pairwise list of 3 games where one (Gamma) starts manually
+ * excluded from ranking — so the *active* set is just Alpha/Beta (a single
+ * pair), letting a test reach "fully ordered" in one comparison.
+ */
+async function seedListWithExcludedGame(userId: string): Promise<string> {
+	const sql = postgres(process.env.DATABASE_URL as string);
+	const base = 900000 + Math.floor(Math.random() * 90000);
+	try {
+		const games = await sql<{ id: number }[]>`
+			insert into games (bgg_id, name)
+			values (${base + 1}, 'Alpha'), (${base + 2}, 'Beta'), (${base + 3}, 'Gamma')
+			returning id`;
+		const [pool] = await sql<{ id: string }[]>`
+			insert into pools (user_id, name) values (${userId}, 'E2E completion pool') returning id`;
+		for (const g of games) {
+			const excluded = g.id === games[2].id;
+			await sql`insert into pool_games (pool_id, game_id, excluded_from_ranking) values (${pool.id}, ${g.id}, ${excluded})`;
+		}
+		const [list] = await sql<{ id: string }[]>`
+			insert into lists (pool_id, user_id, name, ranking_method)
+			values (${pool.id}, ${userId}, 'E2E completion ranking', 'pairwise') returning id`;
+		return list.id;
+	} finally {
+		await sql.end();
+	}
+}
+
 /** Seed a pool + pairwise list with one game carrying cover art. */
 async function seedListWithCoverArt(userId: string): Promise<string> {
 	const sql = postgres(process.env.DATABASE_URL as string);
@@ -183,4 +211,46 @@ test('pairwise cards show cover art and the toggle suppresses image requests', a
 	]);
 	await expect(matchup.locator('img')).toHaveCount(0);
 	expect(imageRequests).toEqual([]);
+});
+
+// pool-completion-celebration (T003/T004): once every pair among the active
+// (non-excluded) games is judged, a one-time confetti animation fires and the
+// comparison controls hide; they reappear automatically when the active set
+// changes (here, restoring the pre-excluded Gamma creates new unseen pairs).
+test('pool completion celebration: confetti fires once, controls hide, and reappear on active-set change', async ({
+	page
+}) => {
+	const userId = await signUp(page);
+	const listId = await seedListWithExcludedGame(userId);
+
+	await page.goto(`/lists/${listId}`);
+	await page.waitForLoadState('networkidle'); // let hydration finish before clicking
+	const heading = page.getByRole('heading', { name: 'Which is better?' });
+	await expect(heading).toBeVisible();
+
+	// Only Alpha vs Beta is active (Gamma starts excluded) — no confetti yet.
+	await expect(page.locator('canvas')).toHaveCount(0);
+
+	// Judging the only active pair completes the pool.
+	await page.getByRole('button', { name: 'Alpha', exact: true }).click();
+
+	// canvas-confetti renders a transient full-viewport <canvas> when it fires.
+	await expect(page.locator('canvas')).toHaveCount(1);
+	await expect(heading).not.toBeVisible();
+	await expect(page.getByRole('button', { name: 'Undo' })).not.toBeVisible();
+
+	// Resume: reload rebuilds an already-complete session — controls stay
+	// hidden and confetti does not replay for the pre-existing completion.
+	await page.reload();
+	await expect(page.getByRole('status')).toBeVisible();
+	await expect(heading).not.toBeVisible();
+	await expect(page.locator('canvas')).toHaveCount(0);
+	await page.waitForTimeout(300);
+	await expect(page.locator('canvas')).toHaveCount(0);
+
+	// Restoring the excluded Gamma grows the active set, creating new unseen
+	// pairs — the controls reappear automatically (no manual "unhide").
+	await page.getByRole('button', { name: /^Unranked \(/ }).click();
+	await page.getByRole('button', { name: 'Restore Gamma to ranking' }).click();
+	await expect(heading).toBeVisible();
 });

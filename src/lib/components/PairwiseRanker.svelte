@@ -1,4 +1,5 @@
 <script lang="ts">
+	import confetti from 'canvas-confetti';
 	import { PairwiseSession } from '$lib/pairwiseSession.svelte';
 	import { spineColor } from '$lib/spine';
 	import { resolveCoverArt } from '$lib/domain/coverArt';
@@ -109,6 +110,20 @@
 		);
 	}
 
+	// pool-completion-celebration (T003): fire the confetti once on the
+	// false->true transition of isFullyOrdered — `previousDone` starts
+	// `undefined` (not `false`) so an already-complete session never fires
+	// on initial mount, and it only fires again after a subsequent
+	// false->true transition (active set changed and got re-completed).
+	let previousDone: boolean | undefined = undefined;
+	$effect(() => {
+		const isDone = session.isFullyOrdered;
+		if (previousDone === false && isDone) {
+			confetti();
+		}
+		previousDone = isDone;
+	});
+
 	function onKeydown(event: KeyboardEvent) {
 		const pair = session.currentPair;
 		if (!pair) return;
@@ -123,37 +138,43 @@
 {#if session.currentPair}
 	{@const pair = session.currentPair}
 	<section class="flex flex-col gap-4" aria-labelledby="matchup-heading">
-		<div class="flex flex-wrap items-baseline justify-between gap-2">
-			<h2 id="matchup-heading" class="text-lg font-semibold">Which is better?</h2>
-			<p class="text-xs opacity-60">
-				Press <kbd class="kbd kbd-xs">1</kbd>/<kbd class="kbd kbd-xs">2</kbd> (or ←/→),
-				<kbd class="kbd kbd-xs">U</kbd> to undo
-			</p>
-		</div>
-		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-			{#each [pair[0], pair[1]] as gameId, i (gameId)}
-				{@const cover = coverOf(gameId)}
-				<button
-					type="button"
-					class="group bg-base-100 border-base-300 hover:border-primary hover:bg-primary/5 focus-visible:border-primary flex min-h-28 items-center gap-3 rounded-box border-2 p-4 text-left transition-colors"
-					onclick={() => pick(gameId)}
-					aria-label={nameOf(gameId)}
-				>
-					<span
-						class="kbd kbd-sm font-mono opacity-70 transition-colors group-hover:opacity-100"
-						aria-hidden="true">{i + 1}</span
+		{#if !session.isFullyOrdered}
+			<div class="flex flex-wrap items-baseline justify-between gap-2">
+				<h2 id="matchup-heading" class="text-lg font-semibold">Which is better?</h2>
+				<p class="text-xs opacity-60">
+					Press <kbd class="kbd kbd-xs">1</kbd>/<kbd class="kbd kbd-xs">2</kbd> (or ←/→),
+					<kbd class="kbd kbd-xs">U</kbd> to undo
+				</p>
+			</div>
+			<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+				{#each [pair[0], pair[1]] as gameId, i (gameId)}
+					{@const cover = coverOf(gameId)}
+					<button
+						type="button"
+						class="group bg-base-100 border-base-300 hover:border-primary hover:bg-primary/5 focus-visible:border-primary flex min-h-28 items-center gap-3 rounded-box border-2 p-4 text-left transition-colors"
+						onclick={() => pick(gameId)}
+						aria-label={nameOf(gameId)}
 					>
-					{#if cover}
-						<img src={cover} alt={nameOf(gameId)} class="h-16 w-16 rounded-box object-cover" />
-					{/if}
-					<span class="font-display text-xl font-bold">{nameOf(gameId)}</span>
-				</button>
-			{/each}
-		</div>
+						<span
+							class="kbd kbd-sm font-mono opacity-70 transition-colors group-hover:opacity-100"
+							aria-hidden="true">{i + 1}</span
+						>
+						{#if cover}
+							<img src={cover} alt={nameOf(gameId)} class="h-16 w-16 rounded-box object-cover" />
+						{/if}
+						<span class="font-display text-xl font-bold">{nameOf(gameId)}</span>
+					</button>
+				{/each}
+			</div>
+		{:else}
+			<p class="alert">All active games have been compared — nice work!</p>
+		{/if}
 		<div class="flex items-center justify-between gap-3">
-			<button type="button" class="btn btn-ghost btn-sm" onclick={undo} disabled={session.log.length === 0}>
-				Undo
-			</button>
+			{#if !session.isFullyOrdered}
+				<button type="button" class="btn btn-ghost btn-sm" onclick={undo} disabled={session.log.length === 0}>
+					Undo
+				</button>
+			{/if}
 			<span role="status" aria-live="polite" class="text-sm opacity-70">
 				{session.progress.seen} of {session.progress.total} matchups judged
 			</span>
