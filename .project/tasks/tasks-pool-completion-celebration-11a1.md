@@ -20,7 +20,7 @@ status: in-progress
 
 ## Phase 2: Confetti animation
 
-- [ ] T002 [artifacts: constitution] Check for an existing, well-maintained
+- [x] T002 [artifacts: constitution] Check for an existing, well-maintained
   confetti library (e.g. `canvas-confetti`) per Principle IX before writing
   any custom animation code; add it as a dependency once confirmed
   appropriate (lightweight, no heavy runtime cost, TypeScript-friendly or
