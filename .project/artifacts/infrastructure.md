@@ -1,7 +1,7 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-07-13
+last_updated: 2026-07-15
 diagram_type: graph TD
 render_section: Infrastructure
 diagram_status: current
@@ -118,11 +118,19 @@ worker-driven** rather than handled inline in a request.
   reached with the secret key, not per-user publishable keys, so RLS would add
   policy overhead without being the enforcement path. Trade-off accepted: a
   server-side authorization bug has no DB backstop — see Production Annotations.
-- **The Supabase Data API (PostgREST) is disabled.** With RLS off, exposing the
-  auto-generated REST API on the public schema would let the public publishable
-  key read/write tables directly. Because we enforce authorization server-side, we
-  turn the Data API off entirely and reach Postgres over a **direct connection**
-  instead — so there is no public data surface.
+- **No public Data API surface.** With RLS off, exposing the Supabase
+  Data API (PostgREST) on the public schema would let the public
+  publishable key read/write tables directly. Because we enforce
+  authorization server-side, the app reaches Postgres over a **direct
+  connection** instead of the Data API. Locally this is achieved by
+  leaving `auto_expose_new_tables` unset in `supabase/config.toml` (its
+  documented default — new `public`-schema tables are *not*
+  auto-granted to `anon`/`authenticated`/`service_role`), not by turning
+  the Data API service off outright (`[api] enabled = true` still runs
+  locally; it just has nothing to expose). Deployed environments'
+  Supabase project settings aren't managed by Terraform, so whether the
+  hosted Data API is toggled off in the dashboard isn't verifiable from
+  this repo — either way, the app never uses it.
 - **Data access:** a direct Postgres connection (`postgres.js` driver) with
   **Kysely** as the type-safe query builder. `supabase-js`/`@supabase/ssr` are
   used only for Auth (a separate endpoint), not for table queries.
@@ -146,8 +154,8 @@ The app reaches this stack as **two independent local endpoints** — the same
 two paths it uses against any environment:
 
 - **Data** — a **direct Postgres** connection (`postgres.js`/Kysely) to
-  `:54322`. Because the Data API is disabled, table access never goes through
-  the gateway.
+  `:54322`. The app never calls the Data API/gateway for table access (see
+  "No public Data API surface" above) — it always goes direct.
 - **Auth** — `supabase-js` to the Kong gateway `:54321` (→ GoTrue) for
   sign-in / JWTs / OAuth.
 

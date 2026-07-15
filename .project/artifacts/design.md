@@ -1,7 +1,7 @@
 ---
 name: design
 status: stable
-last_updated: 2026-07-12
+last_updated: 2026-07-15
 ---
 
 # Visual Design
@@ -81,17 +81,20 @@ not amateurish.
 - The **landing hero breaks out** of the reading column to full width so the
   headline and the demo spine-stack have room; ordinary views stay in-column.
 - Shared components live in `src/lib/components/` (`Logo`, `ThemeToggle`,
-  `PairwiseRanker`, `ManualRanker`) and are documented in Storybook. The
-  spine-stack motif is a component-layer pair of classes (`.spine` /
-  `.spine-rank` in `app.css`) fed by the shared colour helper `src/lib/spine.ts`,
-  so pairwise and manual rankings render it identically. Views compose these
+  `PairwiseRanker`, `ManualRanker`, `BggSearchAdd`); `Logo` and `ThemeToggle`
+  have Storybook stories today, the others don't yet (see Production
+  Annotations). The spine-stack motif is a component-layer pair of classes
+  (`.spine` / `.spine-rank` in `app.css`) fed by the shared colour helper
+  `src/lib/spine.ts`, so pairwise and manual rankings render it identically.
+  Views compose these
   rather than repeating utility soup.
 
 ## Production Annotations
 
 - **Component library is still lean.** The brand and interaction primitives are
-  extracted (`Logo`, `ThemeToggle`, `PairwiseRanker`, `ManualRanker`, the
-  `.spine` motif), but many views still compose DaisyUI classes directly (cards,
-  forms, badges). As shared patterns recur, extract them into
+  extracted (`Logo`, `ThemeToggle`, `PairwiseRanker`, `ManualRanker`,
+  `BggSearchAdd`, the `.spine` motif), but many views still compose DaisyUI
+  classes directly (cards, forms, badges), and only `Logo`/`ThemeToggle` have
+  Storybook stories so far. As shared patterns recur, extract them into
   `src/lib/components/` with Storybook stories rather than repeating class
   strings.

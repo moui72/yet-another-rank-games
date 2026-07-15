@@ -1,6 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-15 (full /ardd-defects survey: 3 cosmetic defects found). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-15 (3 cosmetic defects refined and closed). Keep this current as artifacts are refined and open questions are resolved._
 
 ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/ardd-update`.
 
@@ -42,9 +42,7 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
 - infrastructure.md — current ✅
 - ui.md — current ✅ (regenerated: pairwise view node now mentions move up/down)
 
-## Code-vs-Artifact Defects
-
-**3 known defects** — full survey (all 5 artifacts vs. codebase), last checked 2026-07-15. All cosmetic, no broken contracts: (1) `datamodel.md`'s Indexes section omits the real `unique (list_id, game_id)` constraint on `list_entries`; (2) `infrastructure.md` claims the Data API is "disabled" as a blanket fact, but local dev's `supabase/config.toml` has `[api] enabled = true` (the no-public-surface outcome still holds, via `auto_expose_new_tables` defaulting off rather than the service itself being off — staging/production can't be verified from this repo); (3) `design.md`'s component list is missing `BggSearchAdd.svelte` (extracted during `collection-editing-and-resync`). See `.project/DEFECTS.md` for full detail. Run `/ardd-plan defects` to surface these as fix tasks in the next plan, or `/ardd-refine <artifact>` to fix any directly.
+No defects — last checked 2026-07-15. The 3 cosmetic gaps from the prior full survey are fixed: `datamodel.md`'s Indexes section now documents `ListEntry (list_id, game_id)`; `infrastructure.md`'s Data API claim now accurately describes the local mechanism (`auto_expose_new_tables` defaulting off) and scopes the hosted-environment part to what's verifiable from this repo; `design.md`'s component list now includes `BggSearchAdd`, and a related over-claim (all shared components "documented in Storybook") is corrected — only `Logo`/`ThemeToggle` actually have stories.
 
 ## In Flight
 
@@ -52,4 +50,4 @@ Nothing in flight — the manual-pairwise-ranking-adjust worktree merged and was
 
 ## Recommended Next Step
 
-The feature backlog is fully caught up (0 backlogged, 0 planned, 0 tasked, 7 implemented). A full `/ardd-defects` survey just found 3 cosmetic documentation gaps (see above) — cheapest fix is a quick `/ardd-refine datamodel`, `/ardd-refine infrastructure`, and `/ardd-refine design` pass to close them directly, since none require a design decision. Otherwise: `ui.md`'s public-sharing open question has no urgency, and the ARDD tool itself has an update available (`/ardd-update`).
+The feature backlog is fully caught up (0 backlogged, 0 planned, 0 tasked, 7 implemented) and all known documentation drift is fixed (defects clean). Remaining lower-priority items: `ui.md`'s public-sharing open question has no urgency (a deferred product decision), and the ARDD tool itself has an update available (`/ardd-update`). Nothing else is queued — the next move is whatever new idea or feedback comes up.

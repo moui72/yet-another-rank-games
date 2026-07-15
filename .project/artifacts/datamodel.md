@@ -1,7 +1,7 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-14
+last_updated: 2026-07-15
 diagram_type: erDiagram
 render_section: Datamodel
 diagram_status: current
@@ -283,6 +283,7 @@ rather than silently ignored.
 - `Comparison.list_id` — comparisons are read/written per list constantly by the
   ranking algorithm.
 - `ListEntry (list_id, position)` — rendering a list in order.
+- `ListEntry (list_id, game_id)` — unique; a game has at most one entry in a list's ordering.
 - `Pool.user_id` — listing a user's pools.
 - `PoolGame (pool_id, game_id)` — unique; index on `pool_id` for reading a pool.
 - `List.pool_id` and `List.user_id` — listing a pool's / user's lists.
