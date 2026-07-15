@@ -1,10 +1,10 @@
 ---
 name: ui
 status: draft
-last_updated: 2026-07-14
+last_updated: 2026-07-15
 diagram_type: graph TD
 render_section: UI
-diagram_status: current
+diagram_status: stale
 ---
 
 # UI
@@ -131,6 +131,19 @@ screens, 3 at `sm`, 4 at `md` and up.
   not authored." This is entirely derived UI state from the existing
   `Comparison` log and `PoolGame.excluded_from_ranking` — no new persisted
   field.
+- **Manual reordering** (feature `manual-pairwise-ranking-adjust`):
+  **move up / move down** controls per row in the Ranked section let a user
+  directly nudge a game one position at a time — accessible by construction
+  (keyboard/screen-reader operable, no drag-and-drop or new dependency
+  needed, per constitution Principle VI). This is implemented as a
+  **synthetic comparison**, not an authored-position override — each move
+  swaps the game with its immediate neighbor and emits exactly one
+  `Comparison` row through the same `choose()` path a real pairwise pick
+  uses (the moved game beats the neighbor it swapped past). It never
+  bypasses "order is derived from the `Comparison` graph" (`datamodel.md`)
+  — manual intent becomes a comparison, and the existing engine absorbs it
+  like any other. Works identically whether the ranking is complete or
+  incomplete; no restriction to post-completion is needed.
 
 ### Ranking engine & matchup selection (decided)
 

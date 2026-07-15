@@ -1,6 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-14 (pool-completion-celebration implemented + merged; post-ship follow-up done). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-15 (manual-pairwise-ranking-adjust planned + tasked). Keep this current as artifacts are refined and open questions are resolved._
 
 ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/ardd-update`.
 
@@ -21,11 +21,13 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
 
 ## Feature Backlog
 
-- **0 backlogged** · 0 planned · 0 tasked · **6 implemented** (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`, `collection-editing-and-resync`, `bgg-cover-art-and-card-view`, `pool-completion-celebration`) — see `.project/features/`. The feature backlog is fully caught up; no work in flight.
+- **0 backlogged** · 0 planned · **1 tasked** (`manual-pairwise-ranking-adjust` — move up/down controls in the Ranked section, each emitting one synthetic comparison against the swapped neighbor; plan approved, tasks ready) · 6 implemented (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`, `collection-editing-and-resync`, `bgg-cover-art-and-card-view`, `pool-completion-celebration`) — see `.project/features/`.
 
 ## Plans & Tasks
 
-- `plan-pool-completion-celebration-2026-07-14-0bde.md` — approved; `tasks-pool-completion-celebration-11a1.md` **completed, 5/5**. Merged to `main`. Delivered: a derived `isFullyOrdered` signal (unseen-pair count over active/non-excluded games, factored from the existing matchup-selection pair enumeration), a one-time confetti celebration (`canvas-confetti`) on the false→true transition, and comparison controls that hide when fully ordered and reappear automatically when the active game set changes. No `datamodel.md` changes. Full suite green: 132 unit + 18 e2e tests; lint/typecheck clean.
+- `research-manual-pairwise-ranking-adjustment-2026-07-14-5810.md` — proposal-vetting research, consumed by the plan below. Key finding: implement as synthetic comparisons through the existing `Comparison`/derived-order model, not an authored-position override — no reversal of `datamodel.md`'s "order is derived, not authored" decision.
+- `plan-manual-pairwise-ranking-adjust-2026-07-15-3db7.md` — approved; `tasks-manual-pairwise-ranking-adjust-97c6.md` **ready, 0/3**. Covers `PairwiseSession.moveUp`/`moveDown` (thin wrappers over the existing `choose()`), move-up/move-down buttons in the Ranked section (chosen over drag-and-drop — accessible by construction, no new dependency), and an artifact-clarification pass. No `datamodel.md` changes. Not yet implemented — run `/ardd-implement` when ready to start.
+- `plan-pool-completion-celebration-2026-07-14-0bde.md` — approved; `tasks-pool-completion-celebration-11a1.md` **completed, 5/5**. Merged to `main`.
 - `plan-bgg-cover-art-and-card-view-2026-07-14-3c32.md` — approved; `tasks-bgg-cover-art-and-card-view-6090.md` **completed, 8/8**. Merged to `main`.
 - `research-collection-editing-and-resync-reconciliation-2026-07-14-47f7.md` — proposal-vetting research, consumed by the plan below.
 - `plan-collection-editing-and-resync-2026-07-14-d0af.md` — approved; `tasks-collection-editing-and-resync-b3ff.md` **completed, 15/15**. Merged to `main`.
@@ -38,16 +40,16 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
 
 - datamodel.md — current ✅
 - infrastructure.md — current ✅
-- ui.md — current ✅ (regenerated: pairwise view node now mentions the completion celebration)
+- ui.md — stale ⚠️ (run `/ardd-diagram ui`) — new manual-reordering behavior added to the pairwise ranking view (no new nodes/flow, but worth a refresh pass after this ships, same as the completion-celebration precedent)
 
 ## Code-vs-Artifact Defects
 
-No defects — last checked 2026-07-14 (re-verified after `pool-completion-celebration` shipped). All new behavior matches `ui.md` exactly; no artifact edit was needed (T005 verified no discrepancy).
+No defects — last checked 2026-07-14 (after `pool-completion-celebration` shipped). This plan's artifact changes are plan-only so far, not yet implemented.
 
 ## In Flight
 
-Nothing in flight — the pool-completion-celebration worktree merged and was removed this run.
+Nothing in flight.
 
 ## Recommended Next Step
 
-The feature backlog is fully caught up (0 backlogged, 0 planned, 0 tasked, 6 implemented) and all post-ship follow-up is done (defects clean, diagram regenerated). Remaining lower-priority items: `ui.md`'s public-sharing open question has no urgency (a deferred product decision), and the ARDD tool itself has an update available (`/ardd-update`). Nothing else is queued — the next move is whatever new idea or feedback comes up.
+`manual-pairwise-ranking-adjust` now has an approved plan and a ready tasks file (`tasks-manual-pairwise-ranking-adjust-97c6.md`, 0/3) — run `/ardd-implement` to start executing it. Lower priority: `ui.md`'s diagram is stale (cosmetic — low urgency), the public-sharing open question has no urgency, and the ARDD tool itself has an update available (`/ardd-update`).
