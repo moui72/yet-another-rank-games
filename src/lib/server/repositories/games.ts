@@ -45,6 +45,7 @@ export function upsertGame(
 		maxPlayers: t.maxPlayers,
 		playingTime: t.playingTime,
 		thumbnailUrl: t.thumbnailUrl,
+		imageUrl: t.imageUrl,
 		mechanics: t.mechanics,
 		categories: t.categories,
 		isExpansion: t.isExpansion,

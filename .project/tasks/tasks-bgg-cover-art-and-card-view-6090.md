@@ -23,7 +23,7 @@ status: in-progress
   entity type (`src/lib/types/entities.ts`) with `imageUrl`/`image_url`.
   Write a test first (extend `parse.test.ts`'s existing thumbnail fixture
   with an `<image>` sibling), confirm it fails, then implement.
-- [ ] T003 [artifacts: datamodel] Wire `imageUrl` through the existing
+- [x] T003 [artifacts: datamodel] Wire `imageUrl` through the existing
   `thing`-enrichment upsert path (wherever `thumbnailUrl` is written today)
   so newly-imported/enriched games get `image_url` populated. Write a test
   first, confirm it fails, then implement.
