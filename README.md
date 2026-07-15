@@ -194,7 +194,7 @@ graph TD
     Resync["Collection resync\n(re-pull, reconcile removed/pending-delete,\npossible-duplicates review)"]
     PoolBuilder["Pool builder view\n(filter bulk-add, hand-edit,\nBGG search-import,\nlist/card view toggle + cover art)"]
     ListMgmt["List management view\n(create list from pool,\nchoose ranking method)"]
-    Pairwise["Pairwise ranking view\n(Ranked / Unranked split,\ncomparison cards show cover art,\nnovelty-preferring matchups,\nkeyboard-operable)"]
+    Pairwise["Pairwise ranking view\n(Ranked / Unranked split,\ncomparison cards show cover art,\nnovelty-preferring matchups,\nconfetti + hidden controls when fully ordered,\nkeyboard-operable)"]
     Manual["Manual drag-to-order view\n(override / fallback)"]
     Result["List result & export view\n(Markdown / CSV / JSON / GeekList)"]
 

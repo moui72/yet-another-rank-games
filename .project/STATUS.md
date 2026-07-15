@@ -1,6 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-14 (pool-completion-celebration planned + tasked). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-14 (pool-completion-celebration implemented + merged; post-ship follow-up done). Keep this current as artifacts are refined and open questions are resolved._
 
 ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/ardd-update`.
 
@@ -21,11 +21,11 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
 
 ## Feature Backlog
 
-- **0 backlogged** · 0 planned · **1 tasked** (`pool-completion-celebration` — confetti animation and hiding comparison controls once a pool becomes fully deterministically ordered; plan approved, tasks ready) · 5 implemented (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`, `collection-editing-and-resync`, `bgg-cover-art-and-card-view`) — see `.project/features/`. All previously-backlogged features are now in flight or shipped.
+- **0 backlogged** · 0 planned · 0 tasked · **6 implemented** (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`, `collection-editing-and-resync`, `bgg-cover-art-and-card-view`, `pool-completion-celebration`) — see `.project/features/`. The feature backlog is fully caught up; no work in flight.
 
 ## Plans & Tasks
 
-- `plan-pool-completion-celebration-2026-07-14-0bde.md` — approved; `tasks-pool-completion-celebration-11a1.md` **ready, 0/5**. Covers a derived `isFullyOrdered` signal (scoped to active/non-excluded games), a one-time confetti animation on completion (checking for an existing library per Principle IX before writing custom code), hiding/auto-reappearing comparison controls, and an artifact-clarification pass. No `datamodel.md` changes — purely derived UI state. Not yet implemented — run `/ardd-implement` when ready to start.
+- `plan-pool-completion-celebration-2026-07-14-0bde.md` — approved; `tasks-pool-completion-celebration-11a1.md` **completed, 5/5**. Merged to `main`. Delivered: a derived `isFullyOrdered` signal (unseen-pair count over active/non-excluded games, factored from the existing matchup-selection pair enumeration), a one-time confetti celebration (`canvas-confetti`) on the false→true transition, and comparison controls that hide when fully ordered and reappear automatically when the active game set changes. No `datamodel.md` changes. Full suite green: 132 unit + 18 e2e tests; lint/typecheck clean.
 - `plan-bgg-cover-art-and-card-view-2026-07-14-3c32.md` — approved; `tasks-bgg-cover-art-and-card-view-6090.md` **completed, 8/8**. Merged to `main`.
 - `research-collection-editing-and-resync-reconciliation-2026-07-14-47f7.md` — proposal-vetting research, consumed by the plan below.
 - `plan-collection-editing-and-resync-2026-07-14-d0af.md` — approved; `tasks-collection-editing-and-resync-b3ff.md` **completed, 15/15**. Merged to `main`.
@@ -38,16 +38,16 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
 
 - datamodel.md — current ✅
 - infrastructure.md — current ✅
-- ui.md — stale ⚠️ (run `/ardd-diagram ui`) — new completion-celebration behavior (no new nodes/flow, but worth a refresh pass after this ships)
+- ui.md — current ✅ (regenerated: pairwise view node now mentions the completion celebration)
 
 ## Code-vs-Artifact Defects
 
-No defects — last checked 2026-07-14 (after `bgg-cover-art-and-card-view` shipped). This plan's artifact changes are plan-only so far, not yet implemented.
+No defects — last checked 2026-07-14 (re-verified after `pool-completion-celebration` shipped). All new behavior matches `ui.md` exactly; no artifact edit was needed (T005 verified no discrepancy).
 
 ## In Flight
 
-Nothing in flight.
+Nothing in flight — the pool-completion-celebration worktree merged and was removed this run.
 
 ## Recommended Next Step
 
-`pool-completion-celebration` now has an approved plan and a ready tasks file (`tasks-pool-completion-celebration-11a1.md`, 0/5) — run `/ardd-implement` to start executing it. This is the last backlogged feature — once it ships, the feature register will be fully caught up (0 backlogged, 0 planned, 0 tasked, 6 implemented). Lower priority: `ui.md`'s diagram is stale (a cosmetic gap — the graph nodes/flow don't actually change for this feature, so low urgency), the public-sharing open question has no urgency, and the ARDD tool itself has an update available (`/ardd-update`).
+The feature backlog is fully caught up (0 backlogged, 0 planned, 0 tasked, 6 implemented) and all post-ship follow-up is done (defects clean, diagram regenerated). Remaining lower-priority items: `ui.md`'s public-sharing open question has no urgency (a deferred product decision), and the ARDD tool itself has an update available (`/ardd-update`). Nothing else is queued — the next move is whatever new idea or feedback comes up.
