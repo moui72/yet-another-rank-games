@@ -1,7 +1,7 @@
 ---
 plan: plan-manual-pairwise-ranking-adjust-2026-07-15-3db7.md
 generated: 2026-07-15
-status: ready
+status: in-progress
 ---
 
 # Tasks
