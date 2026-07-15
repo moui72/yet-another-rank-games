@@ -30,6 +30,7 @@ const THING_XML = `<?xml version="1.0" encoding="utf-8"?>
 <items>
 	<item type="boardgame" id="13">
 		<thumbnail>https://cf.geekdo-images.com/catan.jpg</thumbnail>
+		<image>https://cf.geekdo-images.com/catan-full.jpg</image>
 		<name type="alternate" sortindex="1" value="Die Siedler" />
 		<name type="primary" sortindex="1" value="Catan" />
 		<yearpublished value="1995" />
@@ -135,6 +136,7 @@ describe('parseThingXml', () => {
 			maxPlayers: 4,
 			playingTime: 120,
 			thumbnailUrl: 'https://cf.geekdo-images.com/catan.jpg',
+			imageUrl: 'https://cf.geekdo-images.com/catan-full.jpg',
 			mechanics: ['Trading', 'Dice Rolling'],
 			categories: ['Economic'],
 			isExpansion: false
@@ -164,6 +166,7 @@ describe('parseThingXml', () => {
 			maxPlayers: null,
 			playingTime: null,
 			thumbnailUrl: null,
+			imageUrl: null,
 			mechanics: [],
 			categories: [],
 			isExpansion: false

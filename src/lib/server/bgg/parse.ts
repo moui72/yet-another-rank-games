@@ -82,6 +82,7 @@ export function parseThingXml(xml: string): BggThing[] {
 			const linkValues = (type: string) =>
 				links.filter((l) => l?.type === type).map((l) => String(l.value));
 			const thumbnail = it?.thumbnail;
+			const image = it?.image;
 			return {
 				bggId: Number(it?.id),
 				name: textOf(primary),
@@ -91,6 +92,7 @@ export function parseThingXml(xml: string): BggThing[] {
 				maxPlayers: num(it?.maxplayers?.value),
 				playingTime: num(it?.playingtime?.value),
 				thumbnailUrl: thumbnail ? String(thumbnail).trim() : null,
+				imageUrl: image ? String(image).trim() : null,
 				mechanics: linkValues('boardgamemechanic'),
 				categories: linkValues('boardgamecategory'),
 				isExpansion: it?.type === 'boardgameexpansion'

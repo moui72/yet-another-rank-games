@@ -23,6 +23,7 @@ function thing(bggId: number, name: string, over: Partial<BggThing>): BggThing {
 		maxPlayers: null,
 		playingTime: null,
 		thumbnailUrl: null,
+		imageUrl: null,
 		mechanics: [],
 		categories: [],
 		isExpansion: false,

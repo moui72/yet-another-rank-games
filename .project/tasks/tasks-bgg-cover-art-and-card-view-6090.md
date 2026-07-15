@@ -16,7 +16,7 @@ status: in-progress
 
 ## Phase 2: BGG cover art ingestion
 
-- [ ] T002 [artifacts: datamodel, infrastructure] Extend `parseThingXml`
+- [x] T002 [artifacts: datamodel, infrastructure] Extend `parseThingXml`
   (`src/lib/server/bgg/parse.ts`) to extract `<image>` into `imageUrl`,
   mirroring the existing `thumbnailUrl` extraction exactly (null-safe,
   trimmed). Update `BggThing` (`src/lib/server/bgg/types.ts`) and the `Game`

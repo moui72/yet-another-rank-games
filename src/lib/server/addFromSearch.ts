@@ -18,6 +18,7 @@ function minimalThing(pick: BggSearchResult): BggThing {
 		maxPlayers: null,
 		playingTime: null,
 		thumbnailUrl: null,
+		imageUrl: null,
 		mechanics: [],
 		categories: [],
 		isExpansion: false

@@ -19,6 +19,7 @@ function thing(bggId: number, name: string): BggThing {
 		maxPlayers: null,
 		playingTime: null,
 		thumbnailUrl: null,
+		imageUrl: null,
 		mechanics: [],
 		categories: [],
 		isExpansion: false

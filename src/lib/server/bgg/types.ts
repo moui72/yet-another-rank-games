@@ -24,6 +24,7 @@ export interface BggThing {
 	maxPlayers: number | null;
 	playingTime: number | null;
 	thumbnailUrl: string | null;
+	imageUrl: string | null;
 	mechanics: string[];
 	categories: string[];
 	isExpansion: boolean;

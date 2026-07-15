@@ -18,6 +18,7 @@ function thing(bggId: number, name: string): BggThing {
 		maxPlayers: 4,
 		playingTime: 120,
 		thumbnailUrl: 'g.jpg',
+		imageUrl: 'g-full.jpg',
 		mechanics: ['Cooperative Game'],
 		categories: ['Adventure'],
 		isExpansion: false
