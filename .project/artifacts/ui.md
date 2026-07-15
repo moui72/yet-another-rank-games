@@ -4,7 +4,7 @@ status: draft
 last_updated: 2026-07-14
 diagram_type: graph TD
 render_section: UI
-diagram_status: current
+diagram_status: stale
 ---
 
 # UI
@@ -119,6 +119,18 @@ screens, 3 at `sm`, 4 at `md` and up.
   `User.show_cover_art`; when off, no images are shown or requested anywhere
   in the app, for users minimizing network usage. There is no separate
   settings page for this — the toggle lives inline wherever images appear.
+- **Completion celebration** (feature `pool-completion-celebration`): when
+  every pair among the currently-active (non-excluded) games has been judged
+  at least once — the coverage signal below reaching `N == M` — the view
+  plays a one-time confetti animation and hides the comparison controls
+  (choose left/right, undo). The controls reappear automatically the moment
+  the active game set changes in a way that creates a new unseen pair (a
+  game added to the pool, un-excluded back into Ranked, etc.) — this
+  naturally covers "a game is removed from the ranking" changing the active
+  set, without a special-cased mechanism, consistent with "order is derived,
+  not authored." This is entirely derived UI state from the existing
+  `Comparison` log and `PoolGame.excluded_from_ranking` — no new persisted
+  field.
 
 ### Ranking engine & matchup selection (decided)
 
@@ -159,9 +171,12 @@ Tuning decisions (settled while building; revisit with real usage):
   when every pair has been seen; deterministic tie-break by game id. No Swiss
   round structure for v1 (the greedy informative pick suffices).
 - **"Done" is user-driven** with a **coverage signal**: the view shows
-  "*N of M* matchups judged" (M = all pairs) and a complete current ranking at
-  every step, so the user stops when satisfied. No forced completion or
-  confidence threshold gate in v1.
+  "*N of M* matchups judged" (M = all pairs **among currently-active,
+  non-excluded games** — implicit before the exclusion mechanism existed,
+  now stated explicitly) and a complete current ranking at every step, so
+  the user stops when satisfied. No forced completion or confidence
+  threshold gate in v1 — reaching `N == M` triggers the completion
+  celebration above, but never blocks further (repeat) comparisons.
 - **Large sets:** no hard comparison budget or list-size cap in v1 — the
   novelty-preferring selector concentrates effort on informative pairs and the
   top stabilizes early, so the user simply stops when the order looks right.
