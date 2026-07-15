@@ -30,7 +30,7 @@ status: in-progress
 
 ## Phase 3: Shared image-fallback helper
 
-- [ ] T004 [artifacts: ui] Add a small shared helper/component resolving a
+- [x] T004 [artifacts: ui] Add a small shared helper/component resolving a
   game's display image: `image_url` → `thumbnail_url` → placeholder — used
   by both the card view (T005) and the pairwise view (T007), avoiding
   duplicating the fallback chain (Principle IX/XIII). Write a test first for
