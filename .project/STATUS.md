@@ -1,6 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-15 (3 cosmetic defects refined and closed). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-16 (all 3 code-vs-artifact defects repaired and verified: `list_entries.tier` dropped via migration, `Comparison (list_id, game_a, game_b)` unique constraint + canonical-order upsert added and migrated, `manual` ranking option removed from list creation. Full suite green: 132 unit + 72 integration tests, lint clean, 0 typecheck errors). Keep this current as artifacts are refined and open questions are resolved._
 
 ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/ardd-update`.
 
@@ -21,7 +21,7 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
 
 ## Feature Backlog
 
-- **0 backlogged** · 0 planned · 0 tasked · **7 implemented** (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`, `collection-editing-and-resync`, `bgg-cover-art-and-card-view`, `pool-completion-celebration`, `manual-pairwise-ranking-adjust`) — see `.project/features/`. The feature backlog is fully caught up; no work in flight.
+- **1 backlogged** (`revisit-ranking-modes`) · 0 planned · 0 tasked · **7 implemented** (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`, `collection-editing-and-resync`, `bgg-cover-art-and-card-view`, `pool-completion-celebration`, `manual-pairwise-ranking-adjust`) — see `.project/features/`. Target `revisit-ranking-modes` with `/ardd-plan revisit-ranking-modes` when ready to design it; no work in flight.
 
 ## Plans & Tasks
 
@@ -38,11 +38,33 @@ ARDD update available: installed `7c5dcd0`, latest release `v0.10.0` — run `/a
 
 ## Diagrams
 
-- datamodel.md — current ✅
-- infrastructure.md — current ✅
-- ui.md — current ✅ (regenerated: pairwise view node now mentions move up/down)
+- datamodel.md — current ✅ (regenerated: `Comparison.game_a`/`game_b` now marked `UK` for the new unique constraint)
+- infrastructure.md — current ✅ (regenerated; no structural change)
+- ui.md — current ✅ (regenerated: Manual drag-to-order view and its edges removed; List management view node updated to reflect pairwise-only)
 
-No defects — last checked 2026-07-15. The 3 cosmetic gaps from the prior full survey are fixed: `datamodel.md`'s Indexes section now documents `ListEntry (list_id, game_id)`; `infrastructure.md`'s Data API claim now accurately describes the local mechanism (`auto_expose_new_tables` defaulting off) and scopes the hosted-environment part to what's verifiable from this repo; `design.md`'s component list now includes `BggSearchAdd`, and a related over-claim (all shared components "documented in Storybook") is corrected — only `Logo`/`ThemeToggle` actually have stories.
+No defects — last checked 2026-07-16. The 3 defects from the prior run (audit
+decisions documented ahead of code) are now fixed and verified against a real
+local Postgres: `ListEntry.tier` dropped (migration
+`20260715220100_list_entries_drop_tier.sql`); `Comparison (list_id, game_a,
+game_b)` unique constraint + canonical-order upsert added (migration
+`20260715220000_comparisons_canonical_unique.sql`, `recordComparison`
+updated, new integration test `comparisons.integration.test.ts` 3/3 passing);
+`manual` ranking option removed from the list-creation form
+(`/pools/[id]/+page.svelte`, `+page.server.ts`).
+
+## Audit
+
+`.project/audit.md` — all 5 findings resolved, both at the artifact level and
+now in code: `ListEntry.tier` removed; `Comparison` unique constraint +
+upsert added; pool filter `include` decided as AND-all (already implemented
+in `pools.ts`, plus a Production Annotation flagging the filter UI for a
+future rework); manual ranking method deprecated in favor of pairwise-only
+(`revisit-ranking-modes` backlogged); constitution shrunk from 15 to 11
+principles (v2.0.0). Nothing outstanding.
+
+## Feedback
+
+- 1 file at `status: planned` (`feedback-unranked-collapsible-pool-games-d07e.md`) — already consumed by a plan, not open.
 
 ## In Flight
 
@@ -50,4 +72,4 @@ Nothing in flight — the manual-pairwise-ranking-adjust worktree merged and was
 
 ## Recommended Next Step
 
-The feature backlog is fully caught up (0 backlogged, 0 planned, 0 tasked, 7 implemented) and all known documentation drift is fixed (defects clean). Remaining lower-priority items: `ui.md`'s public-sharing open question has no urgency (a deferred product decision), and the ARDD tool itself has an update available (`/ardd-update`). Nothing else is queued — the next move is whatever new idea or feedback comes up.
+All code-vs-artifact defects are closed and the full suite is green. `revisit-ranking-modes` is backlogged and ready for `/ardd-plan revisit-ranking-modes` whenever you want to design what (if anything) replaces manual ranking. `ui.md`'s public-sharing open question has no urgency, and the ARDD tool itself has an update available (`/ardd-update`). Consider committing the pending changes (2 new migrations, `recordComparison`/`schema`/`entities` edits, list-creation UI/server changes, `comparisons.integration.test.ts`, and the `.project/` doc updates).

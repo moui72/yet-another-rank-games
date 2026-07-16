@@ -112,7 +112,6 @@ interface ListEntriesTable {
 	gameId: number;
 	position: number;
 	score: number | null;
-	tier: string | null;
 }
 
 export interface Database {

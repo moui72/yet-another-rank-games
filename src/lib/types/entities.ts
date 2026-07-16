@@ -151,7 +151,6 @@ export interface ListEntry {
 	gameId: number;
 	position: number;
 	score: number | null;
-	tier: string | null;
 }
 
 /** A min/max predicate; either bound omitted or null means open-ended. */

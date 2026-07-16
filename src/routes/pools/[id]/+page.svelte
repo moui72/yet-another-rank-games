@@ -221,17 +221,6 @@
 					<label class="label" for="description"><span class="label-text">Description (optional)</span></label>
 					<input id="description" name="description" class="input input-bordered w-full" />
 				</div>
-				<fieldset class="flex gap-4">
-					<legend class="text-sm font-medium">Ranking method</legend>
-					<label class="label cursor-pointer gap-2">
-						<input type="radio" name="rankingMethod" value="pairwise" class="radio radio-sm" checked />
-						<span class="label-text">Pairwise</span>
-					</label>
-					<label class="label cursor-pointer gap-2">
-						<input type="radio" name="rankingMethod" value="manual" class="radio radio-sm" />
-						<span class="label-text">Manual</span>
-					</label>
-				</fieldset>
 				<button type="submit" class="btn btn-primary self-start">Create list</button>
 			</form>
 		</div>

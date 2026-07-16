@@ -118,17 +118,16 @@ export const actions: Actions = {
 		await requirePool(locals.user.id, params.id);
 		const form = await request.formData();
 		const name = (str(form.get('name')) ?? '').trim();
-		const rankingMethod = str(form.get('rankingMethod')) ?? 'pairwise';
 		if (!name) return fail(400, { error: 'A list name is required.' });
-		if (rankingMethod !== 'pairwise' && rankingMethod !== 'manual') {
-			return fail(400, { error: 'Invalid ranking method.' });
-		}
+		// Pairwise is the only ranking method offered when creating a list
+		// (manual drag-to-order is deprecated — see ui.md Production
+		// Annotations); existing `manual` lists are unaffected.
 		await createList(db, {
 			poolId: params.id,
 			userId: locals.user.id,
 			name,
 			description: str(form.get('description')) || null,
-			rankingMethod
+			rankingMethod: 'pairwise'
 		});
 		return { listCreated: true };
 	}
