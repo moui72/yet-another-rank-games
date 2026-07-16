@@ -21,7 +21,7 @@ Core user journey: **connect a BGG account → import a collection → build a p
 primarily) → view/export the result.**
 
 Heavy comparison state lives in **one reactive store per runtime**
-(constitution Principle XII), not threaded between components by reference.
+(constitution Principle XI, Code Organization Discipline), not threaded between components by reference.
 
 ## Collection import & management view
 
@@ -95,8 +95,9 @@ screens, 3 at `sm`, 4 at `md` and up.
 
 ## List management view
 
-- Create a list **from a pool**: choose a pool, name, optional description, and
-  ranking method (pairwise / manual).
+- Create a list **from a pool**: choose a pool, name, and optional description.
+  **Pairwise is the only ranking method offered** (manual drag-to-order is
+  deprecated — see Production Annotations).
 - See a pool's lists, and a user's lists, with status (in progress / complete).
 - Many lists can rank the same pool differently.
 
@@ -173,7 +174,7 @@ contradictory judgments poorly).
 - **Cold-start:** initial ratings may be seeded from the BGG
   `user_rating`/`num_plays` on `CollectionItem` so early comparisons refine a
   sensible order rather than starting flat.
-- **State (Principle XII):** the reactive store holds the `Comparison` log
+- **State (Principle XI, Code Organization Discipline):** the reactive store holds the `Comparison` log
   (source of truth), a derived `Map<gameId, {mu, sigma}>`, and the current
   candidate pair — everything recomputable from the log. Order is **derived from
   the `Comparison` graph** (see `datamodel.md`), not authored directly.
@@ -198,13 +199,6 @@ Tuning decisions (settled while building; revisit with real usage):
   contradictory judgments into a sensible linear order (confidence just drops);
   the linear ranking is shown as-is.
 
-## Manual drag-to-order view (override / fallback)
-
-- The whole (filtered) list is shown and the user drags games into the order
-  they want, overriding or seeding the pairwise result.
-- Built on **`svelte-dnd-action`**.
-- Must remain **keyboard-accessible**, not mouse-only (Principle VI).
-
 ## List result & export view
 
 - The finished ranked list, **exportable** in portable formats (constitution
@@ -226,8 +220,9 @@ Tuning decisions (settled while building; revisit with real usage):
 ## Tiering (deferred)
 
 Bucketing games into tiers (S/A/B/…) instead of a strict linear order is a
-possible **later** feature, not in the initial scope. The data model reserves a
-`tier` field for it.
+possible **later** feature, not in the initial scope. The data model does not
+reserve a field for it yet; the necessary schema change would arrive via
+migration alongside the feature itself.
 
 ## States
 
@@ -243,3 +238,9 @@ possible **later** feature, not in the initial scope. The data model reserves a
 - **Sharing model unspecified**: if list sharing ships as public links, a
   production version needs a considered privacy/visibility model rather than
   the minimal export assumed here.
+- **Manual (drag-to-order) ranking method deprecated**: no longer offered when
+  creating a list — pairwise is the sole ranking method for now. Deprecated
+  rather than deleted from the codebase in this pass, pending a broader
+  rework of ranking modes (see the feature backlog); `List.ranking_method`'s
+  `manual` value and the `svelte-dnd-action`-based view remain in the
+  codebase but are not user-reachable.

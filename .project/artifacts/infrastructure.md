@@ -67,7 +67,7 @@ worker-driven** rather than handled inline in a request.
   limiting, or partial-XML tolerance that dominate this integration. Those are
   ours to write regardless, so we call `xmlapi2` directly and parse with a
   maintained library rather than couple a core path to an unstable wrapper
-  (Principle IX is satisfied by using `fast-xml-parser`, not by adopting a whole
+  (Principle VII's library-idiom check is satisfied by using `fast-xml-parser`, not by adopting a whole
   SDK).
 - **Authentication (BGG "XML APIcalypse", Oct 2025):** the XML API is no longer
   anonymous — every request needs an `Authorization: Bearer <token>` header from
@@ -136,7 +136,7 @@ worker-driven** rather than handled inline in a request.
   used only for Auth (a separate endpoint), not for table queries.
 - Schema changes go through **SQL migrations managed by the Supabase CLI**
   (`supabase/migrations`, applied locally and pushed to the hosted project at
-  deploy), per constitution Principle XI — no implicit ORM sync against real
+  deploy), per constitution Principle X — no implicit ORM sync against real
   data.
 
 ## Local development

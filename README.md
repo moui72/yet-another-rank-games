@@ -135,8 +135,8 @@ erDiagram
     Comparison {
         uuid id PK
         uuid list_id FK
-        bigint game_a FK
-        bigint game_b FK
+        bigint game_a FK,UK
+        bigint game_b FK,UK
         bigint winner_id FK
     }
     ListEntry {
@@ -193,19 +193,15 @@ graph TD
     Import["Collection import & management view\n(queued → fetching → processing → done;\nview/edit active + removed items)"]
     Resync["Collection resync\n(re-pull, reconcile removed/pending-delete,\npossible-duplicates review)"]
     PoolBuilder["Pool builder view\n(filter bulk-add, hand-edit,\nBGG search-import,\nlist/card view toggle + cover art)"]
-    ListMgmt["List management view\n(create list from pool,\nchoose ranking method)"]
+    ListMgmt["List management view\n(create list from pool;\npairwise is the sole ranking method)"]
     Pairwise["Pairwise ranking view\n(Ranked / Unranked split,\ncomparison cards show cover art,\nmove up/down (synthetic comparisons),\nnovelty-preferring matchups,\nconfetti + hidden controls when fully ordered,\nkeyboard-operable)"]
-    Manual["Manual drag-to-order view\n(override / fallback)"]
     Result["List result & export view\n(Markdown / CSV / JSON / GeekList)"]
 
     Import -->|collection populated| PoolBuilder
     Import -->|re-pull triggered| Resync
     Resync -->|reconciled| Import
     PoolBuilder -->|pool created| ListMgmt
-    ListMgmt -->|method = pairwise| Pairwise
-    ListMgmt -->|method = manual| Manual
+    ListMgmt -->|create| Pairwise
     Pairwise -->|stop early or complete| Result
-    Manual -->|reorder complete| Result
-    Pairwise -.->|override order| Manual
 ```
 

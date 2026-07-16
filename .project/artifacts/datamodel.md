@@ -182,7 +182,7 @@ A named ranking over a pool's games. Many lists can rank the same pool.
 | user_id | uuid | → User (denormalized for ownership checks) |
 | name | string | e.g. "Top 10 Co-op" |
 | description | string | nullable |
-| ranking_method | enum | `pairwise` \| `manual` \| `tier` (tier deferred) |
+| ranking_method | enum | `pairwise` \| `manual` \| `tier` (`manual` deprecated — not offered when creating a list, see `ui.md`; `tier` deferred) |
 | status | enum | `in_progress` \| `complete` |
 | created_at | timestamptz | |
 
@@ -193,21 +193,32 @@ A single pairwise judgment within a list. For a pairwise list, the set of
 `ListEntry` are derived from it); `created_at` gives the replay order and
 supports undo.
 
+**Recording a comparison is an upsert, keyed on the unordered pair** — a
+double-submit (double click, network retry, replayed request) for a pair
+already judged in this list overwrites the existing row's `winner_id` and
+`created_at` rather than inserting a second row, so it can never silently
+double-weight a judgment in the `openskill` rating update. Because `game_a`
+and `game_b` don't have a fixed "first/second" meaning between two
+comparisons of the same pair, `game_a`/`game_b` are stored **canonically
+ordered** (lower `game_id` in `game_a`) so the same pair always upserts the
+same row regardless of which game was shown on which side.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | id | uuid | |
 | list_id | uuid | → List |
-| game_a | bigint | → Game |
-| game_b | bigint | → Game |
+| game_a | bigint | → Game; canonically the lower `game_id` of the pair |
+| game_b | bigint | → Game; canonically the higher `game_id` of the pair |
 | winner_id | bigint | → Game (game_a or game_b) |
-| created_at | timestamptz | ordering/undo |
+| created_at | timestamptz | ordering/undo; updated on upsert |
+| — | — | unique `(list_id, game_a, game_b)` — enforces the upsert-not-duplicate guarantee above |
 
 ### ListEntry
 
 The list's ordering. For a **pairwise** list this is a **derived snapshot**
 recomputed from the `Comparison` graph after each comparison (source of truth is
 the comparisons, not this row); for a **manual** list it is authored directly by
-drag-to-order. Also carries tiers if/when tiering ships.
+drag-to-order.
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -216,7 +227,6 @@ drag-to-order. Also carries tiers if/when tiering ships.
 | game_id | bigint | → Game |
 | position | integer | rank within the list |
 | score | numeric | nullable; conservative rating score (e.g. `mu − k·sigma`) the snapshot was sorted by; null for manual lists |
-| tier | string | nullable; for the future tiering feature |
 
 ## Pool filter (build tool)
 
@@ -239,9 +249,9 @@ constraint on that dimension," so `{}` matches the whole collection. Version 1:
 }
 ```
 
-- `mechanics`/`categories`: `include` requires the game to have all listed
-  values (or, if that proves too strict in use, any — a tuning decision left to
-  implementation); `exclude` removes games having any listed value.
+- `mechanics`/`categories`: `include` requires the game to have **all** listed
+  values (AND semantics — decided for v1); `exclude` removes games having any
+  listed value.
 - Range predicates (`weight`, `playing_time`, `year_published`) accept `min`
   and/or `max`, either nullable = open-ended on that side.
 - `player_count.supports = N` keeps games whose `[min_players, max_players]`
@@ -253,7 +263,8 @@ constraint on that dimension," so `{}` matches the whole collection. Version 1:
   filter predicate — the filter selects the candidate set; the ranking picks the
   order.
 
-The filter is validated against a shared typed schema (Principle II, XIII)
+The filter is validated against a shared typed schema (Principle II, Type-Safety
+End to End; Principle XI, Code Organization Discipline's named-types rule)
 before it's used to match games, so an unknown or malformed key is rejected
 rather than silently ignored.
 
@@ -282,6 +293,8 @@ rather than silently ignored.
   item's pending duplicate, if any.
 - `Comparison.list_id` — comparisons are read/written per list constantly by the
   ranking algorithm.
+- `Comparison (list_id, game_a, game_b)` — unique; enforces the upsert-not-duplicate
+  guarantee above (see the Comparison entity note on canonical pair ordering).
 - `ListEntry (list_id, position)` — rendering a list in order.
 - `ListEntry (list_id, game_id)` — unique; a game has at most one entry in a list's ordering.
 - `Pool.user_id` — listing a user's pools.
@@ -295,6 +308,11 @@ rather than silently ignored.
   Security is deliberately off (see `infrastructure.md`), so there is no
   database-level backstop — a hardened production posture would enable RLS as
   defense-in-depth.
+- **Pool filter UI expected to be reworked**: the filter's `include`/`exclude`
+  checkbox-style predicate shape (this document's Pool filter section) is a v1
+  placeholder, not the final UX — a rework is planned, at which point the
+  `include`/`exclude` semantics (currently AND for `include`) may be revisited
+  alongside it.
 - **No soft-delete / audit history, except `CollectionItem`**: all other
   entities are hard-deleted and comparison history is not versioned beyond
   `created_at` — a production system handling valuable user data might add

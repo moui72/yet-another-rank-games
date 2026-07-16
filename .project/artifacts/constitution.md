@@ -1,10 +1,25 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.0 → 1.1.0
-Modified: Principle VI (Accessibility) — bar set to full WCAG 2.1 AA (was open);
-  Quality Standards (test-coverage gate) — set to a ratchet, never-decrease
-  policy (was open threshold).
+Version change: 1.1.0 → 2.0.0
+Modified (MAJOR — principle redefinition/removal): shrank the principle list
+  from 15 to 11 for a solo-hobby-project-appropriate governance surface
+  (ardd-audit finding, 2026-07-15):
+  - Former Principle IX (Check Library Idioms Before Building Custom
+    Mechanism) folded into Principle VII (Simplicity / YAGNI) as a
+    sub-point — no rule content dropped.
+  - Former Principles XII (Single Source of State), XIII (Named Types Over
+    Inline Duplication), XIV (Dispatch Surfaces Decomposed by Concern), and
+    XV (Bootstrap/Entry Files Wire Dependencies Only) consolidated into one
+    new Principle XI, "Code Organization Discipline," as labeled bullets —
+    no rule content dropped.
+  - All remaining principles renumbered accordingly; no other content
+    changed.
+Prior report (1.1.0):
+  Version change: 1.0.0 → 1.1.0
+  Modified: Principle VI (Accessibility) — bar set to full WCAG 2.1 AA (was open);
+    Quality Standards (test-coverage gate) — set to a ratchet, never-decrease
+    policy (was open threshold).
 Prior report (1.0.0):
   Version change: (none) → 1.0.0 — Added sections: all (initial)
 -->
@@ -12,7 +27,7 @@ Prior report (1.0.0):
 ---
 name: constitution
 status: stable
-last_updated: 2026-07-10
+last_updated: 2026-07-15
 workflow_mode: solo
 next_step_prompt: true
 ---
@@ -93,6 +108,13 @@ the requirement; introduce an abstraction only once duplication across three or
 more concrete cases makes it unambiguous. Do not design for hypothetical future
 requirements.
 
+**Check library idioms before building custom mechanism.** Before implementing
+a custom mechanism to solve a problem in a concern already owned by a
+depended-on library, check whether that library already has a built-in,
+idiomatic way to solve it. Reaching for a hand-built solution without checking
+first is surfaced as a question before being built, not discovered as
+duplicated work later.
+
 ### VIII. No Dead Architecture
 
 When an approach is replaced, the old approach is deleted in the same change —
@@ -100,51 +122,37 @@ not archived in place, not left "for reference" in a directory that no longer
 reflects reality. Documentation describes only what is actually true of the
 current codebase.
 
-### IX. Check Library Idioms Before Building Custom Mechanism
-
-Before implementing a custom mechanism to solve a problem in a concern already
-owned by a depended-on library, check whether that library already has a
-built-in, idiomatic way to solve it. Reaching for a hand-built solution without
-checking first is surfaced as a question before being built, not discovered as
-duplicated work later.
-
-### X. Observability
+### IX. Observability
 
 Non-trivial operations emit structured, machine-readable log events, including
 outcome (success/failure) and identifiers sufficient to reproduce an error
 without a debugger attached.
 
-### XI. Migrations Required for Schema Changes
+### X. Migrations Required for Schema Changes
 
 Changes to the persisted data shape are made through a migration, never by
 hand-editing data in place or relying on an ORM's implicit sync in an
 environment with real data.
 
-### XII. Single Source of State
+### XI. Code Organization Discipline
 
-Application state lives in one reactive store per runtime. Shared mutable
-objects threaded by reference between modules, as a substitute for the store,
-are not permitted; modules that need to see the same state read from and write
-through the store.
-
-### XIII. Named Types Over Inline Duplication
-
-A type used in more than one place is a named, exported type with a single
-source of truth — not independently retyped at each usage site, even when the
-inline shapes happen to match today.
-
-### XIV. Dispatch Surfaces Decomposed by Concern
-
-A dispatcher over many message/event types routes to named handler functions,
-one per type, each independently readable without scrolling through unrelated
-cases. Duplicated logic across cases is extracted, not copy-pasted.
-
-### XV. Bootstrap/Entry Files Wire Dependencies Only
-
-Application entry points are limited to reading config, constructing
-dependencies, and starting the app. Business logic, transport glue, and
-persistence concerns each live in their own module with a single
-responsibility, imported by the entry point — never defined inline in it.
+- **Single source of state.** Application state lives in one reactive store
+  per runtime. Shared mutable objects threaded by reference between modules,
+  as a substitute for the store, are not permitted; modules that need to see
+  the same state read from and write through the store.
+- **Named types over inline duplication.** A type used in more than one place
+  is a named, exported type with a single source of truth — not independently
+  retyped at each usage site, even when the inline shapes happen to match
+  today.
+- **Dispatch surfaces decomposed by concern.** A dispatcher over many
+  message/event types routes to named handler functions, one per type, each
+  independently readable without scrolling through unrelated cases. Duplicated
+  logic across cases is extracted, not copy-pasted.
+- **Bootstrap/entry files wire dependencies only.** Application entry points
+  are limited to reading config, constructing dependencies, and starting the
+  app. Business logic, transport glue, and persistence concerns each live in
+  their own module with a single responsibility, imported by the entry point —
+  never defined inline in it.
 
 ## Quality Standards
 
@@ -204,4 +212,4 @@ Amendments require:
    clarifications or wording fixes.
 4. `last_updated` date updated in frontmatter.
 
-**Version**: 1.1.0 | **Ratified**: 2026-07-10 | **Last Amended**: 2026-07-10
+**Version**: 2.0.0 | **Ratified**: 2026-07-10 | **Last Amended**: 2026-07-15
