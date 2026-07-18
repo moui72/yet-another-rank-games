@@ -1,5 +1,6 @@
 # yet-another-rank-games
 
+[![built with ArDD](https://shieldcn.dev/badge/built%20with-ArDD-blue.svg?variant=secondary&theme=blue)](https://github.com/moui72/artifact-driven-dev) [![ArDD version](https://shieldcn.dev/badge/version-v0.10.2-lightgrey.svg?variant=secondary&theme=gray)](https://github.com/moui72/artifact-driven-dev)
 [![sponsor](https://shieldcn.dev/badge/sponsor-%E2%9D%A4-ea4aaa.svg?variant=secondary&theme=pink)](https://github.com/sponsors/moui72)
 
 Build ranked lists of board games from your [BoardGameGeek](https://boardgamegeek.com)
