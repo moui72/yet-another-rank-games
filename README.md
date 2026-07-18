@@ -1,5 +1,7 @@
 # yet-another-rank-games
 
+[![sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/moui72)
+
 Build ranked lists of board games from your [BoardGameGeek](https://boardgamegeek.com)
 collection. A single collection feeds many themed, filtered lists ("top 10
 co-op", "top 100 of all time"), ranked primarily through a fun **pairwise
