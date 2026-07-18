@@ -1,6 +1,6 @@
 # yet-another-rank-games
 
-[![sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/moui72)
+[![sponsor](https://shieldcn.dev/badge/sponsor-%E2%9D%A4-ea4aaa.svg?variant=secondary&theme=pink)](https://github.com/sponsors/moui72)
 
 Build ranked lists of board games from your [BoardGameGeek](https://boardgamegeek.com)
 collection. A single collection feeds many themed, filtered lists ("top 10
