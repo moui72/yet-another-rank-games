@@ -62,7 +62,7 @@
 		"@fontsource/space-mono": "^5.2.9",
 		"@google-cloud/tasks": "^6.2.3",
 		"@supabase/ssr": "^0.12.0",
-		"@supabase/supabase-js": "^2.110.2",
+		"@supabase/supabase-js": "^2.110.7",
 		"canvas-confetti": "^1.9.4",
 		"fast-xml-parser": "^5.9.3",
 		"google-auth-library": "^10.9.0",
