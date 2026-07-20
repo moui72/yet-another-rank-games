@@ -99,3 +99,37 @@ describe('topologicalOrder (T003)', () => {
 		expect(order).toEqual(rankGames(ids, ratings));
 	});
 });
+
+import { breakCycles, hasCycle } from './constraintOrder';
+
+describe('breakCycles + hasCycle (T004)', () => {
+	it('leaves an already-acyclic edge set untouched', () => {
+		const edges = [edge(1, 2), edge(2, 3)];
+		expect(hasCycle(edges)).toBe(false);
+		const kept = breakCycles(edges);
+		expect(kept).toHaveLength(2);
+		expect(hasCycle(kept)).toBe(false);
+	});
+
+	it('breaks a 3-cycle by dropping the oldest edge (created_at asc)', () => {
+		const e12 = edge(1, 2, '2026-01-01T00:00:00Z', 'a'); // oldest
+		const e23 = edge(2, 3, '2026-01-02T00:00:00Z', 'b');
+		const e31 = edge(3, 1, '2026-01-03T00:00:00Z', 'c');
+		expect(hasCycle([e12, e23, e31])).toBe(true);
+		const kept = breakCycles([e12, e23, e31]);
+		expect(hasCycle(kept)).toBe(false);
+		expect(kept.map((k) => k.id).sort()).toEqual(['b', 'c']); // 'a' (oldest) dropped
+	});
+
+	it('uses the row-id tie-break when edges share a created_at (deterministic)', () => {
+		// All three share a created_at; the row-id tie-break makes the oldest
+		// unambiguous: id 'a' < 'b' < 'c', so 'a' (1>2) is dropped.
+		const t = '2026-01-01T00:00:00Z';
+		const edges = [edge(1, 2, t, 'a'), edge(2, 3, t, 'b'), edge(3, 1, t, 'c')];
+		const kept = breakCycles(edges);
+		expect(hasCycle(kept)).toBe(false);
+		expect(kept.map((k) => k.id).sort()).toEqual(['b', 'c']);
+		// Deterministic: repeated runs give the same result, not an arbitrary one.
+		expect(breakCycles(edges).map((k) => k.id).sort()).toEqual(['b', 'c']);
+	});
+});

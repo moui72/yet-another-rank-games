@@ -1,3 +1,6 @@
+import { ratingsFromComparisons, initialRating } from './ranking';
+import { conservativeScore } from './score';
+
 /**
  * Constraint-graph derivation for the `efficient` ranking mode (see
  * `datamodel.md` "Constraint-graph derivation" and the research plan
@@ -150,4 +153,106 @@ export function topologicalOrder(
 		}
 	}
 	return order;
+}
+
+/**
+ * Find one directed cycle in the edge set, returned as the list of edges
+ * forming it, or null if the graph is acyclic. Deterministic: nodes and
+ * out-edges are visited in a stable order so the same edge set always yields
+ * the same cycle.
+ */
+function findCycle(edges: readonly ConstraintEdge[]): ConstraintEdge[] | null {
+	const out = new Map<number, ConstraintEdge[]>();
+	const nodes = new Set<number>();
+	for (const e of edges) {
+		nodes.add(e.winnerId);
+		nodes.add(e.loserId);
+		(out.get(e.winnerId) ?? out.set(e.winnerId, []).get(e.winnerId)!).push(e);
+	}
+	// Stable visitation order.
+	for (const list of out.values()) list.sort((a, b) => compareRecency(a, b));
+	const sortedNodes = [...nodes].sort((a, b) => a - b);
+
+	const WHITE = 0;
+	const GRAY = 1;
+	const BLACK = 2;
+	const color = new Map<number, number>();
+	const stackEdges: ConstraintEdge[] = [];
+
+	function dfs(u: number): ConstraintEdge[] | null {
+		color.set(u, GRAY);
+		for (const e of out.get(u) ?? []) {
+			const v = e.loserId;
+			const c = color.get(v) ?? WHITE;
+			if (c === WHITE) {
+				stackEdges.push(e);
+				const found = dfs(v);
+				if (found) return found;
+				stackEdges.pop();
+			} else if (c === GRAY) {
+				// Back-edge to v: the cycle is the stack tail from where v entered.
+				const start = stackEdges.findIndex((s) => s.winnerId === v);
+				const cycle = start >= 0 ? stackEdges.slice(start) : [];
+				return [...cycle, e];
+			}
+		}
+		color.set(u, BLACK);
+		return null;
+	}
+
+	for (const n of sortedNodes) {
+		if ((color.get(n) ?? WHITE) === WHITE) {
+			const found = dfs(n);
+			if (found) return found;
+		}
+	}
+	return null;
+}
+
+/** True if the constraint edges contain a directed cycle. */
+export function hasCycle(edges: readonly ConstraintEdge[]): boolean {
+	return findCycle(edges) !== null;
+}
+
+/**
+ * Break every cycle in the edge set by repeatedly dropping the **oldest** edge
+ * (min `(createdAt, id)`) in a found cycle until the graph is acyclic (spec
+ * rule 2). Recency wins — the newest judgment is the last to be dropped.
+ * Returns the surviving acyclic edge subset; input order is otherwise preserved.
+ */
+export function breakCycles(edges: readonly ConstraintEdge[]): ConstraintEdge[] {
+	let kept = [...edges];
+	// Each iteration drops exactly one edge, so it terminates in <= |edges|.
+	for (let guard = 0; guard <= edges.length; guard++) {
+		const cycle = findCycle(kept);
+		if (!cycle) return kept;
+		let oldest = cycle[0];
+		for (const e of cycle) if (compareRecency(e, oldest) < 0) oldest = e;
+		kept = kept.filter((e) => e.id !== oldest.id);
+	}
+	return kept;
+}
+
+/**
+ * The full efficient-mode derivation: from the raw judgment log to a total
+ * order over `gameIds`. Pure and deterministic — derive edges (latest-wins),
+ * break cycles (drop-oldest), then topologically sort with the openskill
+ * conservative score as the incomparable-tie-breaker. This is the single
+ * source the selector, override mapping, and server read path all re-derive
+ * from, so an override lands exactly where placed regardless of older evidence.
+ */
+export function deriveOrder(
+	gameIds: readonly number[],
+	judgments: readonly Judgment[],
+	k = 3
+): number[] {
+	const edges = breakCycles(deriveEdges(judgments));
+	const ratings = ratingsFromComparisons(
+		judgments.map((jm) => ({ winnerId: jm.winnerId, loserId: jm.loserId }))
+	);
+	const scoreOf = (id: number): number => {
+		const r = ratings.get(id) ?? initialRating();
+		return conservativeScore(r.mu, r.sigma, k);
+	};
+	return topologicalOrder(gameIds, edges, scoreOf);
 }
