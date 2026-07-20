@@ -133,3 +133,23 @@ describe('breakCycles + hasCycle (T004)', () => {
 		expect(breakCycles(edges).map((k) => k.id).sort()).toEqual(['b', 'c']);
 	});
 });
+
+import { deriveOrder } from './constraintOrder';
+
+describe('derivation tie-break coverage', () => {
+	it('orders two incomparable, equal-score games by their input index', () => {
+		// No edges → both are inDegree-0 at once, and an equal scoreOf forces the
+		// index tie-break in `better()` rather than a score comparison.
+		expect(topologicalOrder([7, 3], [], () => 5)).toEqual([7, 3]);
+		expect(topologicalOrder([3, 7], [], () => 5)).toEqual([3, 7]);
+	});
+
+	it('deriveOrder invokes its internal rating tie-break for games left incomparable by edges', () => {
+		// 1>2 is judged; 3 is judged against nothing, so it is incomparable to
+		// both and only the openskill rating (computed inside deriveOrder) can
+		// place it. This exercises deriveOrder's own scoreOf closure end to end.
+		const order = deriveOrder([1, 2, 3], [j(1, 2, '2026-01-01T00:00:00Z', 'a')]);
+		expect(order).toHaveLength(3);
+		expect(order.indexOf(1)).toBeLessThan(order.indexOf(2)); // the one hard constraint holds
+	});
+});

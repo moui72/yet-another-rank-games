@@ -101,3 +101,15 @@ describe('insertionState (T017 progress)', () => {
 		expect(s!.placedCount).toBe(2);
 	});
 });
+
+describe('insertionState — placing a game that outranks the probed prefix', () => {
+	it('takes the upper half when the placing game ranks above the probed placed game', () => {
+		// sequence [3,1,2] with 1>3: after 3 is placed, placing 1 probes against
+		// 3, finds 1 ranks above it, and narrows to the upper half — the branch
+		// the earlier cases never reach. 2 is then left to ask about.
+		const s = insertionState([3, 1, 2], [edge(1, 3)]);
+		expect(s).not.toBeNull();
+		expect(s!.placingGameId).toBe(2);
+		expect(s!.placedCount).toBe(2);
+	});
+});
