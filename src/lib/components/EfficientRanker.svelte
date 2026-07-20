@@ -91,6 +91,27 @@
 				<kbd class="kbd kbd-xs">U</kbd> to undo
 			</p>
 		</div>
+		{#if session.insertion}
+			{@const ins = session.insertion}
+			<!--
+				T017: the insertion progress is surfaced, not hidden. This mode
+				deliberately re-asks about one game as it binary-searches its spot;
+				naming that game and counting its questions frames the repetition as
+				intended rather than a bug.
+			-->
+			<div role="status" aria-live="polite" class="flex flex-col gap-1">
+				<p class="text-sm">
+					Placing <span class="font-semibold">{nameOf(ins.placingGameId)}</span> — question
+					{ins.questionNumber} of about {ins.questionsForGame}
+				</p>
+				<p class="text-xs opacity-70">{ins.placedCount} of {ins.total} games placed</p>
+				<progress
+					class="progress progress-primary w-full"
+					value={ins.placedCount}
+					max={ins.total}
+				></progress>
+			</div>
+		{/if}
 		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 			{#each [pair.a, pair.b] as gameId, i (gameId)}
 				{@const cover = coverOf(gameId)}

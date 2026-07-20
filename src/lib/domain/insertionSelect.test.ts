@@ -73,3 +73,31 @@ describe('bestFirstSequence (T007)', () => {
 		expect(bestFirstSequence(pool, ratings)).toEqual([3, 1, 2]);
 	});
 });
+
+import { insertionState } from './insertionSelect';
+
+describe('insertionState (T017 progress)', () => {
+	it('returns null when nothing is left to place', () => {
+		expect(insertionState([], [])).toBeNull();
+		expect(insertionState([1], [])).toBeNull();
+		expect(insertionState([1, 2, 3], [edge(1, 2), edge(2, 3)])).toBeNull();
+	});
+
+	it('reports the game being placed and how many are already placed', () => {
+		// [1,2,3] no edges: 1 placed, now placing 2 against 1.
+		const s = insertionState([1, 2, 3], []);
+		expect(s).not.toBeNull();
+		expect(s!.placingGameId).toBe(2);
+		expect(s!.placedCount).toBe(1);
+		expect(s!.total).toBe(3);
+		expect(s!.questionNumber).toBeGreaterThanOrEqual(1);
+		expect(s!.questionNumber).toBeLessThanOrEqual(s!.questionsForGame);
+	});
+
+	it('advances placedCount as earlier games get resolved', () => {
+		// 1>2 known, so 2 is placed after 1; now placing 3 against the prefix.
+		const s = insertionState([1, 2, 3], [edge(1, 2)]);
+		expect(s!.placingGameId).toBe(3);
+		expect(s!.placedCount).toBe(2);
+	});
+});
