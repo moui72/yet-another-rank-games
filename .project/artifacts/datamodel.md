@@ -38,10 +38,15 @@ the pool is defined by its `PoolGame` rows, not a query. Editing a pool affects
 every list built from it: ranking always operates over the pool's **current**
 games and ignores comparisons that reference a game no longer in the pool.
 
-**Order is derived, not authored** (decided from
-`.project/plans/research-pairwise-ranking-algorithm-2026-07-10.md`; resolves the
-former `ListEntry` open question). For a pairwise list the **`Comparison` graph
-is the source of truth**: per-game rating estimates `(mu, sigma)` are computed
+**Order is derived, not authored** — *for the primary pairwise mode* (decided
+from `.project/plans/research-pairwise-ranking-algorithm-2026-07-10.md`;
+resolves the former `ListEntry` open question). This is a property of a mode,
+not of the product: constitution v2.2.0 establishes that a ranking mode
+declares its own priorities, and the planned `efficient-ordering-mode` will
+treat authored drag-and-drop overrides as first-class latest-wins edges rather
+than as approximations to be absorbed by a rating model (see
+`.project/plans/research-efficient-durable-secondary-ranking-mode-2026-07-20-d22b.md`).
+For a pairwise list the **`Comparison` graph is the source of truth**: per-game rating estimates `(mu, sigma)` are computed
 from the comparison log via a Bradley–Terry/Weng–Lin model (`openskill`), and
 the ordering is those ratings sorted by a conservative score. `ListEntry` is a
 **derived snapshot** — recomputed after each comparison and persisted for fast

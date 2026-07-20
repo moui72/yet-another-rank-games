@@ -28,7 +28,7 @@ _Updated: 2026-07-20 (ArDD updated v0.10.2 → v1.0.2; full cross-artifact analy
   - `datamodel.md` — Overview and `ListEntry` sections mark `manual` deprecated-but-read; new Production Annotation records that no migration converted the rows, that `ListEntry` therefore has two sources of truth by method, and what full retirement would require.
   - `ui.md` — the inaccurate "not user-reachable" annotation corrected.
 
-  **Open:** whether any `ranking_method = 'manual'` rows actually exist in staging/production is still unverified — the DB query was blocked by the permission classifier. If the count is zero everywhere, retiring this properly is just a code deletion; if not, it needs a data migration first. Either way it is deferred to `revisit-ranking-modes`.
+  **Measured 2026-07-20: zero `manual` rows in either environment** (production 3 lists, staging 1, all `pairwise`). So the drag view is unreachable in practice today, and retiring it needs **no data migration** — just dropping the enum value, `ManualRanker.svelte`, `svelte-dnd-action`, and the `mode === 'manual'` branches. Constitution v2.1.1's conditional wording ("gated for as long as the render path is reachable") was deliberately left in place rather than reverted: it is now satisfied vacuously, and stays correct if a manual row is ever seeded for testing. Superseded in direction anyway — `efficient-ordering-mode` brings drag-and-drop back deliberately.
 - **[GAP] `List.status = 'complete'` is displayed but unproducible.** `datamodel.md:186` defines the enum; `ui.md:101` displays it. No artifact defines the transition, and `ui.md:123-134` makes completion *derived* UI state with no new persisted field. Code confirms nothing ever writes `'complete'` to a list row. Either define the writer or drop the value and derive it.
 - **[MINOR] Import status vocabulary differs.** `datamodel.md:99` enum is `idle|importing|complete|failed`; `ui.md:31` describes "queued → fetching → processing → done". Almost certainly presentation labels over the enum (`src/lib/domain/importView.ts` maps them) — wants one clarifying sentence, not a fix.
 
@@ -43,7 +43,9 @@ Clean sub-checks: every field `ui.md` displays or branches on exists in `datamod
 
 ## Feature Backlog
 
-- **2 backlogged** (`revisit-ranking-modes`, `in-app-help-and-info-text`) · 0 planned · 0 tasked · **7 implemented** (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`, `collection-editing-and-resync`, `bgg-cover-art-and-card-view`, `pool-completion-celebration`, `manual-pairwise-ranking-adjust`) — see `.project/features/`. Target either with `/ardd-plan <slug>` when ready to design it; no work in flight.
+- **2 backlogged** (`efficient-ordering-mode`, `in-app-help-and-info-text`) · 0 planned · 0 tasked · **7 implemented** · **1 subsumed** (`revisit-ranking-modes`) — see `.project/features/`. Target either backlogged slug with `/ardd-plan <slug>`; no work in flight.
+- `efficient-ordering-mode` arrives with its design already settled by research (below), so it is readier to plan than a typical backlog entry.
+- `revisit-ranking-modes` subsumed 2026-07-20: `efficient-ordering-mode` answers its "reworked manual/override mode" half. **Tiering is not covered by it and is now untracked** — log a fresh entry if it is ever wanted.
 
 ## Plans & Tasks
 
@@ -74,6 +76,9 @@ Clean sub-checks: every field `ui.md` displays or branches on exists in `datamod
 
 ## Feedback
 
+- **1 open** (`feedback-move-up-down-reverts-on-reload-2fd0.md`) — will be picked up by the next `/ardd-plan`.
+
+  **A shipped move-up/move-down adjustment can silently revert on reload.** `PairwiseSession.moveUp` emits one synthetic `Comparison` per move, but an override contradicting several earlier judgments needs 3–4 repeats against the same pair to flip the openskill rating — and `recordComparison` upserts on the unique `(list_id, game_a, game_b)`, so only one row per pair ever persists. Session holds N, replay sees 1. Likely a regression: the unique constraint (migration `20260715220000`) and `manual-pairwise-ranking-adjust` both landed 2026-07-15. **Not yet reproduced against a running app** — found by code reading plus the research simulation; confirm before fixing. Note the research recommends a direction that would dissolve this bug rather than patch it, so weigh the fix against that.
 - 1 file at `status: planned` (`feedback-unranked-collapsible-pool-games-d07e.md`) — already consumed by a plan, not open.
 
 ## In Flight
@@ -86,11 +91,15 @@ Nothing in flight. (Stale local branch `worktree-agent-adf423a6f0eb76edc` has no
 - README ArDD version badge reads `v0.10.2`; installed is now `v1.0.2`.
 - `.project/.gitattributes` marks generated reports `merge=ours` but this clone has no driver: `git config merge.ours.driver true`.
 
+## Research
+
+- `research-efficient-durable-secondary-ranking-mode-2026-07-20-d22b.md` — chose the design for `efficient-ordering-mode`. Falsified the cheap hypothesis (reuse the rating model, swap only the selection policy) on both prongs by simulation against the repo's own `openskill@5.0.1`: the existing selector is *already* information-gain (`ranking.ts:121`) with a novelty filter on top, and removing that filter converged no better; the rating model needs ~4× the comparisons of binary insertion (n=50: ~957 vs 237). Synthetic comparisons into a rating model also honour an override only approximately. Recommends a constraint-graph mode over the existing `Comparison` table. Cites Maystre & Grossglauser 2017, Jamieson & Nowak 2011, Herbrich et al. 2006, Weng & Lin 2011, Feige et al. 1994, Braverman & Mossel 2008; simulation results are the agent's own, marked as such. Also flags an accessibility gap: move-up/move-down gives keyboard parity for short moves but not for long ones — suggests a "move to position N" input.
+
 ## Recommended Next Step
 
-Artifacts are internally consistent again and `/ardd-plan` is unblocked. Two things worth doing before planning new work:
+Artifacts are consistent, constitution is at v2.2.0, and `/ardd-plan` is unblocked.
 
-1. **Confirm whether any `ranking_method = 'manual'` rows exist** in staging (`ujaxenitxmnmxcqkoddy`) and production (`tmncunthbcfdaolqswcq`). This determines whether retiring the drag view is a code deletion or needs a data migration, and whether the drag interaction currently sits inside the live AA release gate. Everything else about this deprecation is now recorded accurately; only this fact is missing.
-2. **`/ardd-defects`** — the last run was 2026-07-16 and predates all of today's artifact changes. Given that a documented claim ("not user-reachable") turned out to contradict the code, a fresh code-vs-artifact pass is worth more than usual.
+1. **`/ardd-plan efficient-ordering-mode`** — the readiest work: design settled by research, and it would dissolve the open feedback bug rather than patch it.
+2. **`/ardd-defects`** — last run 2026-07-16, predates every artifact change since. Two documented claims have now turned out to contradict the code in a single session ("not user-reachable"; the novelty-vs-info-gain description of the selector), so a fresh code-vs-artifact pass is worth more than usual.
 
-Then `/ardd-plan revisit-ranking-modes`, which is where the actual retirement of manual ranking belongs.
+Housekeeping still pending: `.gitignore` breadth, README ArDD badge still reading v0.10.2 (installed is v1.0.2), `merge.ours.driver`, and stale diagram flags on `datamodel`/`ui`.

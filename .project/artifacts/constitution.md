@@ -1,7 +1,23 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.1.0 → 2.1.1
+Version change: 2.1.1 → 2.2.0
+Rationale: Principle III and `datamodel.md`'s "order is derived, not authored"
+  were both written when pairwise was the only ranking mode, so both were
+  stated as global product properties. They are properly properties *of a
+  mode*. A planned second mode (`efficient-ordering-mode`) deliberately trades
+  novelty-preferring matchup selection for convergence speed and exact
+  honouring of manual overrides — which the current global wording forbids
+  outright rather than scopes.
+Modified (MINOR — material expansion; scopes an existing rule, removes none):
+  - Principle III: split into the general complexity-for-delight rule plus an
+    explicit "ranking modes declare their own priorities" clause. Novelty
+    preference now binds the primary pairwise mode specifically. A secondary
+    mode may optimize differently if it states its priority and why.
+    Accessibility (VI) and exportability (V) are called out as non-negotiable
+    in every mode, so the scoping cannot be read as a general opt-out.
+Prior report (2.1.1):
+  Version change: 2.1.0 → 2.1.1
 Rationale: v2.1.0 removed drag-to-order from Principle VI's WCAG AA release
   gate on the strength of `ui.md:245`'s claim that the deprecated view is
   "not user-reachable." Verification against the code showed that claim is
@@ -88,9 +104,12 @@ ordering is inferred), and it is the **sole** ranking method offered for new
 lists. Users can nudge a ranked list directly with per-row move-up/move-down
 controls, but these are expressed as synthetic comparisons through the same
 pairwise model rather than as authored positions. Manual drag-to-order was
-evaluated and **deprecated** — removed from list creation, though lists
-created before that still render it; **tiering** remains a possible later
-feature (tracked as `revisit-ranking-modes`).
+evaluated and **deprecated** — removed from list creation, and as of
+2026-07-20 no list in staging or production uses it, though the render path
+remains. Drag-and-drop is planned to return, not as a purely manual method
+but inside an efficiency-first second mode (`efficient-ordering-mode`).
+**Tiering** remains a possible later feature, currently undesigned and
+untracked by any register entry.
 
 This is a **multi-user product** with real accounts, a hosted backend, and a
 real database — built as a hobby project that must stay cheap to run unless it
@@ -122,10 +141,17 @@ casts, and untyped boundaries are defects, not conveniences.
 
 The experience is the product. Where a delightful interaction demands more
 algorithmic or state-tracking complexity, that complexity is accepted rather
-than avoided — most concretely in the pairwise comparison flow, which must
-minimize repeat exposure of any one game (favor novel matchups; scatter in
-repetitions only when the algorithm genuinely needs a comparison it cannot
-otherwise resolve, or when no novel pairing remains).
+than avoided.
+
+**Ranking modes declare their own priorities.** This principle binds the
+*primary* mode, not every mode. The primary pairwise mode optimizes for
+enjoyment: it must minimize repeat exposure of any one game (favor novel
+matchups; scatter in repetitions only when the algorithm genuinely needs a
+comparison it cannot otherwise resolve, or when no novel pairing remains). A
+secondary mode may deliberately trade that away for a different goal —
+convergence speed, durability under manual override — provided it states
+which priority it optimizes for and why. What is not negotiable in any mode
+is Principle VI (accessibility) and Principle V (exportability).
 
 ### IV. Cost-Safe Infrastructure
 
@@ -265,4 +291,4 @@ Amendments require:
    clarifications or wording fixes.
 4. `last_updated` date updated in frontmatter.
 
-**Version**: 2.1.1 | **Ratified**: 2026-07-10 | **Last Amended**: 2026-07-20
+**Version**: 2.2.0 | **Ratified**: 2026-07-10 | **Last Amended**: 2026-07-20
