@@ -43,7 +43,7 @@ Clean sub-checks: every field `ui.md` displays or branches on exists in `datamod
 
 ## Feature Backlog
 
-- **1 backlogged** (`revisit-ranking-modes`) · 0 planned · 0 tasked · **7 implemented** (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`, `collection-editing-and-resync`, `bgg-cover-art-and-card-view`, `pool-completion-celebration`, `manual-pairwise-ranking-adjust`) — see `.project/features/`. Target `revisit-ranking-modes` with `/ardd-plan revisit-ranking-modes` when ready to design it; no work in flight.
+- **2 backlogged** (`revisit-ranking-modes`, `in-app-help-and-info-text`) · 0 planned · 0 tasked · **7 implemented** (`bgg-geeklist-export`, `bgg-game-search-import`, `custom-domain-mapping`, `collection-editing-and-resync`, `bgg-cover-art-and-card-view`, `pool-completion-celebration`, `manual-pairwise-ranking-adjust`) — see `.project/features/`. Target either with `/ardd-plan <slug>` when ready to design it; no work in flight.
 
 ## Plans & Tasks
 
