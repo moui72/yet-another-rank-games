@@ -6,6 +6,7 @@ import { deriveOrder, type Judgment } from '$lib/domain/constraintOrder';
 import {
 	listComparisons,
 	recordComparison,
+	recordComparisons,
 	deleteLastComparison
 } from './repositories/comparisons';
 import { listPoolGames, setPoolGameExcluded } from './repositories/pools';
@@ -100,5 +101,20 @@ export async function undoLastComparisonAndRecompute(
 	listId: string
 ): Promise<void> {
 	await deleteLastComparison(db, listId);
+	await recomputeListEntries(db, listId);
+}
+
+/**
+ * Persist a batch of override edges (T013) for an efficient list, then refresh
+ * the ordering snapshot from the constraint derivation. One drag = one request:
+ * the k crossed-pair edges land as the newest judgments for their pairs, so the
+ * moved game lands exactly where dropped (T011).
+ */
+export async function recordOverrideAndRecompute(
+	db: Kysely<Database>,
+	listId: string,
+	edges: readonly { winnerId: number; loserId: number }[]
+): Promise<void> {
+	await recordComparisons(db, { listId, edges });
 	await recomputeListEntries(db, listId);
 }
