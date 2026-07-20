@@ -266,7 +266,7 @@ positions directly; see Production Annotations.)
 | list_id | uuid | → List |
 | game_id | bigint | → Game |
 | position | integer | rank within the list |
-| score | numeric | nullable; conservative rating score (e.g. `mu − k·sigma`) the snapshot was sorted by; null for manual lists |
+| score | numeric | nullable; the conservative rating score (e.g. `mu − k·sigma`) the snapshot was sorted by. Populated for **pairwise** lists (the rating model produces it); **null for efficient** lists, whose order comes from the constraint graph rather than a per-game score |
 
 ## Pool filter (build tool)
 
