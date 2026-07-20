@@ -1,7 +1,24 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.1.1 → 2.2.0
+Version change: 2.2.0 → 2.2.1
+Rationale: two wording corrections recorded as defects by `/ardd-defects`
+  (2026-07-20) after the `manual` mode was fully retired and the
+  `efficient-ordering-mode` cleanup deleted its last remnant. The text still
+  described the retired mode as if partly live. No rule changed.
+Modified (PATCH — wording fixes, no principle added, removed, or redefined):
+  - Project Scope: "no migration was needed" → "no *data* migration was
+    needed" (a constraint migration, `20260720010000`, did drop the value
+    from the schema). Defect `a4eccafc`.
+  - Principle VI: removed the clause keeping the deprecated drag-to-order
+    view inside the AA gate "for as long as its render path remains
+    reachable" — that render path no longer exists (the route branches only
+    on efficient/pairwise; the enum value is dropped). Replaced with the
+    `efficient` mode's actual AA basis: its pointer-only drag is carried
+    under the gate by keyboard equivalents (move up/down, move-to-position).
+    Defect `32c46184`.
+Prior report (2.2.0):
+  Version change: 2.1.1 → 2.2.0
 Rationale: Principle III and `datamodel.md`'s "order is derived, not authored"
   were both written when pairwise was the only ranking mode, so both were
   stated as global product properties. They are properly properties *of a
@@ -105,7 +122,8 @@ lists. Users can nudge a ranked list directly with per-row move-up/move-down
 controls, but these are expressed as synthetic comparisons through the same
 pairwise model rather than as authored positions. Manual drag-to-order was
 evaluated and **retired** (no list in either environment ever used it, so no
-migration was needed). Drag-and-drop returns, not as a purely manual method
+*data* migration was needed — a constraint migration dropped the value from
+the schema). Drag-and-drop returns, not as a purely manual method
 but inside an efficiency-first second mode, `efficient`, which trades novel
 matchups for the fewest possible comparisons and treats a drop as an
 authoritative constraint. A list's mode is fixed at creation. **Tiering**
@@ -173,11 +191,11 @@ inside the product with no export path.
 The UI is usable without a mouse or perfect vision: logical tab order, readable
 contrast, labeled controls, keyboard-operable interactions — including the
 pairwise comparison flow and the move-up/move-down ranking controls (chosen
-over drag-and-drop precisely because they are accessible by construction).
-The deprecated drag-to-order view stays inside this gate for as long as its
-render path remains reachable for pre-deprecation lists — a flow a user can
-still land on is a flow that must meet the bar, regardless of whether it can
-be newly created. **The bar is full WCAG 2.1 AA compliance**,
+over drag-and-drop precisely because they are accessible by construction). The
+`efficient` mode's drag-to-reorder is pointer-only, so its keyboard equivalents
+(move up/down and move-to-position) are what carry it under the gate — a mode
+ships only when its reordering is fully operable without a mouse. **The bar is
+full WCAG 2.1 AA compliance**,
 treated as a release gate: each feature is checked against AA (automated axe
 checks plus contrast and keyboard/screen-reader passes) before it ships.
 
@@ -292,4 +310,4 @@ Amendments require:
    clarifications or wording fixes.
 4. `last_updated` date updated in frontmatter.
 
-**Version**: 2.2.0 | **Ratified**: 2026-07-10 | **Last Amended**: 2026-07-20
+**Version**: 2.2.1 | **Ratified**: 2026-07-10 | **Last Amended**: 2026-07-20
