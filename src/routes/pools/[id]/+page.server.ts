@@ -119,15 +119,19 @@ export const actions: Actions = {
 		const form = await request.formData();
 		const name = (str(form.get('name')) ?? '').trim();
 		if (!name) return fail(400, { error: 'A list name is required.' });
-		// Pairwise is the only ranking method offered when creating a list
-		// (manual drag-to-order is deprecated — see ui.md Production
-		// Annotations); existing `manual` lists are unaffected.
+		// The user picks a ranking mode at creation and it's fixed for the life
+		// of the list (the same rows under a different derivation would silently
+		// reorder it — datamodel.md). Only the two creatable modes are accepted;
+		// default to pairwise. (T015 hardens this into a shared validator so an
+		// unknown mode can't reach the repository.)
+		const rawMethod = str(form.get('rankingMethod'));
+		const rankingMethod: 'pairwise' | 'efficient' = rawMethod === 'efficient' ? 'efficient' : 'pairwise';
 		await createList(db, {
 			poolId: params.id,
 			userId: locals.user.id,
 			name,
 			description: str(form.get('description')) || null,
-			rankingMethod: 'pairwise'
+			rankingMethod
 		});
 		return { listCreated: true };
 	}

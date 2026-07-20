@@ -221,6 +221,37 @@
 					<label class="label" for="description"><span class="label-text">Description (optional)</span></label>
 					<input id="description" name="description" class="input input-bordered w-full" />
 				</div>
+				<fieldset class="form-control">
+					<legend class="label-text mb-1 font-medium">How do you want to rank?</legend>
+					<label class="flex cursor-pointer items-start gap-2 py-1">
+						<input
+							type="radio"
+							name="rankingMethod"
+							value="pairwise"
+							class="radio radio-sm mt-1"
+							checked
+						/>
+						<span>
+							<span class="font-medium">One matchup at a time</span>
+							<span class="block text-sm opacity-70">
+								Keep picking the better of two games — a relaxed way to discover your order.
+							</span>
+						</span>
+					</label>
+					<label class="flex cursor-pointer items-start gap-2 py-1">
+						<input type="radio" name="rankingMethod" value="efficient" class="radio radio-sm mt-1" />
+						<span>
+							<span class="font-medium">Fewest questions</span>
+							<span class="block text-sm opacity-70">
+								Answer far fewer matchups to reach a full order, and drag any game to the exact
+								spot you want.
+							</span>
+						</span>
+					</label>
+					<p class="mt-1 text-xs opacity-60">
+						This choice is permanent — a list can't switch ranking styles later.
+					</p>
+				</fieldset>
 				<button type="submit" class="btn btn-primary self-start">Create list</button>
 			</form>
 		</div>
