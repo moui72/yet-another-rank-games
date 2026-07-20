@@ -1,7 +1,7 @@
 ---
 plan: plan-efficient-ordering-mode-2026-07-20-5a1c.md
 generated: 2026-07-20
-status: ready
+status: in-progress
 ---
 
 # Tasks
