@@ -1,10 +1,10 @@
 ---
 name: ui
 status: draft
-last_updated: 2026-07-15
+last_updated: 2026-07-20
 diagram_type: graph TD
 render_section: UI
-diagram_status: current
+diagram_status: stale
 ---
 
 # UI
@@ -243,4 +243,7 @@ migration alongside the feature itself.
   rather than deleted from the codebase in this pass, pending a broader
   rework of ranking modes (see the feature backlog); `List.ranking_method`'s
   `manual` value and the `svelte-dnd-action`-based view remain in the
-  codebase but are not user-reachable.
+  codebase **and remain reachable** — no migration converted pre-deprecation
+  rows, so any list already set to `manual` still loads the drag view. Not
+  creatable is not the same as not reachable; the flow therefore stays inside
+  Principle VI's WCAG 2.1 AA gate (constitution v2.1.1).

@@ -19,10 +19,16 @@ _Updated: 2026-07-20 (ArDD updated v0.10.2 → v1.0.2; full cross-artifact analy
 
 ## Cross-Artifact Issues
 
-- **[CONFLICT — partly resolved] Manual drag-to-order deprecation is stale in two remaining artifacts.** `ui.md:241` deprecates manual drag-to-order (pairwise is the sole method).
-  - ✅ `constitution.md` — **fixed 2026-07-20 (v2.0.0 → v2.1.0)**. Scope now states pairwise as the sole method and records drag-to-order as deprecated; Principle VI's AA gate now names the pairwise flow and the move-up/move-down controls instead.
-  - ❌ `design.md:22` lists drag-order as a live signature motif; `design.md:84,95` list `ManualRanker` as current with no deprecation note.
-  - `datamodel.md:50-53,216-221` describe the manual authored-`ListEntry` model in present tense, while `datamodel.md:185` flags `manual` deprecated at the enum — internal tension inside datamodel itself.
+- ✅ **[RESOLVED 2026-07-20] Manual drag-to-order deprecation now consistent across all four artifacts** — and corrected on a point every one of them had wrong.
+
+  **The deprecation removed the creation path, not the render path.** `src/routes/lists/[id]/+page.server.ts:27` still branches on `list.rankingMethod === 'manual'` and renders the `svelte-dnd-action` view; no migration ever converted existing rows (`ranking_method` appears only in the initial schema). So any list created before the change still loads the drag view. `ui.md`'s claim that it was "not user-reachable" was wrong — *not creatable* is not *not reachable*.
+
+  - `constitution.md` — v2.0.0 → **v2.1.1**. Scope says pairwise is sole method "for new lists"; Principle VI's AA gate explicitly **retains** drag-to-order for as long as its render path is reachable. (v2.1.0 had wrongly dropped it from the gate on the strength of ui.md's claim; v2.1.1 corrects that.)
+  - `design.md` — signature-motif and shared-component lines now mark `ManualRanker` deprecated; new Production Annotation covers the live render path, the retained `svelte-dnd-action` dependency, and the AA-gate consequence.
+  - `datamodel.md` — Overview and `ListEntry` sections mark `manual` deprecated-but-read; new Production Annotation records that no migration converted the rows, that `ListEntry` therefore has two sources of truth by method, and what full retirement would require.
+  - `ui.md` — the inaccurate "not user-reachable" annotation corrected.
+
+  **Open:** whether any `ranking_method = 'manual'` rows actually exist in staging/production is still unverified — the DB query was blocked by the permission classifier. If the count is zero everywhere, retiring this properly is just a code deletion; if not, it needs a data migration first. Either way it is deferred to `revisit-ranking-modes`.
 - **[GAP] `List.status = 'complete'` is displayed but unproducible.** `datamodel.md:186` defines the enum; `ui.md:101` displays it. No artifact defines the transition, and `ui.md:123-134` makes completion *derived* UI state with no new persisted field. Code confirms nothing ever writes `'complete'` to a list row. Either define the writer or drop the value and derive it.
 - **[MINOR] Import status vocabulary differs.** `datamodel.md:99` enum is `idle|importing|complete|failed`; `ui.md:31` describes "queued → fetching → processing → done". Almost certainly presentation labels over the enum (`src/lib/domain/importView.ts` maps them) — wants one clarifying sentence, not a fix.
 
@@ -30,7 +36,8 @@ Clean sub-checks: every field `ui.md` displays or branches on exists in `datamod
 
 ## Constitution Compliance
 
-- ✅ **[RESOLVED 2026-07-20] Governance violation.** Scope and Principle VI asserted drag-to-order as a live, gated capability after its deprecation, without rationale, Sync Impact Report, or version bump. Amended to v2.1.0 with all three. Also corrected a stale `/ardd-critique` → `/ardd-audit` reference in Development Workflow item 3.
+- ✅ **[RESOLVED 2026-07-20] Governance violation.** Scope and Principle VI described drag-to-order inaccurately after its deprecation, without rationale, Sync Impact Report, or version bump. Amended through **v2.1.1**, each step with all three. Also corrected a stale `/ardd-critique` → `/ardd-audit` reference in Development Workflow item 3.
+- Note: the v2.1.0 → v2.1.1 step is itself a worked example of Principle VIII applied to the governing document — v2.1.0 was written from an artifact's claim rather than from the code, and verification against the code reversed it.
 - Not a violation: retaining `ManualRanker`/`svelte-dnd-action` in the tree is properly disclosed under `ui.md`'s Production Annotations per Development Workflow rule 3. The gap is that `design.md:84,95` repeats the components as current *without* such an annotation.
 - Shortcut annotation coverage otherwise clean (RLS-off, single-region, free tier, no-soft-delete, lean component library, sharing model). Principle IV cost ceilings clean — every autoscaling/retry surface has a stated cap.
 
@@ -53,9 +60,9 @@ Clean sub-checks: every field `ui.md` displays or branches on exists in `datamod
 
 ## Diagrams
 
-- datamodel.md — current ✅
+- datamodel.md — stale ⚠️ (run `/ardd-diagram datamodel`) — refined 2026-07-20, though the edits were prose/annotations only, so the rendered diagram likely has no structural change
 - infrastructure.md — current ✅
-- ui.md — current ✅
+- ui.md — stale ⚠️ (run `/ardd-diagram ui`) — same caveat
 
 ## Code-vs-Artifact Defects
 
@@ -81,6 +88,9 @@ Nothing in flight. (Stale local branch `worktree-agent-adf423a6f0eb76edc` has no
 
 ## Recommended Next Step
 
-`/ardd-refine design` then `/ardd-refine datamodel` — propagate the drag-to-order deprecation the constitution now records (v2.1.0). `design.md:22,84,95` still present drag-order and `ManualRanker` as current with no Production Annotation; `datamodel.md:50-53,216-221` still describe the manual authored-`ListEntry` model in present tense while `:185` calls the enum deprecated. Constitution scope is now accurate, so `/ardd-plan` is no longer blocked on it.
+Artifacts are internally consistent again and `/ardd-plan` is unblocked. Two things worth doing before planning new work:
 
-Also pending: commit `.project/ardd-version.md`, `.project/artifacts/constitution.md` (v2.1.0 amendment plus workflow fields `delegation: eager`, `merge_policy: auto`), and this file.
+1. **Confirm whether any `ranking_method = 'manual'` rows exist** in staging (`ujaxenitxmnmxcqkoddy`) and production (`tmncunthbcfdaolqswcq`). This determines whether retiring the drag view is a code deletion or needs a data migration, and whether the drag interaction currently sits inside the live AA release gate. Everything else about this deprecation is now recorded accurately; only this fact is missing.
+2. **`/ardd-defects`** — the last run was 2026-07-16 and predates all of today's artifact changes. Given that a documented claim ("not user-reachable") turned out to contradict the code, a fresh code-vs-artifact pass is worth more than usual.
+
+Then `/ardd-plan revisit-ranking-modes`, which is where the actual retirement of manual ranking belongs.

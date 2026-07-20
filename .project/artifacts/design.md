@@ -1,7 +1,7 @@
 ---
 name: design
 status: stable
-last_updated: 2026-07-15
+last_updated: 2026-07-20
 ---
 
 # Visual Design
@@ -19,8 +19,9 @@ not amateurish.
 - **Signature: the messy spine-stack.** A ranking is drawn as a stack of
   colored game-box spines, tapering in width with rank — the collection,
   stacked and sorted. It is the logo *and* a recurring UI motif (hero, live
-  rankings, manual drag-order). This is where colour and boldness are spent;
-  everything else stays quiet.
+  rankings, and the deprecated manual drag-order view — see Production
+  Annotations). This is where colour and boldness are spent; everything else
+  stays quiet.
 - **Logo (`Logo.svelte`).** Three offset, messily-stacked box shapes (each a
   bright face over a darker depth lip) with **RG** superimposed in the display
   face under a white halo. Variants: `mark` (RG only — navbar, favicon,
@@ -81,16 +82,29 @@ not amateurish.
 - The **landing hero breaks out** of the reading column to full width so the
   headline and the demo spine-stack have room; ordinary views stay in-column.
 - Shared components live in `src/lib/components/` (`Logo`, `ThemeToggle`,
-  `PairwiseRanker`, `ManualRanker`, `BggSearchAdd`); `Logo` and `ThemeToggle`
-  have Storybook stories today, the others don't yet (see Production
-  Annotations). The spine-stack motif is a component-layer pair of classes
-  (`.spine` / `.spine-rank` in `app.css`) fed by the shared colour helper
-  `src/lib/spine.ts`, so pairwise and manual rankings render it identically.
+  `PairwiseRanker`, `BggSearchAdd`, plus the deprecated `ManualRanker` — see
+  Production Annotations); `Logo` and `ThemeToggle` have Storybook stories
+  today, the others don't yet (also annotated below). The spine-stack motif is
+  a component-layer pair of classes (`.spine` / `.spine-rank` in `app.css`)
+  fed by the shared colour helper `src/lib/spine.ts`, so pairwise and manual
+  rankings render it identically.
   Views compose these
   rather than repeating utility soup.
 
 ## Production Annotations
 
+- **`ManualRanker` is deprecated but still shipped and still reachable.**
+  Manual drag-to-order was removed as a list-creation option, but the render
+  path is live: `src/routes/lists/[id]/+page.server.ts` still branches on
+  `rankingMethod === 'manual'` and `+page.svelte` renders `ManualRanker`
+  (`svelte-dnd-action`). No migration ever converted pre-deprecation rows, so
+  any list created before the change still loads the drag view. Consequences
+  while this holds: the component keeps the `svelte-dnd-action` dependency
+  alive, and the drag interaction stays inside Principle VI's WCAG 2.1 AA
+  release gate (constitution v2.1.1) — a flow a user can still land on must
+  meet the bar even if it can no longer be created. Retiring it properly means
+  a data migration plus deleting the component and the dependency; that is
+  deferred to the `revisit-ranking-modes` rework.
 - **Component library is still lean.** The brand and interaction primitives are
   extracted (`Logo`, `ThemeToggle`, `PairwiseRanker`, `ManualRanker`,
   `BggSearchAdd`, the `.spine` motif), but many views still compose DaisyUI

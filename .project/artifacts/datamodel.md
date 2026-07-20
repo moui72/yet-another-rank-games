@@ -1,10 +1,10 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-15
+last_updated: 2026-07-20
 diagram_type: erDiagram
 render_section: Datamodel
-diagram_status: current
+diagram_status: stale
 ---
 
 # Data Model
@@ -47,10 +47,11 @@ the ordering is those ratings sorted by a conservative score. `ListEntry` is a
 **derived snapshot** — recomputed after each comparison and persisted for fast
 render/export, but always reconstructible by replaying comparisons. A pairwise
 list therefore has a complete current ordering at any number of comparisons
-(native stop-early/resume). For a `manual` list the user's drag order is authored
-directly into `ListEntry` (there the snapshot *is* the source of truth for
-order). The rating estimates themselves are transient/derived and need not be a
-persisted table.
+(native stop-early/resume). For a `manual` list — a deprecated method retained
+only for lists created before it was withdrawn (see Production Annotations) —
+the user's drag order is authored directly into `ListEntry`, and there the
+snapshot *is* the source of truth for order. The rating estimates themselves
+are transient/derived and need not be a persisted table.
 
 ## Entities
 
@@ -218,7 +219,8 @@ same row regardless of which game was shown on which side.
 The list's ordering. For a **pairwise** list this is a **derived snapshot**
 recomputed from the `Comparison` graph after each comparison (source of truth is
 the comparisons, not this row); for a **manual** list it is authored directly by
-drag-to-order.
+drag-to-order. `manual` is deprecated and no longer creatable, but rows written
+under it are still read and still rendered — see Production Annotations.
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -303,6 +305,20 @@ rather than silently ignored.
 
 ## Production Annotations
 
+- **`ranking_method = 'manual'` is deprecated but not migrated away**: the value
+  was removed from the list-creation form, but no migration ever converted
+  existing rows (`ranking_method` appears only in the initial schema), and the
+  read path still honours it — `src/routes/lists/[id]/+page.server.ts` orders by
+  authored `ListEntry.position` and renders the drag view for such lists. So the
+  enum value, the authored-position semantics, and the `svelte-dnd-action`
+  dependency all remain live for pre-deprecation data. Two consequences worth
+  stating: `ListEntry` has *two* distinct sources of truth depending on the
+  list's method (derived from comparisons vs. authored directly), which any
+  code touching it must handle; and the drag interaction stays inside
+  Principle VI's WCAG 2.1 AA gate (constitution v2.1.1). Fully retiring it
+  means a data migration converting these lists to `pairwise` (or dropping
+  them), then removing the enum value, the component, and the dependency —
+  deferred to the `revisit-ranking-modes` rework.
 - **Ownership enforced in app code (RLS off)**: `List.user_id` is denormalized
   so the app/worker can enforce per-user ownership without extra joins. Row-Level
   Security is deliberately off (see `infrastructure.md`), so there is no

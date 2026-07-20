@@ -1,7 +1,24 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.0.0 → 2.1.0
+Version change: 2.1.0 → 2.1.1
+Rationale: v2.1.0 removed drag-to-order from Principle VI's WCAG AA release
+  gate on the strength of `ui.md:245`'s claim that the deprecated view is
+  "not user-reachable." Verification against the code showed that claim is
+  wrong: `src/routes/lists/[id]/+page.server.ts:27` still branches on
+  `list.rankingMethod === 'manual'` and renders the `svelte-dnd-action` view,
+  and no migration ever converted existing rows (`ranking_method` appears
+  only in the initial schema). Deprecation removed the *creation* path, not
+  the *render* path. Dropping a still-reachable flow from the accessibility
+  gate is precisely the coverage gap Principle VI exists to prevent.
+Modified (PATCH — corrects an overstatement, no rule change):
+  - Principle VI: the deprecated drag-to-order view is explicitly returned to
+    the AA gate for as long as its render path stays reachable for
+    pre-deprecation lists. The bar is unchanged — still full WCAG 2.1 AA.
+  - Project Scope & Intent: pairwise is the sole method offered "for new
+    lists," not outright, since legacy manual lists still render.
+Prior report (2.1.0):
+  Version change: 2.0.0 → 2.1.0
 Rationale: `ui.md` deprecated manual drag-to-order in favor of pairwise-only
   ranking, but the constitution was never amended to match — it still scoped
   drag-to-order as a live override and named "drag-to-order flows" as a WCAG
@@ -67,12 +84,13 @@ from their Board Game Geek (BGG) collection. A single collection feeds many
 lists, each scoped by a theme or filter — "top 10 co-op," "top 10 heavy,"
 "top 100 of all time." The primary, "fun" ranking interface is **pairwise
 comparison** (repeatedly choose the better of two games, from which a full
-ordering is inferred), and it is the **sole** ranking method offered. Users
-can nudge a ranked list directly with per-row move-up/move-down controls,
-but these are expressed as synthetic comparisons through the same pairwise
-model rather than as authored positions. Manual drag-to-order was evaluated
-and **deprecated**; **tiering** remains a possible later feature (tracked as
-`revisit-ranking-modes`).
+ordering is inferred), and it is the **sole** ranking method offered for new
+lists. Users can nudge a ranked list directly with per-row move-up/move-down
+controls, but these are expressed as synthetic comparisons through the same
+pairwise model rather than as authored positions. Manual drag-to-order was
+evaluated and **deprecated** — removed from list creation, though lists
+created before that still render it; **tiering** remains a possible later
+feature (tracked as `revisit-ranking-modes`).
 
 This is a **multi-user product** with real accounts, a hosted backend, and a
 real database — built as a hobby project that must stay cheap to run unless it
@@ -127,9 +145,12 @@ inside the product with no export path.
 
 The UI is usable without a mouse or perfect vision: logical tab order, readable
 contrast, labeled controls, keyboard-operable interactions — including the
-pairwise comparison flow and the move-up/move-down ranking controls, which
-were chosen over drag-and-drop precisely because they are accessible by
-construction. **The bar is full WCAG 2.1 AA compliance**,
+pairwise comparison flow and the move-up/move-down ranking controls (chosen
+over drag-and-drop precisely because they are accessible by construction).
+The deprecated drag-to-order view stays inside this gate for as long as its
+render path remains reachable for pre-deprecation lists — a flow a user can
+still land on is a flow that must meet the bar, regardless of whether it can
+be newly created. **The bar is full WCAG 2.1 AA compliance**,
 treated as a release gate: each feature is checked against AA (automated axe
 checks plus contrast and keyboard/screen-reader passes) before it ships.
 
@@ -244,4 +265,4 @@ Amendments require:
    clarifications or wording fixes.
 4. `last_updated` date updated in frontmatter.
 
-**Version**: 2.1.0 | **Ratified**: 2026-07-10 | **Last Amended**: 2026-07-20
+**Version**: 2.1.1 | **Ratified**: 2026-07-10 | **Last Amended**: 2026-07-20
