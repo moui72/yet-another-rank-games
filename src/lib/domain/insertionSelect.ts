@@ -74,6 +74,70 @@ export function selectNextComparison(
 	return null;
 }
 
+/** Detailed insertion progress for the ranking-view indicator (T017). */
+export interface InsertionState {
+	/** The pair to ask next. */
+	pair: ComparisonPair;
+	/** The game currently being placed (the one being binary-searched in). */
+	placingGameId: number;
+	/** How many games are already fully placed (0-based prefix length). */
+	placedCount: number;
+	/** Total games to place. */
+	total: number;
+	/** Which question this is for the current game (1-based estimate). */
+	questionNumber: number;
+	/** Estimated total questions to place the current game. */
+	questionsForGame: number;
+}
+
+const bitsFor = (slots: number): number => (slots <= 1 ? 0 : Math.ceil(Math.log2(slots)));
+
+/**
+ * Re-walk the binary insertion to report progress for the T017 indicator:
+ * which game is being placed, how many are already placed, and an estimate of
+ * how many questions this game needs and which one we're on. Returns null when
+ * the ordering is complete. Question counts are estimates (binary search on the
+ * live edge set skips implied probes), which is exactly the framing the plan
+ * wants surfaced — the deliberate re-asking of one game is shown, not hidden.
+ */
+export function insertionState(
+	sequence: readonly number[],
+	edges: readonly ConstraintEdge[]
+): InsertionState | null {
+	const above = reachability(edges);
+	const placed: number[] = [];
+	for (const g of sequence) {
+		let lo = 0;
+		let hi = placed.length;
+		while (lo < hi) {
+			const mid = (lo + hi) >> 1;
+			const h = placed[mid];
+			if (above(g, h)) {
+				hi = mid;
+			} else if (above(h, g)) {
+				lo = mid + 1;
+			} else {
+				const questionsForGame = Math.max(1, bitsFor(placed.length + 1));
+				const remaining = Math.max(1, bitsFor(hi - lo + 1));
+				const questionNumber = Math.min(
+					questionsForGame,
+					Math.max(1, questionsForGame - remaining + 1)
+				);
+				return {
+					pair: { a: g, b: h },
+					placingGameId: g,
+					placedCount: placed.length,
+					total: sequence.length,
+					questionNumber,
+					questionsForGame
+				};
+			}
+		}
+		placed.splice(lo, 0, g);
+	}
+	return null;
+}
+
 /**
  * Best-first placement order for the insertion selector (T007). Games with a
  * `CollectionItem.user_rating` are placed first, highest rating first, so the

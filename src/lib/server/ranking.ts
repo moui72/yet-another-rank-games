@@ -2,6 +2,7 @@ import type { Kysely } from 'kysely';
 import type { Database } from './schema';
 import { ratingsFromComparisons, rankGames, initialRating } from '$lib/domain/ranking';
 import { conservativeScore } from '$lib/domain/score';
+import { deriveOrder, type Judgment } from '$lib/domain/constraintOrder';
 import {
 	listComparisons,
 	recordComparison,
@@ -22,7 +23,7 @@ import { replaceListEntries } from './repositories/listEntries';
 export async function recomputeListEntries(db: Kysely<Database>, listId: string): Promise<void> {
 	const list = await db
 		.selectFrom('lists')
-		.select('poolId')
+		.select(['poolId', 'rankingMethod'])
 		.where('id', '=', listId)
 		.executeTakeFirstOrThrow();
 
@@ -30,12 +31,34 @@ export async function recomputeListEntries(db: Kysely<Database>, listId: string)
 	const inPool = new Set(poolGames.map((g) => g.id));
 	const rankedGameIds = poolGames.filter((g) => !g.excludedFromRanking).map((g) => g.id);
 
-	const comparisons = (await listComparisons(db, listId))
-		.filter((c) => inPool.has(c.gameA) && inPool.has(c.gameB))
-		.map((c) => ({
+	const rows = (await listComparisons(db, listId)).filter(
+		(c) => inPool.has(c.gameA) && inPool.has(c.gameB)
+	);
+
+	if (list.rankingMethod === 'efficient') {
+		// Efficient mode: order is the constraint-graph derivation over the same
+		// rows (datamodel.md). The judgment log keeps `createdAt`/`id` so the
+		// latest-wins / drop-oldest rules stay well-defined. Score is null —
+		// this mode's order is the topo sort, not a rating.
+		const judgments: Judgment[] = rows.map((c) => ({
 			winnerId: c.winnerId,
-			loserId: c.winnerId === c.gameA ? c.gameB : c.gameA
+			loserId: c.winnerId === c.gameA ? c.gameB : c.gameA,
+			createdAt: c.createdAt,
+			id: c.id
 		}));
+		const order = deriveOrder(rankedGameIds, judgments);
+		await replaceListEntries(
+			db,
+			listId,
+			order.map((gameId, i) => ({ gameId, position: i + 1, score: null }))
+		);
+		return;
+	}
+
+	const comparisons = rows.map((c) => ({
+		winnerId: c.winnerId,
+		loserId: c.winnerId === c.gameA ? c.gameB : c.gameA
+	}));
 
 	const ratings = ratingsFromComparisons(comparisons);
 	const ranked = rankGames(rankedGameIds, ratings);
