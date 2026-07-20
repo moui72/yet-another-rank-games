@@ -106,11 +106,15 @@ Nothing in flight. (Stale local branch `worktree-agent-adf423a6f0eb76edc` has no
 - **Dead endpoint:** `src/routes/api/lists/[id]/reorder/+server.ts` was `ManualRanker`'s only caller (`EfficientRanker` uses `/override`). It doesn't reference the retired enum value, so it fell outside the retirement tasks and is still present — Principle VIII (No Dead Architecture) says it should go. Small `/ardd-feedback` or a direct cleanup.
 - **Open feedback still unaddressed:** the pairwise `moveUp`-reverts-on-reload bug (`feedback-move-up-down-reverts-on-reload-2fd0.md`) — the new mode doesn't have it, but the *pairwise* mode still does. Unreproduced against a running app.
 
+## Work Queue
+
+- `tasks-manual-retirement-cleanup-c934.md` — **ready, 0/4**, plan `plan-manual-retirement-cleanup-2026-07-20-890a.md`, covers all 4 recorded defects. Two independent phases (endpoint deletion; artifact wording). No feature binding (defect scope). No other ready file, nothing in flight.
+
 ## Recommended Next Step
 
-1. **`/ardd-plan defects`** (or `/ardd-plan defect:<id>`) — pull the 4 recorded defects into a small plan. The `/reorder` broken-contract is the priority: it's a reachable endpoint that can persist authored positions on a production list, and deleting it also clears the Principle VIII dead-code finding. The three cosmetic drifts are `/ardd-refine` wording fixes that can ride the same plan.
-2. **`/ardd-diagram datamodel` / `/ardd-diagram ui`** — both `stale` after this session's edits; the enum and view changes are real diagram content this time, not just prose.
+1. **`/ardd-implement`** — execute the 4 defect fixes. T001 (delete the `/reorder` endpoint) is the substantive one and clears both the datamodel invariant and Principle VIII; T002–T004 are the wording corrections, with T003+T004 sharing one constitution PATCH bump.
+2. **`/ardd-diagram datamodel` / `/ardd-diagram ui`** — both `stale` after this session's edits; the enum and view changes are real diagram content this time.
 
-Deployment note (resolved): both migrations are applied to staging **and production** — production CHECK verified `pairwise/efficient/tier`, app serving. The feature is live.
+Deployment (resolved): both migrations applied to staging **and production** — production CHECK verified `pairwise/efficient/tier`, app serving. Feature is live.
 
 Housekeeping still pending: `.gitignore` breadth, README ArDD badge still reading v0.10.2 (installed is v1.0.2), `merge.ours.driver`.
