@@ -12,8 +12,6 @@ export function rankingMethodLabel(method: RankingMethod): string {
 			return 'Pairwise';
 		case 'efficient':
 			return 'Efficient';
-		case 'manual':
-			return 'Manual';
 		case 'tier':
 			return 'Tiered';
 	}

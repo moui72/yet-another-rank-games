@@ -12,7 +12,6 @@ describe('rankingMethodLabel', () => {
 	it('labels each ranking method', () => {
 		expect(rankingMethodLabel('pairwise')).toBe('Pairwise');
 		expect(rankingMethodLabel('efficient')).toBe('Efficient');
-		expect(rankingMethodLabel('manual')).toBe('Manual');
 		expect(rankingMethodLabel('tier')).toBe('Tiered');
 	});
 });

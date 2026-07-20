@@ -37,7 +37,7 @@ describe('list repository', () => {
 	it('lets one pool feed several lists', async () => {
 		const { userId, poolId } = await makePool();
 		await createList(db, { poolId, userId, name: 'A', rankingMethod: 'pairwise' });
-		await createList(db, { poolId, userId, name: 'B', rankingMethod: 'manual' });
+		await createList(db, { poolId, userId, name: 'B', rankingMethod: 'efficient' });
 		expect(await listListsByPool(db, poolId)).toHaveLength(2);
 	});
 });

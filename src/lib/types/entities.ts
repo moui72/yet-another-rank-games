@@ -10,7 +10,7 @@
  */
 
 /** How a list's order is produced. */
-export type RankingMethod = 'pairwise' | 'efficient' | 'manual' | 'tier';
+export type RankingMethod = 'pairwise' | 'efficient' | 'tier';
 
 /** Whether a list is still being ranked or finalized. */
 export type ListStatus = 'in_progress' | 'complete';
@@ -144,7 +144,7 @@ export interface Comparison {
 	createdAt: string;
 }
 
-/** Derived ordering snapshot for a list (or authored directly for manual lists). */
+/** Derived ordering snapshot for a list — always derived (never authored). */
 export interface ListEntry {
 	id: string;
 	listId: string;
