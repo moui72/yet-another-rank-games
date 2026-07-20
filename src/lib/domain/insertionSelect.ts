@@ -73,3 +73,32 @@ export function selectNextComparison(
 	}
 	return null;
 }
+
+/**
+ * Best-first placement order for the insertion selector (T007). Games with a
+ * `CollectionItem.user_rating` are placed first, highest rating first, so the
+ * strongest candidates anchor the order early; unrated games follow in pool
+ * order. Equal ratings keep pool order (stable). With no ratings at all this
+ * degrades to exactly `poolGameIds` — the phase still works, it just loses the
+ * warm-start (cold-start caveat in the plan's Open Questions).
+ */
+export function bestFirstSequence(
+	poolGameIds: readonly number[],
+	userRatings: ReadonlyMap<number, number | null | undefined>
+): number[] {
+	const rated: number[] = [];
+	const unrated: number[] = [];
+	for (const id of poolGameIds) {
+		const r = userRatings.get(id);
+		if (r == null) unrated.push(id);
+		else rated.push(id);
+	}
+	const poolIndex = new Map(poolGameIds.map((id, i) => [id, i]));
+	rated.sort((a, b) => {
+		const ra = userRatings.get(a) as number;
+		const rb = userRatings.get(b) as number;
+		if (ra !== rb) return rb - ra; // rating descending
+		return (poolIndex.get(a) ?? 0) - (poolIndex.get(b) ?? 0); // stable
+	});
+	return [...rated, ...unrated];
+}

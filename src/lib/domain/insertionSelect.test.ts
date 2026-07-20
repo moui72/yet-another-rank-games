@@ -44,3 +44,32 @@ describe('selectNextComparison (T006)', () => {
 		expect(new Set([next!.a, next!.b])).toEqual(new Set([2, 3]));
 	});
 });
+
+import { bestFirstSequence } from './insertionSelect';
+
+describe('bestFirstSequence (T007)', () => {
+	it('orders rated games by user_rating descending, unrated after in pool order', () => {
+		const pool = [10, 20, 30, 40];
+		const ratings = new Map<number, number>([
+			[10, 6.5],
+			[30, 9.0]
+		]);
+		// 30 (9.0), 10 (6.5) first; then 20, 40 unrated in pool order.
+		expect(bestFirstSequence(pool, ratings)).toEqual([30, 10, 20, 40]);
+	});
+
+	it('degrades to exact pool order when nothing is rated (no error)', () => {
+		const pool = [5, 3, 8, 1];
+		expect(bestFirstSequence(pool, new Map())).toEqual([5, 3, 8, 1]);
+	});
+
+	it('breaks equal ratings by pool order (stable)', () => {
+		const pool = [1, 2, 3];
+		const ratings = new Map<number, number>([
+			[1, 7],
+			[2, 7],
+			[3, 9]
+		]);
+		expect(bestFirstSequence(pool, ratings)).toEqual([3, 1, 2]);
+	});
+});
