@@ -6,7 +6,9 @@ import { listPoolGames } from '$lib/server/repositories/pools';
 import { listComparisons } from '$lib/server/repositories/comparisons';
 import { listListEntries } from '$lib/server/repositories/listEntries';
 import { getUserById, setShowCoverArt } from '$lib/server/repositories/users';
+import { getUserRatingsForGames } from '$lib/server/repositories/collectionItems';
 import type { Choice } from '$lib/domain/ranking';
+import type { Judgment } from '$lib/domain/constraintOrder';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	if (!locals.user) error(401, 'Not authenticated');
@@ -35,6 +37,38 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			list,
 			mode: 'manual' as const,
 			games: ordered.map((g) => ({ id: g.id, name: g.name })),
+			showCoverArt
+		};
+	}
+
+	if (list.rankingMethod === 'efficient') {
+		// Efficient: resume from the persisted comparison rows as the judgment
+		// log (preserving createdAt/id so latest-wins / drop-oldest stay
+		// well-defined), plus the user's BGG ratings to seed insertion order.
+		const activeGames = games.filter((g) => !g.excludedFromRanking);
+		const comparisons = await listComparisons(db, list.id);
+		const log: Judgment[] = comparisons.map((c) => ({
+			winnerId: c.winnerId,
+			loserId: c.winnerId === c.gameA ? c.gameB : c.gameA,
+			createdAt: c.createdAt,
+			id: c.id
+		}));
+		const userRatings = await getUserRatingsForGames(
+			db,
+			locals.user.id,
+			activeGames.map((g) => g.id)
+		);
+		return {
+			list,
+			mode: 'efficient' as const,
+			games: activeGames.map((g) => ({
+				id: g.id,
+				name: g.name,
+				userRating: userRatings.get(g.id) ?? null,
+				imageUrl: g.imageUrl,
+				thumbnailUrl: g.thumbnailUrl
+			})),
+			log,
 			showCoverArt
 		};
 	}

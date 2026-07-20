@@ -263,3 +263,32 @@ export function addLocalCollectionItem(
 		.returningAll()
 		.executeTakeFirstOrThrow();
 }
+
+/**
+ * The user's BGG ratings for the given games, as a `gameId -> user_rating` map
+ * (only games that have a rating appear). Used to seed the efficient mode's
+ * best-first insertion order (T007/T019). A game rated in more than one of the
+ * user's collections takes its highest rating.
+ */
+export async function getUserRatingsForGames(
+	db: Kysely<Database>,
+	userId: string,
+	gameIds: readonly number[]
+): Promise<Map<number, number>> {
+	if (gameIds.length === 0) return new Map();
+	const rows = await db
+		.selectFrom('collectionItems as ci')
+		.innerJoin('collections as c', 'c.id', 'ci.collectionId')
+		.where('c.userId', '=', userId)
+		.where('ci.gameId', 'in', gameIds as number[])
+		.where('ci.userRating', 'is not', null)
+		.select(['ci.gameId as gameId', 'ci.userRating as userRating'])
+		.execute();
+	const map = new Map<number, number>();
+	for (const r of rows) {
+		if (r.userRating == null) continue;
+		const prev = map.get(r.gameId);
+		if (prev == null || r.userRating > prev) map.set(r.gameId, r.userRating);
+	}
+	return map;
+}
