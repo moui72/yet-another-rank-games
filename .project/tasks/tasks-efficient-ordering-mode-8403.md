@@ -24,7 +24,7 @@ status: in-progress
 ## Phase 3: Override mapping
 
 - [x] T010 [artifacts: datamodel] Test-first: implement override-to-edges mapping in `src/lib/domain/overrideEdges.ts` — moving a game across k positions produces k edges, one against each crossed game, in the direction of the move. Move up/down is the k=1 case and must produce exactly one edge.
-- [ ] T011 Test that a long move against heavily contradicting evidence still lands exactly: build a fully round-robined 10-game order, move rank 9 to rank 2, and assert the re-derived order places it at rank 2 — not rank 8 or rank 3, which is what the rating-model approach produced in the research simulation. This test is the regression guard for the whole design choice.
+- [x] T011 Test that a long move against heavily contradicting evidence still lands exactly: build a fully round-robined 10-game order, move rank 9 to rank 2, and assert the re-derived order places it at rank 2 — not rank 8 or rank 3, which is what the rating-model approach produced in the research simulation. This test is the regression guard for the whole design choice.
 
 ## Phase 4: Persistence & mode plumbing
 
