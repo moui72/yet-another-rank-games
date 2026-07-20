@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildListFilter } from './listForm';
+import { buildListFilter, parseRankingMethod } from './listForm';
 import { parseListFilter } from './listFilter';
 
 describe('buildListFilter', () => {
@@ -46,5 +46,24 @@ describe('buildListFilter', () => {
 
 	it('a well-formed built filter passes validation', () => {
 		expect(() => parseListFilter(buildListFilter({ playerCount: '2', ownedOnly: true }))).not.toThrow();
+	});
+});
+
+describe('parseRankingMethod (T015)', () => {
+	it('accepts the two creatable modes', () => {
+		expect(parseRankingMethod('pairwise')).toBe('pairwise');
+		expect(parseRankingMethod('efficient')).toBe('efficient');
+	});
+
+	it('defaults to pairwise when no value is provided', () => {
+		expect(parseRankingMethod(undefined)).toBe('pairwise');
+		expect(parseRankingMethod(null)).toBe('pairwise');
+	});
+
+	it('rejects retired, deferred, or unknown modes so they cannot reach the repository', () => {
+		expect(() => parseRankingMethod('manual')).toThrow();
+		expect(() => parseRankingMethod('tier')).toThrow();
+		expect(() => parseRankingMethod('bogus')).toThrow();
+		expect(() => parseRankingMethod(42)).toThrow();
 	});
 });

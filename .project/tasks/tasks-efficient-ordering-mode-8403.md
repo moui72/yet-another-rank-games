@@ -31,7 +31,7 @@ status: in-progress
 - [x] T012 [artifacts: datamodel] Add a Supabase migration adding `efficient` to the `ranking_method` enum. Do not drop `manual` here — that is T021, after its only consumer is replaced.
 - [x] T013 [artifacts: datamodel] Test-first: add a batched edge-write repository function in `src/lib/server/repositories/comparisons.ts` that upserts k comparison rows in a single statement, reusing the existing canonical-ordering and `onConflict` logic so a batched write and a single `recordComparison` cannot diverge in behaviour. Integration test against local Postgres.
 - [x] T014 [artifacts: ui, datamodel] Add ranking-mode selection to the list-creation form (`src/routes/pools/[id]/+page.svelte` and `+page.server.ts`): Pairwise or Efficient, one line of plain-language explanation each (no algorithm names), and a note that the choice is permanent. Server action must persist the chosen mode; default stays `pairwise`.
-- [ ] T015 [artifacts: ui] Test-first: extend `src/lib/domain/listForm.ts` validation to accept the new mode value and reject anything outside the enum, so an unknown mode cannot reach the repository.
+- [x] T015 [artifacts: ui] Test-first: extend `src/lib/domain/listForm.ts` validation to accept the new mode value and reject anything outside the enum, so an unknown mode cannot reach the repository.
 
 ## Phase 5: Efficient ranking view
 

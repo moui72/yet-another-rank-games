@@ -56,3 +56,25 @@ export function buildListFilter(input: ListFilterInput): ListFilter {
 
 	return filter;
 }
+
+/**
+ * The ranking modes a *new* list may be created with. `manual` was retired and
+ * `tier` is deferred, so neither is creatable — the mode is fixed for the life
+ * of the list (datamodel.md).
+ */
+export const CREATABLE_RANKING_METHODS = ['pairwise', 'efficient'] as const;
+export type CreatableRankingMethod = (typeof CREATABLE_RANKING_METHODS)[number];
+
+/**
+ * Validate the ranking method chosen in the list-creation form (T015). An
+ * absent value defaults to `pairwise` (the form's default selection); any value
+ * outside the creatable set — a retired/deferred mode or garbage — is rejected
+ * so it can never reach the repository.
+ */
+export function parseRankingMethod(value: unknown): CreatableRankingMethod {
+	if (value == null) return 'pairwise';
+	if (typeof value === 'string' && (CREATABLE_RANKING_METHODS as readonly string[]).includes(value)) {
+		return value as CreatableRankingMethod;
+	}
+	throw new Error(`invalid ranking method: ${String(value)}`);
+}

@@ -10,7 +10,7 @@ import {
 } from '$lib/server/repositories/pools';
 import { listCollectionsByUser } from '$lib/server/repositories/collections';
 import { createList, listListsByPool } from '$lib/server/repositories/lists';
-import { buildListFilter } from '$lib/domain/listForm';
+import { buildListFilter, parseRankingMethod } from '$lib/domain/listForm';
 import { parseListFilter } from '$lib/domain/listFilter';
 import { addGameFromSearch, type FetchThing } from '$lib/server/addFromSearch';
 import { fetchThingXml } from '$lib/server/bgg/client';
@@ -121,11 +121,15 @@ export const actions: Actions = {
 		if (!name) return fail(400, { error: 'A list name is required.' });
 		// The user picks a ranking mode at creation and it's fixed for the life
 		// of the list (the same rows under a different derivation would silently
-		// reorder it — datamodel.md). Only the two creatable modes are accepted;
-		// default to pairwise. (T015 hardens this into a shared validator so an
-		// unknown mode can't reach the repository.)
-		const rawMethod = str(form.get('rankingMethod'));
-		const rankingMethod: 'pairwise' | 'efficient' = rawMethod === 'efficient' ? 'efficient' : 'pairwise';
+		// reorder it — datamodel.md). The shared validator (T015) accepts only
+		// creatable modes and defaults to pairwise, so an unknown mode can't
+		// reach the repository.
+		let rankingMethod;
+		try {
+			rankingMethod = parseRankingMethod(str(form.get('rankingMethod')));
+		} catch {
+			return fail(400, { error: 'Pick a valid ranking style.' });
+		}
 		await createList(db, {
 			poolId: params.id,
 			userId: locals.user.id,
