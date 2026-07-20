@@ -3,6 +3,12 @@
 # is prohibited except in a documented emergency, and any bypass must be
 # followed immediately by a commit that re-establishes the passing state.
 # (End-to-end/axe tests run in CI, not here, to keep the hook fast.)
+#
+# The test step runs the coverage ratchet (constitution Quality Standard):
+# the same never-decrease line-coverage gate CI enforces, run here so a
+# drop is caught before the push rather than after. `coverage:ratchet`
+# runs the full unit suite with coverage, so it replaces a plain `test`
+# rather than adding a second run.
 npm run lint
 npm run check
-npm run test
+npm run coverage:ratchet
