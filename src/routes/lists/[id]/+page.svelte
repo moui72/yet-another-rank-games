@@ -3,7 +3,6 @@
 	import { resolve } from '$app/paths';
 	import PairwiseRanker from '$lib/components/PairwiseRanker.svelte';
 	import EfficientRanker from '$lib/components/EfficientRanker.svelte';
-	import ManualRanker from '$lib/components/ManualRanker.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -45,9 +44,7 @@
 	</div>
 
 	{#key data.list.id}
-		{#if data.mode === 'manual'}
-			<ManualRanker listId={data.list.id} games={data.games} />
-		{:else if data.mode === 'efficient'}
+		{#if data.mode === 'efficient'}
 			<EfficientRanker listId={data.list.id} games={data.games} log={data.log} {showCoverArt} />
 		{:else}
 			<PairwiseRanker listId={data.list.id} games={data.games} log={data.log} {showCoverArt} />

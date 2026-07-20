@@ -44,5 +44,5 @@ status: in-progress
 ## Phase 6: Retire manual
 
 - [x] T021 [artifacts: datamodel] Re-verify zero `ranking_method = 'manual'` rows in both staging and production before touching anything — do not trust this plan's 2026-07-20 snapshot. If any row exists, stop and report rather than proceeding; the retirement assumed an empty set and needs a data migration otherwise. On zero, add a migration dropping `manual` from the enum.
-- [ ] T022 [artifacts: ui, design] Delete `src/lib/components/ManualRanker.svelte` and the `mode === 'manual'` branches in `src/routes/lists/[id]/+page.server.ts` and `+page.svelte`, plus the `manual` case in `src/lib/domain/listView.ts`. Keep `svelte-dnd-action` — T018 now depends on it.
+- [x] T022 [artifacts: ui, design] Delete `src/lib/components/ManualRanker.svelte` and the `mode === 'manual'` branches in `src/routes/lists/[id]/+page.server.ts` and `+page.svelte`, plus the `manual` case in `src/lib/domain/listView.ts`. Keep `svelte-dnd-action` — T018 now depends on it.
 - [ ] T023 Remove `manual` from the `RankingMethod` type in `src/lib/types/entities.ts` and fix the resulting type errors. Full suite plus typecheck must be green; this task is complete only when nothing references the retired value.

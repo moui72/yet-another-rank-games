@@ -4,7 +4,6 @@ import { db } from '$lib/server/db';
 import { getOwnedList, AccessDeniedError } from '$lib/server/ownership';
 import { listPoolGames } from '$lib/server/repositories/pools';
 import { listComparisons } from '$lib/server/repositories/comparisons';
-import { listListEntries } from '$lib/server/repositories/listEntries';
 import { getUserById, setShowCoverArt } from '$lib/server/repositories/users';
 import { getUserRatingsForGames } from '$lib/server/repositories/collectionItems';
 import type { Choice } from '$lib/domain/ranking';
@@ -25,21 +24,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		getUserById(db, locals.user.id)
 	]);
 	const showCoverArt = user?.showCoverArt ?? true;
-
-	if (list.rankingMethod === 'manual') {
-		// Order pool games by their saved position (unsaved ones at the end).
-		const entries = await listListEntries(db, list.id);
-		const posOf = new Map(entries.map((e) => [e.gameId, e.position]));
-		const ordered = [...games].sort(
-			(a, b) => (posOf.get(a.id) ?? Infinity) - (posOf.get(b.id) ?? Infinity)
-		);
-		return {
-			list,
-			mode: 'manual' as const,
-			games: ordered.map((g) => ({ id: g.id, name: g.name })),
-			showCoverArt
-		};
-	}
 
 	if (list.rankingMethod === 'efficient') {
 		// Efficient: resume from the persisted comparison rows as the judgment
