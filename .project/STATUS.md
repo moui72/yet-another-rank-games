@@ -1,14 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-20 (efficient-ordering-mode implemented and merged to main — 23 tasks, delegated worktree run, fast-forward merge at 776f188. Two migrations merged but NOT yet applied to hosted DBs — see Deployment below. Constitution at v2.2.0.) Keep this current as artifacts are refined and open questions are resolved._
-
-## ⚠️ Deployment — action needed
-
-The `efficient-ordering-mode` merge added **two migrations that are not yet applied to staging or production**:
-- `20260720000000_ranking_method_add_efficient.sql` — additive, safe on existing rows.
-- `20260720010000_ranking_method_drop_manual.sql` — drops `manual` from the `ranking_method` CHECK. Self-guarding (the recreate fails if any `manual` row exists); verified zero rows in both environments during T021.
-
-As of this update, both hosted DBs are still at migration `20260715220100`. These deploy through the normal pipeline on merge/deploy — **confirm they actually applied to staging, then production, before considering the feature live.** Order matters only in that the drop must not precede the add on any single environment; since they share a deploy they apply in filename order, which is correct.
+_Updated: 2026-07-20 (efficient-ordering-mode implemented, merged, and deployed to production. `/ardd-defects` run: 4 defects recorded, all from the manual-mode retirement — one broken-contract, three cosmetic. Constitution at v2.2.0.) Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -75,7 +67,10 @@ Clean sub-checks: every field `ui.md` displays or branches on exists in `datamod
 
 ## Code-vs-Artifact Defects
 
-- 0 known defects — see `DEFECTS.md`, last checked 2026-07-16. Run `/ardd-defects` to refresh; note that check predates the artifact drift recorded above.
+- **4 defects — see `DEFECTS.md`, last verified 2026-07-20.** All from the `manual`-mode retirement.
+  - **1 broken-contract:** `POST /api/lists/[id]/reorder` is a live, auth-registered endpoint that writes *authored* `ListEntry` positions, violating datamodel's "never authored" invariant (and Principle VIII — it's the retired `ManualRanker`'s persist path, never deleted). Fix = delete the endpoint. **This is the one that matters** — it's reachable, and it's the exact dead-code follow-up flagged after the merge, now shown to be worse than cosmetic.
+  - **3 cosmetic wording-drifts** (artifacts stale vs code, all fixable via `/ardd-refine`): `datamodel:269` `ListEntry.score` says "null for manual lists"; `constitution:178` Principle VI describes a now-gone reachable render path; `constitution:108` says "no migration was needed" when a constraint migration was written.
+  - `design.md`, `infrastructure.md`, `ui.md` all clean against the code.
 
 ## Audit
 
@@ -113,8 +108,9 @@ Nothing in flight. (Stale local branch `worktree-agent-adf423a6f0eb76edc` has no
 
 ## Recommended Next Step
 
-1. **Confirm the two migrations applied** to staging then production (see Deployment above) — the feature isn't actually usable until they do.
-2. **`/ardd-defects`** — last run 2026-07-16, before all of this session's changes. The retirement of `manual` was written into the artifacts ahead of code across several steps; a fresh code-vs-artifact pass confirms the tree and docs now agree (they should).
-3. **`/ardd-diagram datamodel` / `/ardd-diagram ui`** — both flagged `stale` after this session's edits; the enum and view changes are real diagram content this time, not just prose.
+1. **`/ardd-plan defects`** (or `/ardd-plan defect:<id>`) — pull the 4 recorded defects into a small plan. The `/reorder` broken-contract is the priority: it's a reachable endpoint that can persist authored positions on a production list, and deleting it also clears the Principle VIII dead-code finding. The three cosmetic drifts are `/ardd-refine` wording fixes that can ride the same plan.
+2. **`/ardd-diagram datamodel` / `/ardd-diagram ui`** — both `stale` after this session's edits; the enum and view changes are real diagram content this time, not just prose.
+
+Deployment note (resolved): both migrations are applied to staging **and production** — production CHECK verified `pairwise/efficient/tier`, app serving. The feature is live.
 
 Housekeeping still pending: `.gitignore` breadth, README ArDD badge still reading v0.10.2 (installed is v1.0.2), `merge.ours.driver`.
