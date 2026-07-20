@@ -19,7 +19,7 @@ status: in-progress
 - [x] T006 [artifacts: datamodel] Test-first: implement the resumable binary-insertion selector in `src/lib/domain/insertionSelect.ts` — given the derived order and the edge set, return the next pair to ask, binary-searching the game currently being placed. A probe whose answer is already implied by the edge set (directly or transitively) must be consumed silently rather than asked.
 - [x] T007 [artifacts: datamodel] [parallel] Test-first: implement best-first insertion ordering — seed the sequence of games to place from `CollectionItem.user_rating` descending where present, falling back to pool order for unrated games. Test the all-unrated case explicitly; it degrades to pool order and must not error.
 - [x] T008 Test that comparison counts land near the information-theoretic floor: simulate a noiseless user over the selector at n = 10, 25, 50 and assert the count is within a reasonable margin of ceil(log2(n!)) (research measured 25 / 94 / 237). Assert a bound, not an exact number — this is a regression guard against the selector silently degenerating, not a benchmark.
-- [ ] T009 Test resumability: interrupt a partially-complete insertion, re-derive from the persisted edge set alone, and assert the selector resumes with at most ~log2(n) repeated asks and no persisted sort state of any kind.
+- [x] T009 Test resumability: interrupt a partially-complete insertion, re-derive from the persisted edge set alone, and assert the selector resumes with at most ~log2(n) repeated asks and no persisted sort state of any kind.
 
 ## Phase 3: Override mapping
 
