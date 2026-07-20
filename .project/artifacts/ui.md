@@ -95,9 +95,12 @@ screens, 3 at `sm`, 4 at `md` and up.
 
 ## List management view
 
-- Create a list **from a pool**: choose a pool, name, and optional description.
-  **Pairwise is the only ranking method offered** (manual drag-to-order is
-  deprecated — see Production Annotations).
+- Create a list **from a pool**: choose a pool, name, optional description, and
+  **ranking mode** — **Pairwise** (the primary, "fun" mode: novel matchups,
+  stop anytime) or **Efficient** (fewest comparisons, drag to override). The
+  choice is **fixed once the list is created**; the picker explains the
+  trade-off in one line each rather than naming the algorithms, and warns that
+  the mode can't be changed later.
 - See a pool's lists, and a user's lists, with status (in progress / complete).
 - Many lists can rank the same pool differently.
 
@@ -199,6 +202,43 @@ Tuning decisions (settled while building; revisit with real usage):
   contradictory judgments into a sensible linear order (confidence just drops);
   the linear ranking is shown as-is.
 
+## Efficient ranking view (feature `efficient-ordering-mode`)
+
+The alternative to the pairwise view, chosen at list creation. It asks the
+fewest comparisons it can and treats a manual reorder as authoritative. See
+`datamodel.md`'s constraint-graph derivation for the model beneath it.
+
+- **One insertion at a time, stated plainly.** The mode places games into the
+  order one at a time by binary search, so it deliberately asks about the *same*
+  game several times in a row — the opposite of the pairwise view's novelty
+  preference. The UI leans into this rather than hiding it: a persistent
+  "Placing **Brass** — question 3 of 6" indicator, plus overall progress
+  ("14 of 40 games placed"). Without that framing the repetition reads as a bug.
+- **Comparison prompt** is otherwise the pairwise view's: two games, cover art
+  under the same `show_cover_art` preference, keyboard-operable choice and undo.
+- **The ranked list is always visible and always reorderable**, not gated behind
+  completion — overriding mid-sort is expected, not an edge case.
+- **Three override affordances**, all writing the same constraint edges:
+  - **Drag-and-drop** a game to any position (mouse/touch).
+  - **Move up / move down** per row (keyboard) — the k=1 case.
+  - **"Move to position N"** — a small numeric input per row, giving keyboard
+    users real parity for long moves instead of O(distance) keypresses. Without
+    it, keyboard parity is functional but not practical in a mode where long
+    moves are the point.
+- **An override always sticks exactly** where placed, however much earlier
+  evidence it contradicts — that guarantee is the mode's central promise, and
+  the UI should never silently re-derive a different position afterwards.
+- **A misjudged comparison is corrected by overriding**, not by a separate undo
+  flow: the override affordance is the error-correction loop.
+
+### States
+
+- **Placing** — a comparison is pending; insertion indicator visible.
+- **Complete** — every game placed; comparison prompt hidden, list fully
+  reorderable. Re-enters `Placing` if a game is added to the pool.
+- **Override applied** — brief confirmation that the drop was recorded, since
+  the write is a batch of k edges rather than a single choice.
+
 ## List result & export view
 
 - The finished ranked list, **exportable** in portable formats (constitution
@@ -238,12 +278,9 @@ migration alongside the feature itself.
 - **Sharing model unspecified**: if list sharing ships as public links, a
   production version needs a considered privacy/visibility model rather than
   the minimal export assumed here.
-- **Manual (drag-to-order) ranking method deprecated**: no longer offered when
-  creating a list — pairwise is the sole ranking method for now. Deprecated
-  rather than deleted from the codebase in this pass, pending a broader
-  rework of ranking modes (see the feature backlog); `List.ranking_method`'s
-  `manual` value and the `svelte-dnd-action`-based view remain in the
-  codebase **and remain reachable** — no migration converted pre-deprecation
-  rows, so any list already set to `manual` still loads the drag view. Not
-  creatable is not the same as not reachable; the flow therefore stays inside
-  Principle VI's WCAG 2.1 AA gate (constitution v2.1.1).
+- **Manual (drag-to-order) ranking method retired**: removed from list creation
+  and then deleted outright, once a 2026-07-20 query confirmed zero lists used
+  it in either environment (so no data migration was needed). Drag-and-drop
+  itself returns in the Efficient ranking view above, where a drop is an
+  authoritative constraint rather than an authored position — the interaction
+  came back, the mode did not.

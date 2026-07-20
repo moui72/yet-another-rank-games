@@ -43,8 +43,7 @@ Clean sub-checks: every field `ui.md` displays or branches on exists in `datamod
 
 ## Feature Backlog
 
-- **2 backlogged** (`efficient-ordering-mode`, `in-app-help-and-info-text`) · 0 planned · 0 tasked · **7 implemented** · **1 subsumed** (`revisit-ranking-modes`) — see `.project/features/`. Target either backlogged slug with `/ardd-plan <slug>`; no work in flight.
-- `efficient-ordering-mode` arrives with its design already settled by research (below), so it is readier to plan than a typical backlog entry.
+- **1 backlogged** (`in-app-help-and-info-text`) · 0 planned · **1 tasked** (`efficient-ordering-mode`) · **7 implemented** · **1 subsumed** (`revisit-ranking-modes`) — see `.project/features/`.
 - `revisit-ranking-modes` subsumed 2026-07-20: `efficient-ordering-mode` answers its "reworked manual/override mode" half. **Tiering is not covered by it and is now untracked** — log a fresh entry if it is ever wanted.
 
 ## Plans & Tasks
@@ -95,11 +94,19 @@ Nothing in flight. (Stale local branch `worktree-agent-adf423a6f0eb76edc` has no
 
 - `research-efficient-durable-secondary-ranking-mode-2026-07-20-d22b.md` — chose the design for `efficient-ordering-mode`. Falsified the cheap hypothesis (reuse the rating model, swap only the selection policy) on both prongs by simulation against the repo's own `openskill@5.0.1`: the existing selector is *already* information-gain (`ranking.ts:121`) with a novelty filter on top, and removing that filter converged no better; the rating model needs ~4× the comparisons of binary insertion (n=50: ~957 vs 237). Synthetic comparisons into a rating model also honour an override only approximately. Recommends a constraint-graph mode over the existing `Comparison` table. Cites Maystre & Grossglauser 2017, Jamieson & Nowak 2011, Herbrich et al. 2006, Weng & Lin 2011, Feige et al. 1994, Braverman & Mossel 2008; simulation results are the agent's own, marked as such. Also flags an accessibility gap: move-up/move-down gives keyboard parity for short moves but not for long ones — suggests a "move to position N" input.
 
+## Work Queue
+
+- `tasks-efficient-ordering-mode-8403.md` — **ready, 0/23**, plan `plan-efficient-ordering-mode-2026-07-20-5a1c.md`, feature `efficient-ordering-mode`. No other ready tasks file and nothing in flight, so no pairwise contention to report.
+
 ## Recommended Next Step
 
-Artifacts are consistent, constitution is at v2.2.0, and `/ardd-plan` is unblocked.
+**`/ardd-implement`** — 23 tasks ready across 6 phases. Phases 1–3 are pure functions over the existing comparison log, unit-testable without a database.
 
-1. **`/ardd-plan efficient-ordering-mode`** — the readiest work: design settled by research, and it would dissolve the open feedback bug rather than patch it.
-2. **`/ardd-defects`** — last run 2026-07-16, predates every artifact change since. Two documented claims have now turned out to contradict the code in a single session ("not user-reachable"; the novelty-vs-info-gain description of the selector), so a fresh code-vs-artifact pass is worth more than usual.
+Two things to know before starting:
+
+- **The artifacts now describe the `manual` retirement in the past tense while the code still has it.** That is the intended ArDD lead-code pattern, but it means `/ardd-defects` will legitimately flag the gap until T021–T023 land. Don't "fix" the artifacts in response.
+- **T021 re-verifies the zero-row count itself** rather than trusting this session's snapshot, and stops if any `manual` row appeared in the interim.
+
+Then **`/ardd-defects`** — last run 2026-07-16, predates every artifact change since. Two documented claims turned out to contradict the code in a single session ("not user-reachable"; the novelty-vs-info-gain description of the selector), so a fresh pass is worth more than usual.
 
 Housekeeping still pending: `.gitignore` breadth, README ArDD badge still reading v0.10.2 (installed is v1.0.2), `merge.ours.driver`, and stale diagram flags on `datamodel`/`ui`.

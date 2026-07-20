@@ -52,11 +52,42 @@ the ordering is those ratings sorted by a conservative score. `ListEntry` is a
 **derived snapshot** — recomputed after each comparison and persisted for fast
 render/export, but always reconstructible by replaying comparisons. A pairwise
 list therefore has a complete current ordering at any number of comparisons
-(native stop-early/resume). For a `manual` list — a deprecated method retained
-only for lists created before it was withdrawn (see Production Annotations) —
-the user's drag order is authored directly into `ListEntry`, and there the
-snapshot *is* the source of truth for order. The rating estimates themselves
-are transient/derived and need not be a persisted table.
+(native stop-early/resume). The rating estimates themselves are
+transient/derived and need not be a persisted table.
+
+### Constraint-graph derivation (`efficient` mode)
+
+The `efficient` ranking mode reads the **same `Comparison` rows** but derives
+order differently, trading the primary mode's novelty-preferring matchup
+selection for convergence speed and exact honouring of manual overrides
+(constitution v2.2.0 Principle III; design settled by
+`.project/plans/research-efficient-durable-secondary-ranking-mode-2026-07-20-d22b.md`).
+
+- **Edges.** The existing unique `(list_id, game_a, game_b)` upsert already
+  makes the current row for a pair the *current* judgment about that pair.
+  That latest-write-wins behaviour **is** the recency mechanism — no weighting
+  scheme is needed, because an override literally replaces the prior judgment
+  rather than being averaged against it.
+- **Order.** Deterministic topological sort of that edge set. Games left
+  incomparable by the edges are tie-broken by their openskill rating, so the
+  rating survives in this mode as a *prior*, not as the authority. Cycles are
+  possible (edges are per-pair with no transitivity guarantee) and are broken
+  by dropping the **oldest** edge in the cycle until acyclic — recency wins,
+  matching the durability contract.
+- **Selection.** Resumable binary insertion: pick the next unplaced game and
+  binary-search it into the current derived order, consulting the edge set
+  before asking so already-known pairs are used silently. No sort state is
+  persisted, so resuming costs at most ~log₂n repeated asks. Roughly
+  ⌈log₂(n!)⌉ comparisons — 237 for 50 games, about 4× fewer than the rating
+  model needs to reach the same confidence.
+- **Overrides.** Dropping a game across k positions upserts k rows (one per
+  crossed game) in a single batched write. Because derivation respects the
+  constraints, the drop lands exactly where dropped regardless of how much
+  older evidence it contradicts. Move-up/move-down is the k=1 case.
+
+`ListEntry` remains a derived snapshot in this mode — recomputed from the
+constraint derivation rather than from ratings. It is never authored directly;
+the `manual` mode that did author it was retired (see Production Annotations).
 
 ## Entities
 
@@ -188,7 +219,7 @@ A named ranking over a pool's games. Many lists can rank the same pool.
 | user_id | uuid | → User (denormalized for ownership checks) |
 | name | string | e.g. "Top 10 Co-op" |
 | description | string | nullable |
-| ranking_method | enum | `pairwise` \| `manual` \| `tier` (`manual` deprecated — not offered when creating a list, see `ui.md`; `tier` deferred) |
+| ranking_method | enum | `pairwise` \| `efficient` \| `tier`. `pairwise` = rating-model derivation with novelty-preferring matchups (the primary, "fun" mode); `efficient` = constraint-graph derivation with binary-insertion selection and exact drag-and-drop overrides (see above). Fixed at list creation — a list does not switch modes, since the same rows under a different derivation would silently reorder it. `tier` deferred. The former `manual` value was retired (see Production Annotations). |
 | status | enum | `in_progress` \| `complete` |
 | created_at | timestamptz | |
 
@@ -221,11 +252,13 @@ same row regardless of which game was shown on which side.
 
 ### ListEntry
 
-The list's ordering. For a **pairwise** list this is a **derived snapshot**
-recomputed from the `Comparison` graph after each comparison (source of truth is
-the comparisons, not this row); for a **manual** list it is authored directly by
-drag-to-order. `manual` is deprecated and no longer creatable, but rows written
-under it are still read and still rendered — see Production Annotations.
+The list's ordering — always a **derived snapshot**, never authored, under
+either mode. For a **pairwise** list it is recomputed from the `Comparison`
+graph via the rating model after each comparison; for an **efficient** list it
+is recomputed from the same rows via the constraint-graph derivation described
+in the Overview. In both cases the comparisons are the source of truth, not
+this row. (The retired `manual` mode was the one exception — it authored
+positions directly; see Production Annotations.)
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -310,20 +343,16 @@ rather than silently ignored.
 
 ## Production Annotations
 
-- **`ranking_method = 'manual'` is deprecated but not migrated away**: the value
-  was removed from the list-creation form, but no migration ever converted
-  existing rows (`ranking_method` appears only in the initial schema), and the
-  read path still honours it — `src/routes/lists/[id]/+page.server.ts` orders by
-  authored `ListEntry.position` and renders the drag view for such lists. So the
-  enum value, the authored-position semantics, and the `svelte-dnd-action`
-  dependency all remain live for pre-deprecation data. Two consequences worth
-  stating: `ListEntry` has *two* distinct sources of truth depending on the
-  list's method (derived from comparisons vs. authored directly), which any
-  code touching it must handle; and the drag interaction stays inside
-  Principle VI's WCAG 2.1 AA gate (constitution v2.1.1). Fully retiring it
-  means a data migration converting these lists to `pairwise` (or dropping
-  them), then removing the enum value, the component, and the dependency —
-  deferred to the `revisit-ranking-modes` rework.
+- **`ranking_method = 'manual'` retired**: the authored-drag-order mode was
+  removed from list creation, and on 2026-07-20 a query confirmed **zero rows
+  used it in either staging or production**, so its retirement needs no data
+  migration — the enum value, the authored-`ListEntry` semantics, the
+  `ManualRanker` component, and the `mode === 'manual'` read path are deleted
+  outright. This also removes the dual-source-of-truth hazard `ListEntry`
+  carried while `manual` existed: it is now always derived, under either
+  remaining mode's derivation. Drag-and-drop itself is *not* retired — it
+  returns in `efficient` mode, where a drop is an authoritative constraint
+  rather than an authored position.
 - **Ownership enforced in app code (RLS off)**: `List.user_id` is denormalized
   so the app/worker can enforce per-user ownership without extra joins. Row-Level
   Security is deliberately off (see `infrastructure.md`), so there is no

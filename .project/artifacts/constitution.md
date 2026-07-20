@@ -104,12 +104,13 @@ ordering is inferred), and it is the **sole** ranking method offered for new
 lists. Users can nudge a ranked list directly with per-row move-up/move-down
 controls, but these are expressed as synthetic comparisons through the same
 pairwise model rather than as authored positions. Manual drag-to-order was
-evaluated and **deprecated** — removed from list creation, and as of
-2026-07-20 no list in staging or production uses it, though the render path
-remains. Drag-and-drop is planned to return, not as a purely manual method
-but inside an efficiency-first second mode (`efficient-ordering-mode`).
-**Tiering** remains a possible later feature, currently undesigned and
-untracked by any register entry.
+evaluated and **retired** (no list in either environment ever used it, so no
+migration was needed). Drag-and-drop returns, not as a purely manual method
+but inside an efficiency-first second mode, `efficient`, which trades novel
+matchups for the fewest possible comparisons and treats a drop as an
+authoritative constraint. A list's mode is fixed at creation. **Tiering**
+remains a possible later feature, currently undesigned and untracked by any
+register entry.
 
 This is a **multi-user product** with real accounts, a hosted backend, and a
 real database — built as a hobby project that must stay cheap to run unless it

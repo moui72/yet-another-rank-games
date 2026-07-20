@@ -1,7 +1,9 @@
 ---
 slug: efficient-ordering-mode
-status: backlogged
+status: tasked
 logged: 2026-07-20
+plan: plan-efficient-ordering-mode-2026-07-20-5a1c.md
+tasks: tasks-efficient-ordering-mode-8403.md
 ---
 
 A second ranking mode that reaches a confident total ordering in as few comparisons as possible and honours manual drag-and-drop / move-up / move-down overrides exactly, rather than approximately — built as a constraint graph over the existing Comparison table (latest-wins pair edges, topological derivation with openskill ratings as tie-breaker, resumable binary-insertion selection that consults recorded edges before asking).
