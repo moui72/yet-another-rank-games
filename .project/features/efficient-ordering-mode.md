@@ -1,6 +1,6 @@
 ---
 slug: efficient-ordering-mode
-status: tasked
+status: implemented
 logged: 2026-07-20
 plan: plan-efficient-ordering-mode-2026-07-20-5a1c.md
 tasks: tasks-efficient-ordering-mode-8403.md
