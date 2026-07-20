@@ -60,3 +60,41 @@ export interface ConstraintEdge {
 	createdAt: string;
 	id: string;
 }
+
+/** Order-independent key for a pair of game ids (spec rule 1's "unordered pair"). */
+function pairKey(a: number, b: number): string {
+	return a < b ? `${a}:${b}` : `${b}:${a}`;
+}
+
+/**
+ * Compare two judgments/edges by the `(createdAt, id)` total order (spec).
+ * Returns >0 when `x` is newer than `y`, <0 when older, 0 only for the same id.
+ */
+export function compareRecency(
+	x: { createdAt: string; id: string },
+	y: { createdAt: string; id: string }
+): number {
+	if (x.createdAt !== y.createdAt) return x.createdAt < y.createdAt ? -1 : 1;
+	if (x.id !== y.id) return x.id < y.id ? -1 : 1;
+	return 0;
+}
+
+/**
+ * Derive the latest-wins constraint-edge set from a judgment log (spec rule 1).
+ * For each unordered pair only the newest judgment — max `(createdAt, id)` —
+ * contributes an edge; older judgments for the same pair are discarded.
+ */
+export function deriveEdges(judgments: readonly Judgment[]): ConstraintEdge[] {
+	const latest = new Map<string, Judgment>();
+	for (const jm of judgments) {
+		const key = pairKey(jm.winnerId, jm.loserId);
+		const current = latest.get(key);
+		if (!current || compareRecency(jm, current) > 0) latest.set(key, jm);
+	}
+	return [...latest.values()].map((jm) => ({
+		winnerId: jm.winnerId,
+		loserId: jm.loserId,
+		createdAt: jm.createdAt,
+		id: jm.id
+	}));
+}
