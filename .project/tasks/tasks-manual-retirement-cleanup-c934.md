@@ -1,7 +1,7 @@
 ---
 plan: plan-manual-retirement-cleanup-2026-07-20-890a.md
 generated: 2026-07-20
-status: ready
+status: in-progress
 ---
 
 # Tasks
