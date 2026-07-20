@@ -98,3 +98,56 @@ export function deriveEdges(judgments: readonly Judgment[]): ConstraintEdge[] {
 		id: jm.id
 	}));
 }
+
+/**
+ * Deterministic topological sort of `gameIds` under the constraint edges,
+ * using `scoreOf` (an openskill conservative score) purely as a tie-breaker
+ * for games the edges leave incomparable (spec: "the rating survives as a
+ * prior, not the authority"). Expects an acyclic edge set — run `breakCycles`
+ * first. Edges referencing games outside `gameIds` are ignored.
+ *
+ * Among the nodes currently free to place (in-degree 0), the highest `scoreOf`
+ * wins, tie-broken by position in `gameIds` so a fully-incomparable set
+ * degrades to exactly `rankGames`' stable score order.
+ */
+export function topologicalOrder(
+	gameIds: readonly number[],
+	edges: readonly ConstraintEdge[],
+	scoreOf: (id: number) => number
+): number[] {
+	const present = new Set(gameIds);
+	const index = new Map(gameIds.map((id, i) => [id, i]));
+	const successors = new Map<number, number[]>();
+	const inDegree = new Map<number, number>();
+	for (const id of gameIds) inDegree.set(id, 0);
+
+	for (const e of edges) {
+		if (!present.has(e.winnerId) || !present.has(e.loserId)) continue;
+		(successors.get(e.winnerId) ?? successors.set(e.winnerId, []).get(e.winnerId)!).push(e.loserId);
+		inDegree.set(e.loserId, (inDegree.get(e.loserId) ?? 0) + 1);
+	}
+
+	const better = (a: number, b: number): boolean => {
+		const sa = scoreOf(a);
+		const sb = scoreOf(b);
+		if (sa !== sb) return sa > sb;
+		return (index.get(a) ?? 0) < (index.get(b) ?? 0);
+	};
+
+	const available = gameIds.filter((id) => (inDegree.get(id) ?? 0) === 0);
+	const order: number[] = [];
+	while (available.length > 0) {
+		let bestIdx = 0;
+		for (let i = 1; i < available.length; i++) {
+			if (better(available[i], available[bestIdx])) bestIdx = i;
+		}
+		const [next] = available.splice(bestIdx, 1);
+		order.push(next);
+		for (const s of successors.get(next) ?? []) {
+			const d = (inDegree.get(s) ?? 0) - 1;
+			inDegree.set(s, d);
+			if (d === 0) available.push(s);
+		}
+	}
+	return order;
+}
