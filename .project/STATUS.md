@@ -1,6 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-20 (efficient-ordering-mode implemented, merged, and deployed to production. `/ardd-defects` run: 4 defects recorded, all from the manual-mode retirement — one broken-contract, three cosmetic. Constitution at v2.2.0.) Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-20 (efficient-ordering-mode live in production; the 4 defects from the manual-mode retirement all fixed via plan-manual-retirement-cleanup — orphaned /reorder endpoint deleted, three artifact wordings corrected. Constitution at v2.2.1. Coverage ratchet now runs in the local pre-commit hook.) Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -67,10 +67,10 @@ Clean sub-checks: every field `ui.md` displays or branches on exists in `datamod
 
 ## Code-vs-Artifact Defects
 
-- **4 defects — see `DEFECTS.md`, last verified 2026-07-20.** All from the `manual`-mode retirement.
-  - **1 broken-contract:** `POST /api/lists/[id]/reorder` is a live, auth-registered endpoint that writes *authored* `ListEntry` positions, violating datamodel's "never authored" invariant (and Principle VIII — it's the retired `ManualRanker`'s persist path, never deleted). Fix = delete the endpoint. **This is the one that matters** — it's reachable, and it's the exact dead-code follow-up flagged after the merge, now shown to be worse than cosmetic.
-  - **3 cosmetic wording-drifts** (artifacts stale vs code, all fixable via `/ardd-refine`): `datamodel:269` `ListEntry.score` says "null for manual lists"; `constitution:178` Principle VI describes a now-gone reachable render path; `constitution:108` says "no migration was needed" when a constraint migration was written.
-  - `design.md`, `infrastructure.md`, `ui.md` all clean against the code.
+- **All 4 defects FIXED** by `plan-manual-retirement-cleanup` (tasks `c934`, completed 4/4). `DEFECTS.md` still *lists* them (last verified 2026-07-20, before the fixes) — it is regenerated only by `/ardd-defects`, so **re-run `/ardd-defects` to clear it**; it should come back all-clear.
+  - `effeeb6d` (broken-contract) — `/api/lists/[id]/reorder` deleted (`ed24806`).
+  - `eeff61e9` — `datamodel` `ListEntry.score` note corrected (`f6f77e7`).
+  - `32c46184` + `a4eccafc` — two `constitution` wordings corrected in one PATCH bump, **v2.2.0 → v2.2.1** (`59c0498`).
 
 ## Audit
 
@@ -108,12 +108,17 @@ Nothing in flight. (Stale local branch `worktree-agent-adf423a6f0eb76edc` has no
 
 ## Work Queue
 
-- `tasks-manual-retirement-cleanup-c934.md` — **ready, 0/4**, plan `plan-manual-retirement-cleanup-2026-07-20-890a.md`, covers all 4 recorded defects. Two independent phases (endpoint deletion; artifact wording). No feature binding (defect scope). No other ready file, nothing in flight.
+- No ready tasks files. `tasks-manual-retirement-cleanup-c934.md` completed 4/4. `tasks-foundation-cd84.md` stays `in-progress` (41/46), Phase 6 deliberately superseded.
+
+## Local changes not yet pushed
+
+The 5 defect-cleanup + hook commits (through `59c0498`) are on local `main`, **not pushed**. Pushing triggers staging deploy (no schema change this time — the migrations already applied; `supabase db push` will find nothing new) and CI. Production stays put unless separately promoted.
 
 ## Recommended Next Step
 
-1. **`/ardd-implement`** — execute the 4 defect fixes. T001 (delete the `/reorder` endpoint) is the substantive one and clears both the datamodel invariant and Principle VIII; T002–T004 are the wording corrections, with T003+T004 sharing one constitution PATCH bump.
+1. **`/ardd-defects`** — re-run to regenerate `DEFECTS.md` clean now that all 4 are fixed (the file still lists them; it's single-writer).
 2. **`/ardd-diagram datamodel` / `/ardd-diagram ui`** — both `stale` after this session's edits; the enum and view changes are real diagram content this time.
+3. Push the local commits when ready.
 
 Deployment (resolved): both migrations applied to staging **and production** — production CHECK verified `pairwise/efficient/tier`, app serving. Feature is live.
 
