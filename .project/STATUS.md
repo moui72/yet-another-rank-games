@@ -1,6 +1,14 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-20 (ArDD updated v0.10.2 → v1.0.2; full cross-artifact analyze run. The manual/drag-to-order deprecation recorded in `ui.md` has not propagated to `constitution.md`, `design.md`, or `datamodel.md` — this is the one substantive issue outstanding.) Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-20 (efficient-ordering-mode implemented and merged to main — 23 tasks, delegated worktree run, fast-forward merge at 776f188. Two migrations merged but NOT yet applied to hosted DBs — see Deployment below. Constitution at v2.2.0.) Keep this current as artifacts are refined and open questions are resolved._
+
+## ⚠️ Deployment — action needed
+
+The `efficient-ordering-mode` merge added **two migrations that are not yet applied to staging or production**:
+- `20260720000000_ranking_method_add_efficient.sql` — additive, safe on existing rows.
+- `20260720010000_ranking_method_drop_manual.sql` — drops `manual` from the `ranking_method` CHECK. Self-guarding (the recreate fails if any `manual` row exists); verified zero rows in both environments during T021.
+
+As of this update, both hosted DBs are still at migration `20260715220100`. These deploy through the normal pipeline on merge/deploy — **confirm they actually applied to staging, then production, before considering the feature live.** Order matters only in that the drop must not precede the add on any single environment; since they share a deploy they apply in filename order, which is correct.
 
 ## Artifact Status
 
@@ -96,17 +104,17 @@ Nothing in flight. (Stale local branch `worktree-agent-adf423a6f0eb76edc` has no
 
 ## Work Queue
 
-- `tasks-efficient-ordering-mode-8403.md` — **ready, 0/23**, plan `plan-efficient-ordering-mode-2026-07-20-5a1c.md`, feature `efficient-ordering-mode`. No other ready tasks file and nothing in flight, so no pairwise contention to report.
+- No ready tasks files. `tasks-efficient-ordering-mode-8403.md` reached `completed`; `tasks-foundation-cd84.md` stays `in-progress` (41/46), its remaining Phase 6 deliberately superseded by multi-env-deploy.
+
+## Known follow-ups from the efficient-ordering-mode merge
+
+- **Dead endpoint:** `src/routes/api/lists/[id]/reorder/+server.ts` was `ManualRanker`'s only caller (`EfficientRanker` uses `/override`). It doesn't reference the retired enum value, so it fell outside the retirement tasks and is still present — Principle VIII (No Dead Architecture) says it should go. Small `/ardd-feedback` or a direct cleanup.
+- **Open feedback still unaddressed:** the pairwise `moveUp`-reverts-on-reload bug (`feedback-move-up-down-reverts-on-reload-2fd0.md`) — the new mode doesn't have it, but the *pairwise* mode still does. Unreproduced against a running app.
 
 ## Recommended Next Step
 
-**`/ardd-implement`** — 23 tasks ready across 6 phases. Phases 1–3 are pure functions over the existing comparison log, unit-testable without a database.
+1. **Confirm the two migrations applied** to staging then production (see Deployment above) — the feature isn't actually usable until they do.
+2. **`/ardd-defects`** — last run 2026-07-16, before all of this session's changes. The retirement of `manual` was written into the artifacts ahead of code across several steps; a fresh code-vs-artifact pass confirms the tree and docs now agree (they should).
+3. **`/ardd-diagram datamodel` / `/ardd-diagram ui`** — both flagged `stale` after this session's edits; the enum and view changes are real diagram content this time, not just prose.
 
-Two things to know before starting:
-
-- **The artifacts now describe the `manual` retirement in the past tense while the code still has it.** That is the intended ArDD lead-code pattern, but it means `/ardd-defects` will legitimately flag the gap until T021–T023 land. Don't "fix" the artifacts in response.
-- **T021 re-verifies the zero-row count itself** rather than trusting this session's snapshot, and stops if any `manual` row appeared in the interim.
-
-Then **`/ardd-defects`** — last run 2026-07-16, predates every artifact change since. Two documented claims turned out to contradict the code in a single session ("not user-reachable"; the novelty-vs-info-gain description of the selector), so a fresh pass is worth more than usual.
-
-Housekeeping still pending: `.gitignore` breadth, README ArDD badge still reading v0.10.2 (installed is v1.0.2), `merge.ours.driver`, and stale diagram flags on `datamodel`/`ui`.
+Housekeeping still pending: `.gitignore` breadth, README ArDD badge still reading v0.10.2 (installed is v1.0.2), `merge.ours.driver`.
