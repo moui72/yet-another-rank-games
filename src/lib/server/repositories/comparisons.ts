@@ -33,6 +33,44 @@ export function recordComparison(
 		.executeTakeFirstOrThrow();
 }
 
+/**
+ * Record k pairwise judgments (constraint edges) for a list in a **single**
+ * upsert statement — the batched write a long efficient-mode override produces
+ * (T013). Pairs are canonically ordered and the insert upserts on
+ * `(listId, gameA, gameB)` exactly like {@link recordComparison}, so a batched
+ * write and a single record can never diverge: re-judging a pair overwrites its
+ * `winnerId`/`createdAt` rather than inserting a duplicate. All rows share one
+ * `createdAt` (one statement, one instant); the `(createdAt, id)` total order
+ * the derivation keys on stays well-defined via the row id tie-break.
+ *
+ * `edges` must not contain the same unordered pair twice — a single override
+ * never does (each crossed game is distinct) — since Postgres rejects a batch
+ * that affects the same conflict row twice.
+ */
+export async function recordComparisons(
+	db: Kysely<Database>,
+	input: { listId: string; edges: readonly { winnerId: number; loserId: number }[] }
+): Promise<Comparison[]> {
+	if (input.edges.length === 0) return [];
+	const now = new Date().toISOString();
+	const values = input.edges.map((e) => {
+		const [gameA, gameB] =
+			e.winnerId < e.loserId ? [e.winnerId, e.loserId] : [e.loserId, e.winnerId];
+		return { listId: input.listId, gameA, gameB, winnerId: e.winnerId };
+	});
+	return db
+		.insertInto('comparisons')
+		.values(values)
+		.onConflict((oc) =>
+			oc.columns(['listId', 'gameA', 'gameB']).doUpdateSet((eb) => ({
+				winnerId: eb.ref('excluded.winnerId'),
+				createdAt: now
+			}))
+		)
+		.returningAll()
+		.execute();
+}
+
 /** Delete the most recent comparison for a list (undo). */
 export async function deleteLastComparison(db: Kysely<Database>, listId: string): Promise<void> {
 	const last = await db

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { db, sql } from '../db';
-import { recordComparison, listComparisons } from './comparisons';
+import { recordComparison, recordComparisons, listComparisons } from './comparisons';
 import { createPool, addPoolGames } from './pools';
 import { createList } from './lists';
 import { upsertGame } from './games';
@@ -68,5 +68,41 @@ describe('recordComparison (ardd-audit 2026-07-15: no double-weighting on re-jud
 		const rows = await listComparisons(db, listId);
 		expect(rows).toHaveLength(1);
 		expect(rows[0].winnerId).toBe(b);
+	});
+});
+
+describe('recordComparisons (T013: batched k-edge upsert)', () => {
+	it('inserts k canonically-ordered rows in one statement', async () => {
+		const { listId, a, b } = await setup();
+		const c = (await upsertGame(db, thing(3, 'C'))).id;
+		const rows = await recordComparisons(db, {
+			listId,
+			edges: [
+				{ winnerId: b, loserId: a }, // b higher id, passed winner-first
+				{ winnerId: a, loserId: c }
+			]
+		});
+		expect(rows).toHaveLength(2);
+		const all = await listComparisons(db, listId);
+		expect(all).toHaveLength(2);
+		// Canonicalised: lower game id in gameA regardless of winner side.
+		for (const r of all) expect(r.gameA).toBeLessThan(r.gameB);
+	});
+
+	it('cannot diverge from recordComparison — a batched re-judge upserts, not duplicates', async () => {
+		const { listId, a, b } = await setup();
+		await recordComparison(db, { listId, gameA: a, gameB: b, winnerId: a });
+		// Batched write re-judges the same pair the other way.
+		await recordComparisons(db, { listId, edges: [{ winnerId: b, loserId: a }] });
+		const all = await listComparisons(db, listId);
+		expect(all).toHaveLength(1);
+		expect(all[0].winnerId).toBe(b);
+	});
+
+	it('is a no-op for an empty edge list', async () => {
+		const { listId } = await setup();
+		const rows = await recordComparisons(db, { listId, edges: [] });
+		expect(rows).toEqual([]);
+		expect(await listComparisons(db, listId)).toHaveLength(0);
 	});
 });
