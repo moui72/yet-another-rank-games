@@ -10,6 +10,8 @@ export function rankingMethodLabel(method: RankingMethod): string {
 	switch (method) {
 		case 'pairwise':
 			return 'Pairwise';
+		case 'efficient':
+			return 'Efficient';
 		case 'manual':
 			return 'Manual';
 		case 'tier':

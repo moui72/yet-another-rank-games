@@ -10,7 +10,7 @@
  */
 
 /** How a list's order is produced. */
-export type RankingMethod = 'pairwise' | 'manual' | 'tier';
+export type RankingMethod = 'pairwise' | 'efficient' | 'manual' | 'tier';
 
 /** Whether a list is still being ranked or finalized. */
 export type ListStatus = 'in_progress' | 'complete';
