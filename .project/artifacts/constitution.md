@@ -1,7 +1,31 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.1.0 → 2.0.0
+Version change: 2.0.0 → 2.1.0
+Rationale: `ui.md` deprecated manual drag-to-order in favor of pairwise-only
+  ranking, but the constitution was never amended to match — it still scoped
+  drag-to-order as a live override and named "drag-to-order flows" as a WCAG
+  AA release gate, gating a flow that is not user-reachable. Governance
+  requires the constitution describe what is actually true (Principle VIII,
+  No Dead Architecture, applied to the governing document itself).
+Modified (MINOR — material narrowing, no principle added or removed):
+  - Project Scope & Intent: pairwise is now stated as the sole ranking method.
+    Manual drag-to-order recorded as evaluated and deprecated. The shipped
+    move-up/move-down controls described accurately as synthetic comparisons
+    through the pairwise model, not authored positions. Tiering retained as a
+    possible later feature, now cross-referenced to `revisit-ranking-modes`.
+  - Principle VI (Accessibility): the AA release gate no longer names
+    drag-to-order flows; it names the pairwise flow and the move-up/move-down
+    controls, noting these were chosen over drag-and-drop for accessibility.
+    The bar itself is unchanged — still full WCAG 2.1 AA.
+  - Development Workflow item 3: corrected a stale reference to the renamed
+    `/ardd-critique` skill (now `/ardd-audit`). Wording fix only.
+Follow-up required (not applied here — separate artifacts):
+  `design.md:22,84,95` still list drag-order/`ManualRanker` as current, and
+  `datamodel.md:50-53,216-221` still describe the manual authored-`ListEntry`
+  model in present tense.
+Prior report (2.0.0):
+  Version change: 1.1.0 → 2.0.0
 Modified (MAJOR — principle redefinition/removal): shrank the principle list
   from 15 to 11 for a solo-hobby-project-appropriate governance surface
   (ardd-audit finding, 2026-07-15):
@@ -27,9 +51,11 @@ Prior report (1.0.0):
 ---
 name: constitution
 status: stable
-last_updated: 2026-07-15
+last_updated: 2026-07-20
 workflow_mode: solo
 next_step_prompt: true
+delegation: eager
+merge_policy: auto
 ---
 
 # yet-another-rank-games Constitution
@@ -41,8 +67,12 @@ from their Board Game Geek (BGG) collection. A single collection feeds many
 lists, each scoped by a theme or filter — "top 10 co-op," "top 10 heavy,"
 "top 100 of all time." The primary, "fun" ranking interface is **pairwise
 comparison** (repeatedly choose the better of two games, from which a full
-ordering is inferred), with **manual drag-to-order** as an override and
-**tiering** as a possible later feature.
+ordering is inferred), and it is the **sole** ranking method offered. Users
+can nudge a ranked list directly with per-row move-up/move-down controls,
+but these are expressed as synthetic comparisons through the same pairwise
+model rather than as authored positions. Manual drag-to-order was evaluated
+and **deprecated**; **tiering** remains a possible later feature (tracked as
+`revisit-ranking-modes`).
 
 This is a **multi-user product** with real accounts, a hosted backend, and a
 real database — built as a hobby project that must stay cheap to run unless it
@@ -97,7 +127,9 @@ inside the product with no export path.
 
 The UI is usable without a mouse or perfect vision: logical tab order, readable
 contrast, labeled controls, keyboard-operable interactions — including the
-pairwise and drag-to-order flows. **The bar is full WCAG 2.1 AA compliance**,
+pairwise comparison flow and the move-up/move-down ranking controls, which
+were chosen over drag-and-drop precisely because they are accessible by
+construction. **The bar is full WCAG 2.1 AA compliance**,
 treated as a release gate: each feature is checked against AA (automated axe
 checks plus contrast and keyboard/screen-reader passes) before it ships.
 
@@ -198,7 +230,7 @@ environment with real data.
    simplification, an unintentional gap awaiting future work, etc.) does so
    under a `## Production Annotations` heading — not inline prose elsewhere
    in the artifact — so `/ardd-plan`'s Production Annotation Summary step and
-   `/ardd-critique` can rely on a single, consistent place to find them.
+   `/ardd-audit` can rely on a single, consistent place to find them.
 
 ## Governance
 
@@ -212,4 +244,4 @@ Amendments require:
    clarifications or wording fixes.
 4. `last_updated` date updated in frontmatter.
 
-**Version**: 2.0.0 | **Ratified**: 2026-07-10 | **Last Amended**: 2026-07-15
+**Version**: 2.1.0 | **Ratified**: 2026-07-10 | **Last Amended**: 2026-07-20
