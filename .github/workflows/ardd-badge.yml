@@ -1,11 +1,12 @@
 name: ArDD version badge sync
 
 # Keeps .github/badges/ardd-version.json in sync with
-# .project/ardd-version.md — regenerates the shields.io endpoint-badge JSON
+# .project/ardd-version.md — regenerates the shieldcn dynamic-badge JSON
 # whenever that file changes (via /ardd-update, a manual edit, or anything
 # else that touches it), and commits only if the JSON actually differs.
-# Note: the endpoint badge that reads this JSON renders only for public
-# repos — shields.io fetches raw.githubusercontent.com unauthenticated.
+# Note: the dynamic badge that reads this JSON renders only for public
+# repos — shieldcn (like shields.io before it) fetches
+# raw.githubusercontent.com unauthenticated.
 on:
   push:
     branches: [main]
@@ -56,26 +57,20 @@ jobs:
           # block's common indent before the shell ever sees the script, so
           # the emitted JSON is unchanged; a column-0 heredoc here is
           # invalid YAML (ff0c F001).
+          #
+          # shieldcn's dynamic-badge endpoint (badge/dynamic/json.svg) reads
+          # {label, value, color, link} — not shields.io's {schemaVersion,
+          # message, labelColor}. label/color here are readable fallbacks;
+          # the README badge URL overrides label/variant/theme itself, so
+          # only "value" (and "link", for the click-through) are load-bearing.
           cat > "$OUT" <<JSON
           {
-            "schemaVersion": 1,
             "label": "built with ArDD",
-            "message": "$message",
+            "value": "$message",
             "color": "$color",
-            "labelColor": "#7C3AED"
+            "link": "https://github.com/moui72/artifact-driven-dev"
           }
           JSON
-
-          # Inline the badge mark from the icon file install.sh shipped
-          # alongside this workflow — the file is the source of truth,
-          # embedded at generation time (never escaped SVG pasted here).
-          ICON=".github/badges/ardd-icon.svg"
-          if [ -f "$ICON" ]; then
-            jq --rawfile svg "$ICON" '. + {logoSvg: $svg}' "$OUT" > "$OUT.tmp"
-            mv "$OUT.tmp" "$OUT"
-          else
-            echo "Note: $ICON not found — badge JSON written without logoSvg."
-          fi
 
       - name: Commit if changed
         run: |

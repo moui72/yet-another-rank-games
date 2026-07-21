@@ -1,6 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-21 — planned inline-help + F001 fix (tasks ready). Diagrams: `ui` stale after the Help edit; others current. Defects all-clear, ArDD v1.0.3. Two ranking modes (pairwise + efficient) live in production. Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-21 — ArDD updated to v1.0.4 (`/ardd-update`), no other state changes. Diagrams: `ui` stale after the Help edit; others current. Defects all-clear. Two ranking modes (pairwise + efficient) live in production. Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -58,10 +58,14 @@ Nothing in flight — no worktrees, no reapable branches.
 
 ## Local Changes Not Yet Pushed
 
-One commit (`873351f`, the advisory-nudge UX addition to the plan) sits on local `main` ahead of `origin`. Everything earlier this session — the defect cleanup, diagram regen, ArDD v1.0.3, and the dynamic badge — is pushed and live.
+Two files uncommitted from this session's routine check + `/ardd-update`: `.project/STATUS.md`, `.project/ardd-version.md` (now recording `68970e8` / v1.0.4). Local `main` otherwise matches `origin/main`.
+
+## ArDD Update
+
+Up to date — installed `68970e8` (v1.0.4).
 
 ## Summary
 
 0 issues. Recommended next step: **`/ardd-implement`** — `tasks-inline-help-and-move-fix-d5db.md` is ready (9 tasks: the F001 fix incl. a surprising-result nudge toast, plus the inline-help feature). The two tracks share no files, so they could also be split across separate implement runs.
 
-Also pending (plain, not skill invocations): `ui.md` diagram is `stale` again after the Help-section edit (`/ardd-diagram ui`); several unpushed commits on local `main` (F001 research, this plan, plus the earlier badge/ArDD batch — the dynamic badge won't render until pushed); ArDD housekeeping (narrow `.gitignore` `.claude/` → `.claude/skills/ardd-*/`; `git config merge.ours.driver true`).
+Also pending (plain, not skill invocations): `ui.md` diagram is `stale` again after the Help-section edit (`/ardd-diagram ui`); ArDD housekeeping (narrow `.gitignore` `.claude/` → `.claude/skills/ardd-*/`; `git config merge.ours.driver true`).

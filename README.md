@@ -1,7 +1,7 @@
 # yet-another-rank-games
 
 <!-- ardd-badge-version-start -->
-[![built with ArDD](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/moui72/yet-another-rank-games/main/.github/badges/ardd-version.json)](https://github.com/moui72/artifact-driven-dev)
+[![built with ArDD](https://shieldcn.dev/badge/dynamic/json.svg?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmoui72%2Fyet-another-rank-games%2Fmain%2F.github%2Fbadges%2Fardd-version.json&query=%24.value&label=built%20with%20ArDD&variant=secondary&labelColor=%237C3AED)](https://github.com/moui72/artifact-driven-dev)
 <!-- ardd-badge-version-end -->
 [![sponsor](https://shieldcn.dev/badge/sponsor-%E2%9D%A4-ea4aaa.svg?variant=secondary&theme=pink)](https://github.com/sponsors/moui72)
 
