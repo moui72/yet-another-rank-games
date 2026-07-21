@@ -58,7 +58,7 @@ Nothing in flight — no worktrees, no reapable branches.
 
 ## Local Changes Not Yet Pushed
 
-Several commits sit on local `main` ahead of `origin` — the defect-cleanup batch, diagram regen, ArDD v1.0.3 update, and the README dynamic-badge swap. **The dynamic version badge won't render until pushed** (shields.io fetches `raw.githubusercontent.com`).
+One commit (`873351f`, the advisory-nudge UX addition to the plan) sits on local `main` ahead of `origin`. Everything earlier this session — the defect cleanup, diagram regen, ArDD v1.0.3, and the dynamic badge — is pushed and live.
 
 ## Summary
 
