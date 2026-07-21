@@ -67,10 +67,7 @@ Clean sub-checks: every field `ui.md` displays or branches on exists in `datamod
 
 ## Code-vs-Artifact Defects
 
-- **All 4 defects FIXED** by `plan-manual-retirement-cleanup` (tasks `c934`, completed 4/4). `DEFECTS.md` still *lists* them (last verified 2026-07-20, before the fixes) — it is regenerated only by `/ardd-defects`, so **re-run `/ardd-defects` to clear it**; it should come back all-clear.
-  - `effeeb6d` (broken-contract) — `/api/lists/[id]/reorder` deleted (`ed24806`).
-  - `eeff61e9` — `datamodel` `ListEntry.score` note corrected (`f6f77e7`).
-  - `32c46184` + `a4eccafc` — two `constitution` wordings corrected in one PATCH bump, **v2.2.0 → v2.2.1** (`59c0498`).
+- **0 defects — `DEFECTS.md` all-clear, re-verified 2026-07-20.** The 4 from the earlier run (all `manual`-retirement) were fixed by `plan-manual-retirement-cleanup` (`c934`, 4/4) and each re-verified against code: `/reorder` endpoint deleted (`ed24806`), `datamodel` score note (`f6f77e7`), two `constitution` wordings in one PATCH → v2.2.1 (`59c0498`).
 
 ## Audit
 
@@ -116,9 +113,8 @@ The 5 defect-cleanup + hook commits (through `59c0498`) are on local `main`, **n
 
 ## Recommended Next Step
 
-1. **`/ardd-defects`** — re-run to regenerate `DEFECTS.md` clean now that all 4 are fixed (the file still lists them; it's single-writer).
-2. **`/ardd-diagram datamodel` / `/ardd-diagram ui`** — both `stale` after this session's edits; the enum and view changes are real diagram content this time.
-3. Push the local commits when ready.
+1. **`/ardd-diagram datamodel` / `/ardd-diagram ui`** — both `stale` after this session's edits; the enum and view changes are real diagram content this time.
+2. ArDD housekeeping (below) whenever convenient.
 
 Deployment (resolved): both migrations applied to staging **and production** — production CHECK verified `pairwise/efficient/tier`, app serving. Feature is live.
 
