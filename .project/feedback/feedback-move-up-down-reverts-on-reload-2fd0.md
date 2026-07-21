@@ -41,3 +41,21 @@ plan:
   Not yet reproduced against a running app — identified by reading the code
   and by the research simulation. Worth confirming manually before fixing.
   [artifacts: datamodel, ui]
+
+  **UPDATE 2026-07-21 — reproduced in-browser; causal story refined.** See
+  `.project/plans/research-pairwise-manual-reorder-reload-divergence-2026-07-21-49c5.md`.
+  The user-visible revert is real (a game deliberately moved to rank 1
+  reverted to rank 3 on reload, and untouched games reshuffled). But the "only
+  one row persists / replay sees fewer observations" story above is only half
+  right: no rows are lost (12 judgments → 12 rows), and simple single-game
+  pushes actually survive reload. The dominant mechanism is **replay-order
+  divergence**: `listComparisons` replays in `(createdAt, id)` order, the
+  rating build (`ratingsFromComparisons`) is sequential/order-dependent, and
+  the upsert bumps `createdAt` on any re-judged pair — relocating it to the end
+  of the replay while the live session kept it in place. The two logs re-derive
+  different orders. Recommended fix: make the client rebuild its
+  `PairwiseSession` from the server's canonical replayed log after move-writes
+  (WYSIWYG — no schema change, keeps the move advisory). The constraint-graph
+  "pinned override edge" hybrid is reserved for *if* the product decides
+  pairwise moves must be authoritative — a separate, larger proposal.
+  Open product question: advisory (recommended) vs authoritative.
