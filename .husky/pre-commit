@@ -21,6 +21,10 @@ npx lint-staged
 # + test + ratchet as the gate of record, so anything the staged-only local
 # lint misses is still caught before merge.
 if git diff --cached --name-only | grep -qE '\.(js|ts|svelte)$'; then
-	npm run check
+	# check:fast uses the tsgo engine (@typescript/native-preview) — a faster
+	# whole-project typecheck for local commits. CI runs the canonical
+	# `npm run check` (svelte-check without tsgo) as the sound gate of record,
+	# so any rare tsgo/tsc diagnostic difference is still caught before merge.
+	npm run check:fast
 	npm run coverage:ratchet
 fi
