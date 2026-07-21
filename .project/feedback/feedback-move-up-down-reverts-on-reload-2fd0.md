@@ -1,5 +1,5 @@
 ---
-status: open
+status: planned
 created: 2026-07-20
 plan:
 ---
@@ -8,7 +8,7 @@ plan:
 
 ## Bug
 
-- [ ] F001 A move-up/move-down adjustment can appear to work in-session and
+- [x] F001 A move-up/move-down adjustment can appear to work in-session and
   then partially or fully revert after a reload. `PairwiseSession.moveUp`
   (`src/lib/pairwiseSession.svelte.ts:85`) emits one synthetic `Comparison`
   per move through `choose()`, but an override that contradicts several

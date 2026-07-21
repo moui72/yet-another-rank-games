@@ -1,6 +1,6 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-21 — full `/ardd-status` pass. Everything internally consistent: diagrams current, defects all-clear, ArDD at v1.0.3. Two ranking modes (pairwise + efficient) live in production. Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-21 — planned inline-help + F001 fix (tasks ready). Diagrams: `ui` stale after the Help edit; others current. Defects all-clear, ArDD v1.0.3. Two ranking modes (pairwise + efficient) live in production. Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -25,7 +25,7 @@ None. The `manual`-mode retirement drift (4 defects) was fixed and re-verified t
 
 - datamodel.md — current ✅
 - infrastructure.md — current ✅
-- ui.md — current ✅ (regenerated with the Efficient ranking view + mode-branch)
+- ui.md — stale ⚠️ (run `/ardd-diagram ui`) — Help & info text section added 2026-07-21
 
 ## Code-vs-Artifact Defects
 
@@ -33,12 +33,11 @@ None. The `manual`-mode retirement drift (4 defects) was fixed and re-verified t
 
 ## Feedback
 
-- **1 open** (`feedback-move-up-down-reverts-on-reload-2fd0.md`) — the pairwise `moveUp`/`moveDown` adjustment can silently revert on reload (synthetic repeats collapse under the per-pair upsert). **Still unreproduced against a running app** — reproduce before planning a fix, and weigh any fix against the constraint-graph direction that would dissolve it. Will be offered by the next `/ardd-plan`.
-- 1 planned (`feedback-unranked-collapsible-pool-games-d07e.md`) — already consumed, not open.
+- 0 open. `feedback-move-up-down-reverts-on-reload-2fd0.md` (F001) — reproduced in-browser, diagnosis corrected (replay-order divergence), product decision **advisory**, now `planned` and bound to `plan-inline-help-and-move-fix`. `feedback-unranked-collapsible-pool-games-d07e.md` — planned earlier.
 
 ## Feature Backlog
 
-- **1 backlogged** (`in-app-help-and-info-text`) · 0 planned · 0 tasked · **8 implemented** · **1 subsumed** (`revisit-ranking-modes`) — see `.project/features/`. Target the backlogged slug with `/ardd-plan in-app-help-and-info-text`.
+- 0 backlogged · 0 planned · **1 tasked** (`in-app-help-and-info-text`) · **8 implemented** · **1 subsumed** (`revisit-ranking-modes`) — see `.project/features/`.
 
 ## Documented but Untracked
 
@@ -46,7 +45,8 @@ None. The `manual`-mode retirement drift (4 defects) was fixed and re-verified t
 
 ## Work Queue
 
-No `ready` tasks files. `tasks-foundation-cd84.md` remains `in-progress` (41/46) — its remaining Phase 6 (T035–T039) is deliberately superseded by `multi-env-deploy`, not real pending work, and no worktree claims it.
+- `tasks-inline-help-and-move-fix-d5db.md` — **ready, 0/8**, plan `plan-inline-help-and-move-fix-2026-07-21-683a.md`, feature `in-app-help-and-info-text` + feedback F001. Two independent tracks: Phase 1 (F001 fix) and Phases 2–3 (inline help) share no files. No other ready file, nothing in flight.
+- `tasks-foundation-cd84.md` remains `in-progress` (41/46) — Phase 6 deliberately superseded, no worktree claims it.
 
 ## In Flight
 
@@ -62,6 +62,6 @@ Several commits sit on local `main` ahead of `origin` — the defect-cleanup bat
 
 ## Summary
 
-0 issues. Safe to `/ardd-plan`: **yes**. Recommended next step: **push the local commits** (the README badge needs it to render, and it promotes the cleanup toward production). After that, `/ardd-plan in-app-help-and-info-text` is the one actionable backlog item; the open `moveUp` feedback needs reproduction before it's worth planning.
+0 issues. Recommended next step: **`/ardd-implement`** — `tasks-inline-help-and-move-fix-d5db.md` is ready (8 tasks: the F001 fix + the inline-help feature). The two tracks share no files, so they could also be split across separate implement runs.
 
-Standing housekeeping (optional, all surfaced by `install.sh`): narrow the `.gitignore` `.claude/` pattern to `.claude/skills/ardd-*/`; `git config merge.ours.driver true` for automatic report-file merges.
+Also pending (plain, not skill invocations): `ui.md` diagram is `stale` again after the Help-section edit (`/ardd-diagram ui`); several unpushed commits on local `main` (F001 research, this plan, plus the earlier badge/ArDD batch — the dynamic badge won't render until pushed); ArDD housekeeping (narrow `.gitignore` `.claude/` → `.claude/skills/ardd-*/`; `git config merge.ours.driver true`).

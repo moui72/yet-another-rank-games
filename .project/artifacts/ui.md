@@ -1,10 +1,10 @@
 ---
 name: ui
 status: draft
-last_updated: 2026-07-20
+last_updated: 2026-07-21
 diagram_type: graph TD
 render_section: UI
-diagram_status: current
+diagram_status: stale
 ---
 
 # UI
@@ -148,6 +148,15 @@ screens, 3 at `sm`, 4 at `md` and up.
   — manual intent becomes a comparison, and the existing engine absorbs it
   like any other. Works identically whether the ranking is complete or
   incomplete; no restriction to post-completion is needed.
+  - **The move is advisory, and WYSIWYG across reloads** (feedback F001): a
+    nudge is a comparison the rating model weighs, not an authoritative pin, so
+    a move against strong contrary evidence may settle somewhere other than
+    exactly one spot over. What is guaranteed is that **the order shown after a
+    move is the order a reload produces** — after each move-write the client
+    re-syncs its session to the server's canonical replayed comparison log, so
+    the derived order can never silently differ between the live session and a
+    reload. (Authoritative "the drop sticks exactly" ordering is the
+    `efficient` mode's contract, not this one.)
 
 ### Ranking engine & matchup selection (decided)
 
@@ -256,6 +265,39 @@ fewest comparisons it can and treats a manual reorder as authoritative. See
 - [OPEN: public sharing model — whether a list can be exposed as a read-only
   shareable link (and its privacy/visibility rules) is a deferred product
   decision, separate from the export formats above, which stand on their own.]
+
+## Help & info text (feature `in-app-help-and-info-text`)
+
+The product's mental model is not self-evident from the UI: pools sit between
+collections and lists, and orderings are *derived* from comparisons rather than
+authored. Rather than a separate manual or help page, explanatory help is
+**inline and contextual** — it sits on the view where the confusion arises, so
+the user never leaves their flow to find it.
+
+- **One reusable affordance.** A small `InfoPopover` component (an info "ⓘ"
+  trigger that reveals a short blurb) — keyboard-operable and screen-reader
+  labelled per Principle VI, dismissible, no new dependency beyond the existing
+  DaisyUI/Tailwind layer. Content is plain copy, not generated.
+- **Where help attaches, and what each blurb explains:**
+  - **Pool builder + list creation** — the **Collection → Pool → List**
+    hierarchy: a collection is your imported BGG set; a pool is a reusable
+    curated group built from it; a list ranks a pool, and many lists can rank
+    the same pool differently.
+  - **Pool builder filter** — the filter's **include/exclude** semantics and
+    that multiple includes combine with **AND** (as implemented in
+    `listFilter`), so the user understands why a narrow filter returns few
+    games.
+  - **Pairwise ranking view** — **what pairwise is doing** (repeatedly pick the
+    better of two; a full order is inferred) and **why a list can be stopped
+    early and resumed** (the order is valid and persisted at any number of
+    comparisons).
+  - **List result / export view** — **what each export format is** (Markdown /
+    CSV / JSON / GeekList) and when to reach for which.
+- **States:** collapsed (just the trigger) and expanded (blurb shown). No
+  loading/error states — content is static and local.
+- Copy is intentionally brief; this is orientation, not documentation. It does
+  not attempt to explain the ranking algorithm's internals (that is a design
+  note, not user-facing help).
 
 ## Tiering (deferred)
 

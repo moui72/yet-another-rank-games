@@ -1,0 +1,24 @@
+---
+plan: plan-inline-help-and-move-fix-2026-07-21-683a.md
+generated: 2026-07-21
+status: ready
+---
+
+# Tasks
+
+## Phase 1: F001 — session/replay convergence
+
+- [ ] T001 Test-first: add a failing unit test that reproduces the pairwise move reload divergence deterministically, then confirm the fix closes it. Use the research recipe as the fixture (`.project/plans/research-pairwise-manual-reorder-reload-divergence-2026-07-21-49c5.md`): a 6-game list with a 10-row partial prior, then Juliet ▲×3 and India ▼×2. Assert that the order derived from the *live* client `PairwiseSession.log` (append-only) diverges from the order derived from the *server replayed* log (deduped, `createdAt`-bumped, ordered by `(createdAt, id)`) — using `ratingsFromComparisons`/`rankGames` from `src/lib/domain/ranking.ts` and the persistence/replay semantics of `src/lib/server/repositories/comparisons.ts`. This test is the regression guard; it must fail before T002/T003 and pass after.
+- [ ] T002 Make `POST /api/lists/[id]/compare` (`src/routes/api/lists/[id]/compare/+server.ts`) return the canonical replayed comparison log alongside `{ ok: true }`: after `recordComparisonAndRecompute`, read the persisted log via `listComparisons` and map it to the client `Choice[]` shape (`{ winnerId, loserId }`, loser = the non-winner of the canonical pair) — the same shape the list-page load already builds in `src/routes/lists/[id]/+page.server.ts`. Keep the existing `{ ok }` field for compatibility. Integration test that the returned log matches what a fresh page load would replay.
+- [ ] T003 In `src/lib/components/PairwiseRanker.svelte`, after a move-up/move-down persist resolves, rebuild `PairwiseSession` from the canonical log returned by T002 (replacing the client's append-only log) so the displayed Ranked order equals the reload-derived order. Preserve `excludedIds`/`gameIds` across the rebuild. Do not change the real-pick (`choose`) or undo paths' behavior beyond consuming the now-returned log if convenient. Verify the T001 divergence no longer occurs and the existing pairwise e2e (`e2e/ranking.spec.ts`) still passes.
+
+## Phase 2: Help — InfoPopover component
+
+- [ ] T004 [artifacts: ui, design] [parallel] Test-first: create `src/lib/components/InfoPopover.svelte` — an "ⓘ" trigger that toggles a short static blurb (passed as a slot/child or prop), with collapsed and expanded states only. Keyboard-operable (open/close, Esc to dismiss), `aria`-labelled and `aria-expanded` wired, focus-manageable per constitution Principle VI. No new dependency (DaisyUI/Tailwind + Svelte 5 runes). Component test covers toggle behavior and the accessibility attributes; include an axe assertion on the rendered open state.
+
+## Phase 3: Help — attach contextual blurbs to the views
+
+- [ ] T005 [artifacts: ui] Compose `InfoPopover` into the pool builder (`src/routes/pools/[id]/+page.svelte`): one blurb on the Collection → Pool → List hierarchy, one on the filter's include/exclude semantics and that multiple includes combine with AND (matching `src/lib/domain/listFilter.ts`). Copy per `ui.md`'s "Help & info text" section; keep it brief (orientation, not documentation).
+- [ ] T006 [artifacts: ui] [parallel] Compose `InfoPopover` into list creation (the create-list form on `src/routes/pools/[id]/+page.svelte`) with the hierarchy blurb, and into the pairwise ranking view (`src/lib/components/PairwiseRanker.svelte`): what pairwise is doing, and why a list can be stopped early and resumed. Copy per `ui.md`.
+- [ ] T007 [artifacts: ui] [parallel] Compose `InfoPopover` into the list result / export view (`src/routes/lists/[id]/+page.svelte` export section) explaining what each export format is (Markdown / CSV / JSON / GeekList) and when to use which. Copy per `ui.md`.
+- [ ] T008 Run an axe accessibility scan (extend `e2e/`) over the views carrying the new popovers, confirming every trigger is keyboard-operable and labelled with zero WCAG 2.1 AA violations (constitution Principle VI release gate).

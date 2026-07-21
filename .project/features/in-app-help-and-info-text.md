@@ -1,7 +1,9 @@
 ---
 slug: in-app-help-and-info-text
-status: backlogged
+status: tasked
 logged: 2026-07-20
+plan: plan-inline-help-and-move-fix-2026-07-21-683a.md
+tasks: tasks-inline-help-and-move-fix-d5db.md
 ---
 
 In-app help and explanatory info text covering how the product's concepts and flows work — the Collection → Pool → List hierarchy, what pairwise comparison is doing and why a list can be stopped early and resumed, what the pool filter's include/exclude semantics mean, and how exports work.
