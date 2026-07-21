@@ -45,7 +45,7 @@ None. The `manual`-mode retirement drift (4 defects) was fixed and re-verified t
 
 ## Work Queue
 
-- `tasks-inline-help-and-move-fix-d5db.md` — **ready, 0/8**, plan `plan-inline-help-and-move-fix-2026-07-21-683a.md`, feature `in-app-help-and-info-text` + feedback F001. Two independent tracks: Phase 1 (F001 fix) and Phases 2–3 (inline help) share no files. No other ready file, nothing in flight.
+- `tasks-inline-help-and-move-fix-d5db.md` — **ready, 0/9**, plan `plan-inline-help-and-move-fix-2026-07-21-683a.md`, feature `in-app-help-and-info-text` + feedback F001. Two independent tracks: Phase 1 (F001 fix) and Phases 2–3 (inline help) share no files. No other ready file, nothing in flight.
 - `tasks-foundation-cd84.md` remains `in-progress` (41/46) — Phase 6 deliberately superseded, no worktree claims it.
 
 ## In Flight
@@ -62,6 +62,6 @@ Several commits sit on local `main` ahead of `origin` — the defect-cleanup bat
 
 ## Summary
 
-0 issues. Recommended next step: **`/ardd-implement`** — `tasks-inline-help-and-move-fix-d5db.md` is ready (8 tasks: the F001 fix + the inline-help feature). The two tracks share no files, so they could also be split across separate implement runs.
+0 issues. Recommended next step: **`/ardd-implement`** — `tasks-inline-help-and-move-fix-d5db.md` is ready (9 tasks: the F001 fix incl. a surprising-result nudge toast, plus the inline-help feature). The two tracks share no files, so they could also be split across separate implement runs.
 
 Also pending (plain, not skill invocations): `ui.md` diagram is `stale` again after the Help-section edit (`/ardd-diagram ui`); several unpushed commits on local `main` (F001 research, this plan, plus the earlier badge/ArDD batch — the dynamic badge won't render until pushed); ArDD housekeeping (narrow `.gitignore` `.claude/` → `.claude/skills/ardd-*/`; `git config merge.ours.driver true`).

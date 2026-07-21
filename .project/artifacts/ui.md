@@ -157,6 +157,19 @@ screens, 3 at `sm`, 4 at `md` and up.
     the derived order can never silently differ between the live session and a
     reload. (Authoritative "the drop sticks exactly" ordering is the
     `efficient` mode's contract, not this one.)
+  - **Surprising-result notification** (feedback F001): because a nudge is
+    advisory, it can *visibly* fail to move the game one spot — the confusing
+    case a user reads as "ignored." When the moved game does **not** land at the
+    naively-expected position (one spot up for move-up, one down for move-down) —
+    i.e. it held, or the recompute shifted it differently — the view shows a
+    brief **toast** explaining the actual outcome (e.g. "*Brass* stayed at #3 —
+    your earlier comparisons rank it there; nudge again or compare it directly"
+    or "*Brass* moved to #1 — a nudge adjusts the whole ranking, not just one
+    step"). An expected one-step move fires **no** toast — the visible reorder
+    is its own confirmation, so the notification only appears when there is
+    something to explain. The toast is mirrored to an `aria-live` region for
+    screen-reader parity (Principle VI) and is single-slot (a new one replaces
+    the last, so rapid nudges don't stack).
 
 ### Ranking engine & matchup selection (decided)
 
@@ -291,6 +304,14 @@ the user never leaves their flow to find it.
     better of two; a full order is inferred) and **why a list can be stopped
     early and resumed** (the order is valid and persisted at any number of
     comparisons).
+  - **Move up / move down controls** — a dedicated blurb explaining that a
+    nudge is a *suggestion*, not a drag-to-exact-position: "This ranking is
+    built from all your comparisons, so a nudge is recorded as one more
+    comparison and the whole order is recomputed. It usually moves the game one
+    spot, but against strong earlier picks it may move less — or hold — until
+    you nudge again or compare it head-to-head." This directly heads off the
+    "my nudge was ignored" reading of the advisory behavior; the surprising-
+    result toast below reinforces it in the moment.
   - **List result / export view** — **what each export format is** (Markdown /
     CSV / JSON / GeekList) and when to reach for which.
 - **States:** collapsed (just the trigger) and expanded (blurb shown). No

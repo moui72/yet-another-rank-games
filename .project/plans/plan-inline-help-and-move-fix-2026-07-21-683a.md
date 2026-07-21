@@ -17,6 +17,7 @@ Deliver inline contextual help across the confusing views and fix the pairwise m
 **In scope**
 
 - **F001 fix** (feedback `feedback-move-up-down-reverts-on-reload-2fd0.md`): make the pairwise session converge to the server's canonical replayed comparison log after a move-write, so the live order and the reload order can never silently differ. Advisory semantics — a move nudges, it does not authoritatively pin.
+- **Advisory-move legibility** (the advisory behavior is confusing if unexplained — a nudge that visibly doesn't move a game reads as "ignored/broken"): (a) a dedicated help blurb on the move controls explaining nudges are suggestions recomputed from all comparisons, and (b) a **surprising-result toast** that fires only when the moved game did not land at the naively-expected one-spot position, explaining the actual outcome. An expected one-step move stays silent (the reorder confirms it).
 - **`in-app-help-and-info-text`**: a reusable `InfoPopover` component and contextual help blurbs on the pool builder, list creation, pairwise view, and export view, per the `ui.md` "Help & info text" section.
 
 **Out of scope**
@@ -42,7 +43,8 @@ Phase lists are plan work-items, not live checklists — progress is tracked in 
 
 - Have `POST /api/lists/[id]/compare` return the canonical replayed comparison log (`listComparisons` mapped to the client `Choice[]` shape) alongside `{ ok }`.
 - In `PairwiseRanker.svelte`, after a move-up/move-down write resolves, rebuild `PairwiseSession` from the returned canonical log so the displayed order equals the reload-derived order.
-- Tests (TDD, Principle I): a failing test first proving the live-session-vs-replay divergence on a crafted log (the research's recipe is a ready fixture — Juliet ▲×3 / India ▼×2 over the 10-row partial prior), then the convergence fix makes session order == `deriveOrder`/replay order.
+- **Surprising-result toast:** capture the moved game's rank before the move; after the rebuild, if its new rank is not the naively-expected one-spot shift (it held, or moved differently), show a single-slot toast explaining the outcome, mirrored to an `aria-live` region. An expected one-step move fires no toast.
+- Tests (TDD, Principle I): a failing test first proving the live-session-vs-replay divergence on a crafted log (the research's recipe is a ready fixture — Juliet ▲×3 / India ▼×2 over the 10-row partial prior), then the convergence fix makes session order == `deriveOrder`/replay order. Also test the surprising-result predicate (held / over-shoot → toast; exact one-step → no toast).
 
 *Depends on:* nothing.
 
@@ -55,7 +57,7 @@ Phase lists are plan work-items, not live checklists — progress is tracked in 
 
 ### Phase 3 — Help: attach contextual blurbs to the views
 
-- Compose `InfoPopover` into the pool builder (hierarchy + filter include/exclude/AND semantics), list creation (hierarchy), pairwise view (what pairwise does; stop-early/resume), and export view (what each format is), with the copy from `ui.md`.
+- Compose `InfoPopover` into the pool builder (hierarchy + filter include/exclude/AND semantics), list creation (hierarchy), pairwise view (what pairwise does; stop-early/resume; **and the move-controls advisory blurb** — nudges are suggestions recomputed from all comparisons), and export view (what each format is), with the copy from `ui.md`.
 - axe scan over the views confirming the added triggers are operable and labelled (Principle VI).
 
 *Depends on:* Phase 2.
