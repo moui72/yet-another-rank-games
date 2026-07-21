@@ -20,6 +20,9 @@
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build"
 	},
+	"lint-staged": {
+		"*.{js,ts,svelte}": "eslint --no-warn-ignored"
+	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.12.1",
 		"@chromatic-com/storybook": "^5.2.1",
@@ -45,6 +48,7 @@
 		"eslint-plugin-svelte": "^3.20.0",
 		"globals": "^17.7.0",
 		"husky": "^9.1.7",
+		"lint-staged": "^17.1.0",
 		"playwright": "^1.61.1",
 		"storybook": "^10.5.0",
 		"svelte": "^5.56.1",

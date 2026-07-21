@@ -4,11 +4,23 @@
 # followed immediately by a commit that re-establishes the passing state.
 # (End-to-end/axe tests run in CI, not here, to keep the hook fast.)
 #
-# The test step runs the coverage ratchet (constitution Quality Standard):
-# the same never-decrease line-coverage gate CI enforces, run here so a
-# drop is caught before the push rather than after. `coverage:ratchet`
-# runs the full unit suite with coverage, so it replaces a plain `test`
-# rather than adding a second run.
-npm run lint
-npm run check
-npm run coverage:ratchet
+# set -e: any failing step aborts the commit. Without it, a lint failure
+# followed by a passing later step would let the commit through.
+set -e
+
+# lint-staged runs eslint on the STAGED code files only (correct even with
+# unstaged edits present — it lints staged content, not the working tree).
+# Fast, and a no-op when no code files are staged.
+npx lint-staged
+
+# Whole-project typecheck + the coverage ratchet (constitution Quality
+# Standard) are cross-file / whole-suite, so they can't be scoped to staged
+# files without weakening the gate — run them, but ONLY when a code file is
+# staged. A docs-only commit changes nothing these can catch, so it skips
+# them and commits instantly. CI (ci.yml) always runs the full lint + check
+# + test + ratchet as the gate of record, so anything the staged-only local
+# lint misses is still caught before merge.
+if git diff --cached --name-only | grep -qE '\.(js|ts|svelte)$'; then
+	npm run check
+	npm run coverage:ratchet
+fi
