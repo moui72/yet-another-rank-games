@@ -87,7 +87,7 @@ jobs:
           # deploy-staging.yml's comment on the same lesson).
           echo "image=${{ env.REPOSITORY }}/web@${PROD_DIGEST}" >> "$GITHUB_OUTPUT"
 
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           version: latest
 

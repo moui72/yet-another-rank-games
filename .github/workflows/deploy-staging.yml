@@ -49,7 +49,7 @@ jobs:
       # against an unchanged tag string produces no Terraform diff, so
       # Cloud Run never re-pulls a corrected image. See infrastructure.md /
       # tasks-multi-env-deploy-5928.md T003 for the incident.
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           version: latest
 
