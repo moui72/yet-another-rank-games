@@ -196,15 +196,18 @@ graph TD
     Import["Collection import & management view\n(queued → fetching → processing → done;\nview/edit active + removed items)"]
     Resync["Collection resync\n(re-pull, reconcile removed/pending-delete,\npossible-duplicates review)"]
     PoolBuilder["Pool builder view\n(filter bulk-add, hand-edit,\nBGG search-import,\nlist/card view toggle + cover art)"]
-    ListMgmt["List management view\n(create list from pool;\npairwise is the sole ranking method)"]
-    Pairwise["Pairwise ranking view\n(Ranked / Unranked split,\ncomparison cards show cover art,\nmove up/down (synthetic comparisons),\nnovelty-preferring matchups,\nconfetti + hidden controls when fully ordered,\nkeyboard-operable)"]
+    ListMgmt["List management view\n(create list from pool;\nchoose Pairwise or Efficient mode,\nfixed at creation)"]
+    Pairwise["Pairwise ranking view (primary, 'fun')\n(Ranked / Unranked split,\ncomparison cards show cover art,\nmove up/down (synthetic comparisons),\nnovelty-preferring matchups,\nconfetti + hidden controls when fully ordered,\nkeyboard-operable)"]
+    Efficient["Efficient ranking view\n(binary-insertion selection,\n'Placing X — question n of m' progress,\nfewest comparisons;\ndrag-and-drop / move up-down / move-to-position\noverrides land exactly,\nlist always reorderable)"]
     Result["List result & export view\n(Markdown / CSV / JSON / GeekList)"]
 
     Import -->|collection populated| PoolBuilder
     Import -->|re-pull triggered| Resync
     Resync -->|reconciled| Import
     PoolBuilder -->|pool created| ListMgmt
-    ListMgmt -->|create| Pairwise
+    ListMgmt -->|create: pairwise| Pairwise
+    ListMgmt -->|create: efficient| Efficient
     Pairwise -->|stop early or complete| Result
+    Efficient -->|every game placed| Result
 ```
 
