@@ -58,4 +58,10 @@ plan:
   (WYSIWYG — no schema change, keeps the move advisory). The constraint-graph
   "pinned override edge" hybrid is reserved for *if* the product decides
   pairwise moves must be authoritative — a separate, larger proposal.
-  Open product question: advisory (recommended) vs authoritative.
+  Product decision 2026-07-21: **advisory** — a pairwise move nudges, and the
+  shown order must always equal what reload produces. So the fix is option 1
+  (client rebuilds `PairwiseSession` from the server's canonical replayed log
+  after move-writes); the constraint-graph authoritative-override hybrid is
+  explicitly NOT pursued for pairwise. The next `/ardd-plan` that consumes this
+  feedback should implement option 1 and document the advisory nudge semantics
+  in `ui.md`.
