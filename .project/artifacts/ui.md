@@ -1,10 +1,10 @@
 ---
 name: ui
-status: draft
-last_updated: 2026-07-21
+status: stable
+last_updated: 2026-07-23
 diagram_type: graph TD
 render_section: UI
-diagram_status: stale
+diagram_status: current
 ---
 
 # UI
@@ -275,9 +275,20 @@ fewest comparisons it can and treats a manual reorder as authoritative. See
   bggId), needs no BGG call, and is offered alongside Markdown/CSV/JSON. The app
   produces the list *body*; creating the GeekList itself is done by the user on
   BGG (the XML API is read-only for this).
-- [OPEN: public sharing model — whether a list can be exposed as a read-only
-  shareable link (and its privacy/visibility rules) is a deferred product
-  decision, separate from the export formats above, which stand on their own.]
+- **Public sharing (feature `public-list-sharing`)**: a list is **private by
+  default**. The owner can enable a **read-only share link** from this view;
+  once enabled, anyone with the link can view the list — no login required —
+  but cannot modify it. The shared view is **live**, not a frozen snapshot: it
+  always reflects the list's current ranked order, including any ongoing
+  pairwise refinement or manual reordering, matching this artifact's "order is
+  derived, not authored" model rather than freezing a point-in-time export.
+  Sharing is **view-only, not revocable** — once a link has been generated and
+  handed out, the owner cannot invalidate it later; disabling sharing in the
+  UI stops *new* visibility (the toggle going forward) but does not retract
+  access already given via a previously-shared link. This mirrors the export
+  formats' one-way nature: once shared, treat it as public. Distinct from the
+  GeekList/export formats above, which are one-time pastes of a snapshot — the
+  share link is a standing, continuously-live view.
 
 ## Help & info text (feature `in-app-help-and-info-text`)
 
@@ -338,9 +349,10 @@ migration alongside the feature itself.
 
 ## Production Annotations
 
-- **Sharing model unspecified**: if list sharing ships as public links, a
-  production version needs a considered privacy/visibility model rather than
-  the minimal export assumed here.
+- **Share links are not revocable in v1**: once a link is generated and
+  distributed, the owner cannot invalidate viewer access to it — a production
+  version handling sensitive lists may need real revocation (e.g. rotating the
+  share token) rather than the minimal always-valid link assumed here.
 - **Manual (drag-to-order) ranking method retired**: removed from list creation
   and then deleted outright, once a 2026-07-20 query confirmed zero lists used
   it in either environment (so no data migration was needed). Drag-and-drop
