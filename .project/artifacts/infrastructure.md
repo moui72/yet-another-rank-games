@@ -1,10 +1,10 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-07-15
+last_updated: 2026-07-23
 diagram_type: graph TD
 render_section: Infrastructure
-diagram_status: current
+diagram_status: stale
 ---
 
 # Infrastructure
@@ -118,6 +118,16 @@ worker-driven** rather than handled inline in a request.
   reached with the secret key, not per-user publishable keys, so RLS would add
   policy overhead without being the enforcement path. Trade-off accepted: a
   server-side authorization bug has no DB backstop — see Production Annotations.
+- **One unauthenticated read route** (feature `public-list-sharing`): a
+  public `List` view route resolves by `List.share_token` (see
+  `datamodel.md`) with no Supabase Auth/JWT check — the only endpoint in the
+  app that intentionally skips authentication. It re-uses the same
+  server-side ownership-free read path as the authenticated list view (no
+  separate cache/snapshot), so the public view always shows the list's live
+  current ranking. Authorization here is "possession of the unguessable
+  token", not per-user checks — consistent with the RLS-off, app-enforced
+  model below, just inverted (this route deliberately grants access to
+  anyone holding the token rather than restricting to an owner).
 - **No public Data API surface.** With RLS off, exposing the Supabase
   Data API (PostgREST) on the public schema would let the public
   publishable key read/write tables directly. Because we enforce

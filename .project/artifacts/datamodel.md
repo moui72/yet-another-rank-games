@@ -1,10 +1,10 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-20
+last_updated: 2026-07-23
 diagram_type: erDiagram
 render_section: Datamodel
-diagram_status: current
+diagram_status: stale
 ---
 
 # Data Model
@@ -221,6 +221,8 @@ A named ranking over a pool's games. Many lists can rank the same pool.
 | description | string | nullable |
 | ranking_method | enum | `pairwise` \| `efficient` \| `tier`. `pairwise` = rating-model derivation with novelty-preferring matchups (the primary, "fun" mode); `efficient` = constraint-graph derivation with binary-insertion selection and exact drag-and-drop overrides (see above). Fixed at list creation — a list does not switch modes, since the same rows under a different derivation would silently reorder it. `tier` deferred. The former `manual` value was retired (see Production Annotations). |
 | status | enum | `in_progress` \| `complete` |
+| is_shared | bool | default `false` (feature `public-list-sharing`). Gates *new* visibility only — flipping to `false` stops future lookups from newly-distributed links but does not retract access already given via a link handed out during a prior `true` window (non-revocable in v1; see `ui.md`). |
+| share_token | uuid | nullable; generated once, the first time `is_shared` is set `true` — never rotated or regenerated in v1, since a link is meant to work for as long as it's been shared. Not present/generated until first shared. |
 | created_at | timestamptz | |
 
 ### Comparison
