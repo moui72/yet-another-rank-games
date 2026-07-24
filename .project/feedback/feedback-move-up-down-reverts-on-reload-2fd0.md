@@ -1,7 +1,7 @@
 ---
 status: planned
 created: 2026-07-20
-plan:
+plan: plan-inline-help-and-move-fix-2026-07-21-683a.md
 ---
 
 # Feedback
