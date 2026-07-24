@@ -116,6 +116,34 @@ test('public /share/[token] view: readable, zero AA violations', async ({ page }
 	await context.close();
 });
 
+// F001: copyShareLink previously had no error handling around
+// navigator.clipboard.writeText, so a rejected write silently no-op'd.
+// Force a rejection and assert the UI surfaces a visible failure state
+// instead of staying silent.
+test('copy-link failure: rejected clipboard write shows a visible failure state', async ({
+	page
+}) => {
+	const userId = await signUp(page);
+	const { listId } = await seedPoolAndList(userId);
+
+	// Installed before the app's own scripts run, independent of the other
+	// tests' grantPermissions setup — this context's clipboard always rejects.
+	await page.addInitScript(() => {
+		navigator.clipboard.writeText = () => Promise.reject(new Error('denied'));
+	});
+
+	await page.goto(`/lists/${listId}`);
+	await page.waitForLoadState('networkidle');
+
+	await page.getByLabel('Share a read-only link').check();
+	await expect(page.getByLabel('Share link')).toBeVisible();
+
+	const copyButton = page.getByRole('button', { name: 'Copy link' });
+	await copyButton.click();
+	await expect(page.getByRole('button', { name: 'Copy failed' })).toBeVisible();
+	await expect(page.getByText('Failed to copy share link')).toBeVisible();
+});
+
 test('unknown share token 404s', async ({ page }) => {
 	const res = await page.goto('/share/00000000-0000-0000-0000-000000000000');
 	expect(res?.status()).toBe(404);

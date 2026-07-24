@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Clipboard error handling
 
-- [ ] T001 [artifacts: ui] Write a failing test for `copyShareLink` in `src/routes/lists/[id]/+page.svelte` (feedback F001): mock `navigator.clipboard.writeText` to reject, invoke `copyShareLink`, and assert the UI shows a visible failure state (not silence) rather than throwing unhandled or no-oping.
+- [x] T001 [artifacts: ui] Write a failing test for `copyShareLink` in `src/routes/lists/[id]/+page.svelte` (feedback F001): mock `navigator.clipboard.writeText` to reject, invoke `copyShareLink`, and assert the UI shows a visible failure state (not silence) rather than throwing unhandled or no-oping.
 - [ ] T002 [artifacts: ui] Wrap `copyShareLink`'s `navigator.clipboard.writeText` call in a try/catch; on rejection, set a failure-state flag/message the template renders (reusing the existing copy-status UI slot used for the success "Copied!" case) so the user sees the write failed. Make T001's test pass.
 
 ## Phase 2: E2e clipboard permissions
