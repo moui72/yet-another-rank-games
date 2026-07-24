@@ -141,7 +141,7 @@ test('copy-link failure: rejected clipboard write shows a visible failure state'
 	const copyButton = page.getByRole('button', { name: 'Copy link' });
 	await copyButton.click();
 	await expect(page.getByRole('button', { name: 'Copy failed' })).toBeVisible();
-	await expect(page.getByText('Failed to copy share link')).toBeVisible();
+	await expect(page.getByText('Failed to copy share link').first()).toBeVisible();
 });
 
 test('unknown share token 404s', async ({ page }) => {

@@ -22,12 +22,19 @@
 	const shareUrl = $derived(
 		sharePath && typeof window !== 'undefined' ? `${window.location.origin}${sharePath}` : sharePath
 	);
-	let copyStatus = $state<'idle' | 'copied'>('idle');
+	let copyStatus = $state<'idle' | 'copied' | 'error'>('idle');
 
+	// F001: navigator.clipboard.writeText can reject (denied permission,
+	// insecure context, etc.) — surface that to the user via the existing
+	// copy-status affordance instead of silently no-op'ing.
 	async function copyShareLink() {
 		if (!shareUrl) return;
-		await navigator.clipboard.writeText(shareUrl);
-		copyStatus = 'copied';
+		try {
+			await navigator.clipboard.writeText(shareUrl);
+			copyStatus = 'copied';
+		} catch {
+			copyStatus = 'error';
+		}
 		setTimeout(() => (copyStatus = 'idle'), 2000);
 	}
 </script>
@@ -137,10 +144,23 @@
 					value={shareUrl}
 				/>
 				<button type="button" class="btn btn-sm" onclick={copyShareLink}>
-					{copyStatus === 'copied' ? 'Copied!' : 'Copy link'}
+					{#if copyStatus === 'copied'}
+						Copied!
+					{:else if copyStatus === 'error'}
+						Copy failed
+					{:else}
+						Copy link
+					{/if}
 				</button>
+				{#if copyStatus === 'error'}
+					<span class="text-error text-sm">Failed to copy share link</span>
+				{/if}
 				<span class="sr-only" role="status" aria-live="polite">
-					{copyStatus === 'copied' ? 'Share link copied to clipboard' : ''}
+					{#if copyStatus === 'copied'}
+						Share link copied to clipboard
+					{:else if copyStatus === 'error'}
+						Failed to copy share link
+					{/if}
 				</span>
 			</div>
 			{#if !isShared}
