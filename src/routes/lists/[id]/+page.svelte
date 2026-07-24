@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import PairwiseRanker from '$lib/components/PairwiseRanker.svelte';
 	import EfficientRanker from '$lib/components/EfficientRanker.svelte';
+	import InfoPopover from '$lib/components/InfoPopover.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -52,7 +53,14 @@
 	{/key}
 
 	<section class="flex flex-col gap-2" aria-labelledby="export-heading">
-		<h2 id="export-heading" class="text-lg font-semibold">Export</h2>
+		<h2 id="export-heading" class="text-lg font-semibold">
+			Export
+			<InfoPopover label="About export formats">
+				Markdown and CSV are plain-text tables — good for notes or a
+				spreadsheet. JSON is the full structured data — good for scripts or
+				other tools. GeekList is BBCode you paste into a new GeekList on BGG.
+			</InfoPopover>
+		</h2>
 		<div class="flex flex-wrap gap-2">
 			<a class="btn btn-outline btn-sm" href="{exportBase}?format=md" download>Markdown</a>
 			<a class="btn btn-outline btn-sm" href="{exportBase}?format=csv" download>CSV</a>
