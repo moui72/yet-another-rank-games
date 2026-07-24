@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { db, sql } from '../db';
-import { createList, listListsByPool } from './lists';
+import { createList, listListsByPool, setListShared, getSharedListByToken } from './lists';
 import { createPool } from './pools';
 
 async function makePool(): Promise<{ userId: string; poolId: string }> {
@@ -39,5 +39,51 @@ describe('list repository', () => {
 		await createList(db, { poolId, userId, name: 'A', rankingMethod: 'pairwise' });
 		await createList(db, { poolId, userId, name: 'B', rankingMethod: 'efficient' });
 		expect(await listListsByPool(db, poolId)).toHaveLength(2);
+	});
+});
+
+// public-list-sharing (T002): lazy share_token generation on first enable,
+// stable on repeat enable, retained on disable.
+describe('setListShared (T002)', () => {
+	it('generates a share token the first time sharing is enabled', async () => {
+		const { userId, poolId } = await makePool();
+		const list = await createList(db, { poolId, userId, name: 'Shareable', rankingMethod: 'pairwise' });
+		expect(list.isShared).toBe(false);
+		expect(list.shareToken).toBeNull();
+
+		const shared = await setListShared(db, list.id, true);
+		expect(shared.isShared).toBe(true);
+		expect(shared.shareToken).toBeTruthy();
+	});
+
+	it('does not change the token on a second enable', async () => {
+		const { userId, poolId } = await makePool();
+		const list = await createList(db, { poolId, userId, name: 'Shareable', rankingMethod: 'pairwise' });
+		const first = await setListShared(db, list.id, true);
+		const second = await setListShared(db, list.id, true);
+		expect(second.shareToken).toBe(first.shareToken);
+	});
+
+	it('keeps the token when sharing is disabled', async () => {
+		const { userId, poolId } = await makePool();
+		const list = await createList(db, { poolId, userId, name: 'Shareable', rankingMethod: 'pairwise' });
+		const shared = await setListShared(db, list.id, true);
+		const disabled = await setListShared(db, list.id, false);
+		expect(disabled.isShared).toBe(false);
+		expect(disabled.shareToken).toBe(shared.shareToken);
+	});
+
+	it('finds a shared list by its token but not when unshared or unknown', async () => {
+		const { userId, poolId } = await makePool();
+		const list = await createList(db, { poolId, userId, name: 'Shareable', rankingMethod: 'pairwise' });
+		const shared = await setListShared(db, list.id, true);
+
+		const found = await getSharedListByToken(db, shared.shareToken as string);
+		expect(found?.id).toBe(list.id);
+
+		expect(await getSharedListByToken(db, '00000000-0000-0000-0000-000000000000')).toBeUndefined();
+
+		const disabled = await setListShared(db, list.id, false);
+		expect(await getSharedListByToken(db, disabled.shareToken as string)).toBeUndefined();
 	});
 });
