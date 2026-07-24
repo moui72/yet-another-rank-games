@@ -1,23 +1,20 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-24 — `/ardd-status` full re-check after `tasks-b47a-e7b6.md`
-completed via a delegated worktree subagent and merged (fast-forward, no
-conflicts) back into local `main`; the worktree has been reaped (no
-`b47a` branch remains). The fix — a `waitForLoadState('networkidle')` wait
-added to `e2e/sharing.spec.ts`'s "public /share/[token] view" test — was
-verified with a real e2e run (Docker available this pass): the original
-failure was reproduced with the fix stashed, then 3 repeated passes
-confirmed with it applied. `tasks-b47a-e7b6.md` is now `status: completed`
-(1/1, no bound features). While verifying, a new bug was found and logged:
-`feedback-seedpoolandlist-missing-list-entries-4281.md` (F001, `status:
-open`) — the e2e test helper `seedPoolAndList` never inserts `list_entries`
-rows, a test-fixture data-seeding gap unrelated to the hydration-race fix.
-Feedback is now 1 open, 4 planned. Feature register unchanged (0
-backlogged, 0 planned, 0 tasked, 10 implemented, 1 subsumed). No `ready`
-tasks files remain (Work Queue empty); `tasks-foundation-cd84.md` is
-`in-progress` (41/46), not ready. No in-flight worktrees. `datamodel.md`
-and `infrastructure.md` remain stale; `ui.md` is current. Local `main` is
-ahead of `origin/main` by 5 commits (not yet pushed)._
+_Updated: 2026-07-24 — `/ardd-status` full re-check after `/ardd-plan` consumed
+the open feedback file `feedback-seedpoolandlist-missing-list-entries-4281.md`
+(F001 marked incorporated `[x]`, file flipped `open` → `planned`, stamped
+`plan: plan-5b25-2026-07-24-9ef0.md`), wrote and approved a new plan
+`plan-5b25-2026-07-24-9ef0.md` (no bound features), and generated a `ready`
+tasks file `tasks-5b25-589c.md` (1 task, 1 phase: seed `list_entries` rows
+in `e2e/sharing.spec.ts`'s `seedPoolAndList` helper so the "public
+/share/[token] view" test has real ranked-order data to assert against).
+Feedback is now 0 open, 5 planned. Feature register unchanged (0
+backlogged, 0 planned, 0 tasked, 10 implemented, 1 subsumed). One `ready`
+tasks file now queued (`tasks-5b25-589c.md`); `tasks-foundation-cd84.md`
+remains `in-progress` (41/46). No in-flight worktrees. `datamodel.md` and
+`infrastructure.md` remain stale; `ui.md` is current. Local `main` is up to
+date with `origin/main`; the working tree carries this plan run's
+uncommitted output (modified feedback file, new plan and tasks files)._
 
 ## Artifact Status
 
@@ -35,9 +32,10 @@ None found across artifacts.
 
 ## Cross-Artifact Issues
 
-None found. The just-merged change is test-only (Playwright timing fix in
-`e2e/sharing.spec.ts`) with no bound features and no artifact-level claims —
-nothing in `ui.md` or `design.md` is contradicted or implicated.
+None found. The new plan/tasks file is test-only (Playwright e2e fixture
+seeding fix in `e2e/sharing.spec.ts`) with no bound features and no
+artifact-level claims — nothing in `ui.md` or `datamodel.md` is
+contradicted or implicated.
 
 ## Within-Artifact Issues
 
@@ -45,8 +43,8 @@ None found — no unresolved `[OPEN: ...]` markers in any artifact.
 
 ## Constitution Compliance
 
-None. The merged fix is test-only (`waitForLoadState('networkidle')`); it
-introduces no product-facing shortcut and needs no production annotation.
+None. The queued fix is test-fixture-only; it introduces no product-facing
+shortcut and needs no production annotation.
 
 ## Diagrams
 
@@ -57,26 +55,28 @@ introduces no product-facing shortcut and needs no production annotation.
 ## Code-vs-Artifact Defects
 
 - 0 known defects — `DEFECTS.md` all-clear, last verified 2026-07-20. Run
-  `/ardd-defects` to refresh (unchanged this pass — the merged change was
-  test-only, no product code changed).
+  `/ardd-defects` to refresh (unchanged this pass — no product code
+  changed, only planning artifacts).
 
 ## Feedback
 
-- 1 open feedback file (`feedback-seedpoolandlist-missing-list-entries-4281.md`,
-  F001: `seedPoolAndList` never inserts `list_entries` rows) — see
-  `.project/feedback/`, will be picked up by the next `/ardd-plan`.
-- 4 planned (already bound to plans, awaiting/undergoing implementation):
-  `feedback-e2e-hydration-race-flake-7eda.md` (now resolved by the merged
-  fix — flip to consider on next `/ardd-plan` pass),
-  `feedback-move-up-down-reverts-on-reload-2fd0.md`,
-  `feedback-public-list-sharing-clipboard-2f0e.md`,
-  `feedback-unranked-collapsible-pool-games-d07e.md`.
+- 0 open feedback files — all five feedback files are now `status:
+  planned`, each stamped with a bound plan:
+  `feedback-e2e-hydration-race-flake-7eda.md` (`plan-b47a-2026-07-24-76cb.md`),
+  `feedback-move-up-down-reverts-on-reload-2fd0.md`
+  (`plan-inline-help-and-move-fix-2026-07-21-683a.md`),
+  `feedback-public-list-sharing-clipboard-2f0e.md`
+  (`plan-80b9-2026-07-24-fac9.md`),
+  `feedback-seedpoolandlist-missing-list-entries-4281.md`
+  (`plan-5b25-2026-07-24-9ef0.md`, newly flipped this pass),
+  `feedback-unranked-collapsible-pool-games-d07e.md`
+  (`plan-collection-editing-and-resync-2026-07-14-d0af.md`).
 
 ## Feature Backlog
 
 - 0 backlogged · 0 planned · 0 tasked · 10 implemented · 1 subsumed
-  (`revisit-ranking-modes`) — see `.project/features/`. Unchanged this pass;
-  the merged tasks file bound no features.
+  (`revisit-ranking-modes`) — see `.project/features/`. Unchanged this
+  pass; the new plan/tasks bind no features.
 
 ## Documented but Untracked
 
@@ -89,40 +89,41 @@ introduces no product-facing shortcut and needs no production annotation.
 ## Orphaned Completion Flips
 
 None found. Ran `completion-flip-check.sh` against all `status: completed`
-tasks files (13 of them; 14 tasks files total, `tasks-foundation-cd84.md`
-excluded as `in-progress`) — no printed slugs, including the newly
-completed `tasks-b47a-e7b6.md`.
+tasks files (13 of them; 15 tasks files total — `tasks-5b25-589c.md`
+excluded as `ready`, `tasks-foundation-cd84.md` excluded as `in-progress`)
+— no printed slugs.
 
 ## Work Queue
 
-No `ready` tasks files exist this pass — section omitted per convention.
-`tasks-b47a-e7b6.md` completed and merged; no replacement `ready` file has
-been generated yet. `tasks-foundation-cd84.md` remains `in-progress`
-(41/46), not `ready`, so `parallel-matrix.sh` had nothing to compare.
+- `tasks-5b25-589c.md` — plan `plan-5b25-2026-07-24-9ef0.md`, features: none
+  bound. `parallel-matrix.sh` produced no pairwise verdict lines (only one
+  `ready` file this pass and no in-flight worktree claims to compare
+  against) — nothing to report beyond the single entry itself.
 
 ## In Flight
 
 Nothing in flight — `inflight-worktrees.sh` found no other worktrees,
-`worktree-reap.sh --dry-run` found no reapable candidates (the b47a
-worktree is already gone, reaped post-merge), and no draft PRs apply
-(`workflow_mode: solo`).
+`worktree-reap.sh --dry-run` found no reapable candidates, and no draft
+PRs apply (`workflow_mode: solo`).
 
 ## Deployment
 
 `efficient-ordering-mode` (both migrations), the `public-list-sharing`
 migration (`lists.is_shared`/`lists.share_token`) — deployment status
-unchanged this pass; the merged change was e2e-test-only, nothing to
-deploy.
+unchanged this pass; nothing new to deploy (planning-only artifacts).
 
 ## Local Changes Not Yet Pushed
 
-Local `main` is ahead of `origin/main` by 5 commits (0 behind), working
-tree clean:
-- `1b82011` chore(delegation): auto-commit b47a plan/tasks before delegating
-- `ade1971` chore: flip tasks-b47a-e7b6 to in-progress
-- `8bb624f` fix(e2e): wait for hydration before checkbox in public share view test (T001)
-- `c4db77d` chore: flip tasks-b47a-e7b6 to completed
-- `750c2b5` feedback: log seedPoolAndList missing list_entries gap
+Local `main` is up to date with `origin/main` (0 ahead, 0 behind). The
+working tree is **not** clean — it carries this just-completed `/ardd-plan`
+run's output, not yet committed:
+- modified: `.project/feedback/feedback-seedpoolandlist-missing-list-entries-4281.md`
+  (F001 flipped `[x]`, status `open` → `planned`)
+- untracked: `.project/plans/plan-5b25-2026-07-24-9ef0.md`
+- untracked: `.project/tasks/tasks-5b25-589c.md`
+
+(`/ardd-status` does not commit these — that's the coordinator's or
+`/ardd-implement`'s concern.)
 
 ## ArDD Update
 
@@ -130,11 +131,8 @@ Up to date — installed `85407e4a` (per `ardd-update-check.sh`: `up-to-date`).
 
 ## Summary
 
-0 issues found this pass. Safe to /plan: yes. Recommended next step: push
-the 5 unpushed local commits to `origin/main`, then either (a) run
-`/ardd-plan` on the newly logged open feedback
-(`feedback-seedpoolandlist-missing-list-entries-4281.md`, the
-`seedPoolAndList` list_entries gap) since it's the only open item not yet
-bound to a plan, or (b) resume `tasks-foundation-cd84.md` (41/46, already
-in progress). No `ready` tasks file is queued, so there is no single
-"the" next `/ardd-implement` target this pass.
+0 issues found this pass. Safe to /plan: yes. Recommended next step:
+`/ardd-implement tasks-5b25-589c.md` — the only `ready` tasks file, a
+single-task/single-phase fix seeding `list_entries` rows in the sharing e2e
+test helper. (Resuming `tasks-foundation-cd84.md`, 41/46 in-progress, is
+also available but not new this pass.)

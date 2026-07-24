@@ -1,14 +1,14 @@
 ---
-status: open
+status: planned
 created: 2026-07-24
-plan: null
+plan: plan-5b25-2026-07-24-9ef0.md
 ---
 
 # Feedback
 
 ## Bugs
 
-- [ ] F001 The e2e test helper `seedPoolAndList` never inserts `list_entries`
+- [x] F001 The e2e test helper `seedPoolAndList` never inserts `list_entries`
   rows, so a seeded list's shared/public view renders "No games ranked yet"
   instead of the expected game names. This is a test-fixture data-seeding
   gap, not a product bug — it surfaced in `e2e/sharing.spec.ts`'s "public
