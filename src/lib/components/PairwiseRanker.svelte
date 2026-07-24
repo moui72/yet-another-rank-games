@@ -72,11 +72,27 @@
 	}
 
 	/**
+	 * After a move's `/compare` POST resolves, rebuild the session's log from
+	 * the canonical replayed log the endpoint now returns (T002), instead of
+	 * trusting the client's own append-only log (F001, T003 — see the
+	 * research doc: the server's upsert dedupes a re-judged pair and bumps
+	 * its replay position, so the live and reload-derived orders can
+	 * diverge). Reassigning `session.log` keeps `gameIds`/`excludedIds`
+	 * untouched, so only the order-affecting log is replaced.
+	 */
+	async function resyncFromCompareResponse(res: Response) {
+		const data = await res.json().catch(() => null);
+		if (data && Array.isArray(data.log)) session.log = data.log;
+	}
+
+	/**
 	 * Manual reordering (feature `manual-pairwise-ranking-adjust`): nudge a
 	 * ranked game up/down one spot. Delegates the swap to the session (which
 	 * emits it as a synthetic comparison via `choose()`), then persists that
 	 * comparison through the same `/compare` endpoint a real pick uses — no
-	 * new persisted field, `ui.md`.
+	 * new persisted field, `ui.md`. Once the persist resolves, the session is
+	 * resynced to the canonical order (T003) so the displayed order always
+	 * matches what a reload would show.
 	 */
 	function moveUp(gameId: number) {
 		const choice = session.moveUp(gameId);
@@ -87,7 +103,7 @@
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ gameA: choice.winnerId, gameB: choice.loserId, winnerId: choice.winnerId })
-			})
+			}).then(resyncFromCompareResponse)
 		);
 	}
 
@@ -100,7 +116,7 @@
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ gameA: choice.winnerId, gameB: choice.loserId, winnerId: choice.winnerId })
-			})
+			}).then(resyncFromCompareResponse)
 		);
 	}
 
