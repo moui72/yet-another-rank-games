@@ -105,6 +105,7 @@ test('public /share/[token] view: readable, zero AA violations', async ({ page }
 	const userId = await signUp(page);
 	const { listId } = await seedPoolAndList(userId);
 	await page.goto(`/lists/${listId}`);
+	await page.waitForLoadState('networkidle');
 
 	await page.getByLabel('Share a read-only link').check();
 	const shareUrl = await page.getByLabel('Share link').inputValue();
