@@ -4,6 +4,7 @@
 	import { listStatusLabel, rankingMethodLabel } from '$lib/domain/listView';
 	import { resolveCoverArt } from '$lib/domain/coverArt';
 	import BggSearchAdd from '$lib/components/BggSearchAdd.svelte';
+	import InfoPopover from '$lib/components/InfoPopover.svelte';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -37,7 +38,14 @@
 	<section class="card bg-base-200 shadow-sm" aria-labelledby="games-heading">
 		<div class="card-body gap-3">
 			<div class="flex flex-wrap items-center justify-between gap-2">
-				<h2 id="games-heading" class="card-title text-lg">Games in this pool ({data.games.length})</h2>
+				<h2 id="games-heading" class="card-title text-lg">
+					Games in this pool ({data.games.length})
+					<InfoPopover label="About collections, pools, and lists">
+						A collection is your imported BGG set. A pool is a reusable curated
+						group built from it. A list ranks a pool — and many lists can rank
+						the same pool differently.
+					</InfoPopover>
+				</h2>
 				<div class="flex items-center gap-3">
 					<form
 						method="POST"
@@ -137,7 +145,14 @@
 
 	<section class="card bg-base-200 shadow-sm" aria-labelledby="filter-heading">
 		<form class="card-body gap-3" method="POST" action="?/addByFilter" use:enhance>
-			<h2 id="filter-heading" class="card-title text-lg">Add games by filter</h2>
+			<h2 id="filter-heading" class="card-title text-lg">
+				Add games by filter
+				<InfoPopover label="About filter matching">
+					A game must match every include you set — mechanics, weight, player
+					count, playing time, and expansion/owned filters all combine with
+					AND — so a narrow combination of filters can return few or no games.
+				</InfoPopover>
+			</h2>
 			<div class="form-control">
 				<label class="label" for="collectionId"><span class="label-text">From collection</span></label>
 				<select id="collectionId" name="collectionId" class="select select-bordered w-full" required>
