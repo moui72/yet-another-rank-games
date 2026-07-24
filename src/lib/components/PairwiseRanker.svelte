@@ -4,6 +4,7 @@
 	import { spineColor } from '$lib/spine';
 	import { resolveCoverArt } from '$lib/domain/coverArt';
 	import type { Choice } from '$lib/domain/ranking';
+	import { isSurprisingMoveOutcome } from '$lib/domain/moveOutcome';
 
 	let {
 		listId,
@@ -41,6 +42,37 @@
 	const excludeUrl = $derived(`/api/lists/${listId}/exclude`);
 
 	let unrankedOpen = $state(false);
+
+	// Surprising-result notification (T009, feedback F001): single-slot —
+	// a new toast replaces the last, so rapid nudges don't stack. Mirrored
+	// into an aria-live="polite" region for screen-reader parity (Principle
+	// VI) via the toast container itself.
+	let moveToast = $state<string | null>(null);
+	let moveToastTimer: ReturnType<typeof setTimeout> | undefined;
+	function showMoveToast(message: string) {
+		moveToast = message;
+		clearTimeout(moveToastTimer);
+		moveToastTimer = setTimeout(() => {
+			moveToast = null;
+		}, 4000);
+	}
+
+	/**
+	 * After a resynced move settles, show a toast only when the outcome is
+	 * surprising (didn't land exactly one spot in the move's direction) —
+	 * an expected one-step move needs no explanation (`ui.md`).
+	 */
+	function maybeNotifySurprisingMove(gameId: number, direction: 'up' | 'down', rankBefore: number) {
+		const rankAfter = session.ranked.indexOf(gameId) + 1;
+		if (rankAfter <= 0) return; // game left Ranked entirely (e.g. excluded mid-flight) — nothing to report
+		if (!isSurprisingMoveOutcome({ rankBefore, direction, rankAfter })) return;
+		const name = nameOf(gameId);
+		const message =
+			rankAfter === rankBefore
+				? `${name} stayed at #${rankAfter} — your earlier comparisons rank it there; nudge again or compare it directly`
+				: `${name} moved to #${rankAfter} — a nudge adjusts the whole ranking, not just one step`;
+		showMoveToast(message);
+	}
 
 	// Serialize persistence so the optimistic UI stays instant and the server
 	// never sees out-of-order recomputes.
@@ -95,6 +127,7 @@
 	 * matches what a reload would show.
 	 */
 	function moveUp(gameId: number) {
+		const rankBefore = session.ranked.indexOf(gameId) + 1;
 		const choice = session.moveUp(gameId);
 		if (!choice) return;
 		const url = compareUrl;
@@ -103,11 +136,14 @@
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ gameA: choice.winnerId, gameB: choice.loserId, winnerId: choice.winnerId })
-			}).then(resyncFromCompareResponse)
+			})
+				.then(resyncFromCompareResponse)
+				.then(() => maybeNotifySurprisingMove(gameId, 'up', rankBefore))
 		);
 	}
 
 	function moveDown(gameId: number) {
+		const rankBefore = session.ranked.indexOf(gameId) + 1;
 		const choice = session.moveDown(gameId);
 		if (!choice) return;
 		const url = compareUrl;
@@ -116,7 +152,9 @@
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ gameA: choice.winnerId, gameB: choice.loserId, winnerId: choice.winnerId })
-			}).then(resyncFromCompareResponse)
+			})
+				.then(resyncFromCompareResponse)
+				.then(() => maybeNotifySurprisingMove(gameId, 'down', rankBefore))
 		);
 	}
 
@@ -183,6 +221,12 @@
 </script>
 
 <svelte:window onkeydown={onKeydown} />
+
+<div class="toast toast-top toast-center z-50" role="status" aria-live="polite">
+	{#if moveToast}
+		<div class="alert alert-info">{moveToast}</div>
+	{/if}
+</div>
 
 {#if session.currentPair}
 	{@const pair = session.currentPair}
