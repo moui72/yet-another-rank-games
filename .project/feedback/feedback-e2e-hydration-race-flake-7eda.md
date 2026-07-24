@@ -1,14 +1,14 @@
 ---
-status: open
+status: planned
 created: 2026-07-24
-plan: null
+plan: plan-b47a-2026-07-24-76cb.md
 ---
 
 # Feedback
 
 ## Bugs
 
-- [ ] F001 Pre-existing e2e hydration-race flake: clicking an interactive
+- [x] F001 Pre-existing e2e hydration-race flake: clicking an interactive
   element immediately after `page.goto()` can race Svelte's client
   hydration, so the click/keypress silently has no effect (no
   console/network error to indicate anything went wrong). This affects the

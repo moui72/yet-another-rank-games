@@ -1,21 +1,18 @@
 # yet-another-rank-games — Project Status
 
-_Updated: 2026-07-24 — `/ardd-status` full re-check after `tasks-80b9-eeb7.md`
-completed (3/3, no bound features to flip — it was a feedback-only plan) via
-a delegated worktree subagent and was fast-forward merged back into local
-`main` (no conflicts); the worktree has since been reaped. New code landed:
-try/catch error handling around the clipboard write in
-`src/routes/lists/[id]/+page.svelte` (a `copyStatus` state showing "Copy
-failed" plus an `aria-live` announcement), and clipboard-permission
-hardening in `e2e/sharing.spec.ts`. A new feedback file,
-`feedback-e2e-hydration-race-flake-7eda.md`, was also logged this pass — one
-open bug (F001: a pre-existing e2e hydration-race flake in the "public
-`/share/[token]` view" test, unrelated to any recent feature work). Feedback
-is now 1 open, 3 planned. Feature register unchanged (0 backlogged, 0
-planned, 0 tasked, 10 implemented, 1 subsumed). No in-flight worktrees.
-`datamodel.md` and `infrastructure.md` remain stale; `ui.md` is current.
-Local `main` is ahead of `origin/main` by 7 commits (0 behind) — not yet
-pushed._
+_Updated: 2026-07-24 — `/ardd-status` full re-check after `/ardd-plan` consumed
+the open feedback file `feedback-e2e-hydration-race-flake-7eda.md` (F001
+marked incorporated `[x]`, file flipped `open` → `planned` with
+`plan: plan-b47a-2026-07-24-76cb.md` stamped). A new plan,
+`plan-b47a-2026-07-24-76cb.md` (no bound features), was written and
+approved, and a `ready` tasks file, `tasks-b47a-e7b6.md` (1 task, 1 phase),
+was generated to add a `waitForLoadState` wait before the checkbox
+interaction in `e2e/sharing.spec.ts`'s public share-view test, fixing the
+hydration-race flake. Feedback is now 0 open, 4 planned. Feature register
+unchanged (0 backlogged, 0 planned, 0 tasked, 10 implemented, 1 subsumed).
+No in-flight worktrees. `datamodel.md` and `infrastructure.md` remain stale;
+`ui.md` is current. Local `main` is even with `origin/main` (0 ahead, 0
+behind)._
 
 ## Artifact Status
 
@@ -33,12 +30,10 @@ None found across artifacts.
 
 ## Cross-Artifact Issues
 
-None found. The completed clipboard fix and its e2e hardening are
-implementation-level, matching what the feedback file already described —
-no artifact contradicted. The newly logged hydration-race flake is a test
-infrastructure issue (Playwright/hydration timing), not a product-behavior
-or artifact concern; nothing in `ui.md` or `design.md` implies synchronous
-post-navigation interactivity that this contradicts.
+None found. The new plan/tasks pair targets a test-infrastructure fix
+(Playwright hydration timing in `e2e/sharing.spec.ts`) with no bound
+features and no artifact-level claims — nothing in `ui.md` or `design.md`
+is contradicted or implicated.
 
 ## Within-Artifact Issues
 
@@ -46,7 +41,8 @@ None found — no unresolved `[OPEN: ...]` markers in any artifact.
 
 ## Constitution Compliance
 
-None. No new shortcuts landed this pass requiring a production annotation.
+None. The queued fix is test-only (adds a `waitForLoadState` wait); it
+introduces no product-facing shortcut and needs no production annotation.
 
 ## Diagrams
 
@@ -57,27 +53,14 @@ None. No new shortcuts landed this pass requiring a production annotation.
 ## Code-vs-Artifact Defects
 
 - 0 known defects — `DEFECTS.md` all-clear, last verified 2026-07-20. Run
-  `/ardd-defects` to refresh (unchanged since last pass; the clipboard fix
-  that just landed was already tracked via feedback, not as a defect).
-
-## Feedback
-
-- 1 open, 3 planned (4 files total):
-  - `feedback-e2e-hydration-race-flake-7eda.md` — **open**, F001 (hydration
-    race in `e2e/sharing.spec.ts`'s public share-view test), just logged
-    this pass, `plan: null`.
-  - `feedback-public-list-sharing-clipboard-2f0e.md` — planned, F001/F002,
-    now fully implemented via `tasks-80b9-eeb7.md`
-    (`plan-80b9-2026-07-24-fac9.md`).
-  - `feedback-move-up-down-reverts-on-reload-2fd0.md` — planned.
-  - `feedback-unranked-collapsible-pool-games-d07e.md` — planned.
+  `/ardd-defects` to refresh (unchanged this pass — no code landed, only
+  planning artifacts).
 
 ## Feature Backlog
 
 - 0 backlogged · 0 planned · 0 tasked · 10 implemented · 1 subsumed
-  (`revisit-ranking-modes`) — see `.project/features/`. Unchanged this pass:
-  `tasks-80b9-eeb7.md` bound no features (feedback-only plan), so nothing to
-  flip.
+  (`revisit-ranking-modes`) — see `.project/features/`. Unchanged this pass;
+  `plan-b47a-2026-07-24-76cb.md` bound no features.
 
 ## Documented but Untracked
 
@@ -90,31 +73,36 @@ None. No new shortcuts landed this pass requiring a production annotation.
 ## Orphaned Completion Flips
 
 None found. Ran `completion-flip-check.sh` against all `status: completed`
-tasks files (12 of them, including `tasks-80b9-eeb7.md`) — no printed slugs.
+tasks files (13 of them) — no printed slugs.
 
 ## Work Queue
 
-Empty — no `ready` tasks files remain. `tasks-foundation-cd84.md` is
-`in-progress` (not `ready`) and is excluded from the ready-file comparison.
+- `tasks-b47a-e7b6.md` — plan `plan-b47a-2026-07-24-76cb.md`, features none:
+  - vs in-flight: none (no other worktrees or draft PRs to compare against)
+
+  Only one `ready` tasks file exists this pass, so `parallel-matrix.sh`
+  produced no pairwise lines (it needs at least two participants —
+  `tasks-foundation-cd84.md` is `in-progress`, not `ready`, and is excluded).
 
 ## In Flight
 
-Nothing in flight — no other worktrees (the `tasks-80b9-eeb7.md` worktree
-was reaped after its merge), no reapable branches remaining, no draft PRs
+Nothing in flight — no other worktrees, no reapable branches, no draft PRs
 (`workflow_mode: solo`, so no draft-PR channel applies).
 
 ## Deployment
 
 `efficient-ordering-mode` (both migrations), the `public-list-sharing`
-migration (`lists.is_shared`/`lists.share_token`), and this pass's clipboard
-fix (no schema change) — deployment status otherwise unchanged this pass.
+migration (`lists.is_shared`/`lists.share_token`) — deployment status
+unchanged this pass; no code landed, only the plan/tasks pair for the
+hydration-race fix.
 
 ## Local Changes Not Yet Pushed
 
-Local `main` is ahead of `origin/main` by 7 commits, 0 behind. Working tree
-is clean. Unpushed commits include the `tasks-80b9-eeb7.md` implementation
-(clipboard fix + e2e hardening), its completion flip, and the new
-hydration-race feedback log.
+Local `main` is even with `origin/main` (0 ahead, 0 behind). Working tree
+has the just-updated feedback file
+(`feedback-e2e-hydration-race-flake-7eda.md`, flipped to `planned`) plus the
+new, not-yet-committed `plan-b47a-2026-07-24-76cb.md` and
+`tasks-b47a-e7b6.md`.
 
 ## ArDD Update
 
@@ -123,6 +111,6 @@ Up to date — installed `85407e4a` (per `ardd-update-check.sh`: `up-to-date`).
 ## Summary
 
 0 issues found this pass. Safe to /plan: yes. Recommended next step:
-`/ardd-plan feedback-e2e-hydration-race-flake-7eda.md`'s F001 (or fold it
-into the next general `/ardd-plan` pass) to address the hydration-race
-flake with a `waitForLoadState` fix — no other ready work is queued.
+`/ardd-implement tasks-b47a-e7b6.md` to execute the single queued task
+(add `waitForLoadState` to fix the hydration-race flake) — it is the only
+`ready` work queued.
