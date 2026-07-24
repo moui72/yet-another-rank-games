@@ -1,7 +1,7 @@
 ---
 plan: plan-inline-help-and-move-fix-2026-07-21-683a.md
 generated: 2026-07-21
-status: in-progress
+status: completed
 ---
 
 # Tasks
