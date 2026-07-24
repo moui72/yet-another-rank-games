@@ -1,7 +1,7 @@
 ---
 plan: plan-public-list-sharing-2026-07-23-810c.md
 generated: 2026-07-23
-status: ready
+status: in-progress
 ---
 
 # Tasks
