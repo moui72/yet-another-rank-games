@@ -139,6 +139,9 @@
 				<button type="button" class="btn btn-sm" onclick={copyShareLink}>
 					{copyStatus === 'copied' ? 'Copied!' : 'Copy link'}
 				</button>
+				<span class="sr-only" role="status" aria-live="polite">
+					{copyStatus === 'copied' ? 'Share link copied to clipboard' : ''}
+				</span>
 			</div>
 			{#if !isShared}
 				<p class="text-sm opacity-70">

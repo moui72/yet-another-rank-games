@@ -22,4 +22,4 @@ status: in-progress
 
 ## Phase 4: Accessibility & polish
 
-- [ ] T006 [artifacts: ui] Run a WCAG 2.1 AA pass (Principle VI) on the share toggle, copy-link control, and the public `/share/[token]` view: automated axe checks plus manual contrast and keyboard/screen-reader operability checks. Fix any failures found.
+- [x] T006 [artifacts: ui] Run a WCAG 2.1 AA pass (Principle VI) on the share toggle, copy-link control, and the public `/share/[token]` view: automated axe checks plus manual contrast and keyboard/screen-reader operability checks. Fix any failures found.
