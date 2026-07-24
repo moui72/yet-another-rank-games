@@ -48,11 +48,21 @@ async function seedPoolAndList(userId: string): Promise<{ listId: string }> {
 }
 
 test('share toggle and copy-link: keyboard-operable, labelled, zero AA violations', async ({
-	page
+	page,
+	context
 }) => {
+	// F002: grant clipboard permissions so the "Copied!" assertion below is a
+	// genuine regression check against a context that can actually perform
+	// the clipboard write, rather than one where the write may silently fail.
+	await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+
 	const userId = await signUp(page);
 	const { listId } = await seedPoolAndList(userId);
 	await page.goto(`/lists/${listId}`);
+	// Pre-existing environment note (not part of F001/F002): interacting
+	// immediately after goto can race the client hydration that wires up
+	// event handlers, so wait for the network to settle first.
+	await page.waitForLoadState('networkidle');
 
 	const shareInfoTrigger = page.getByRole('button', { name: 'About sharing' });
 	await shareInfoTrigger.focus();

@@ -13,4 +13,4 @@ status: in-progress
 
 ## Phase 2: E2e clipboard permissions
 
-- [ ] T003 [parallel] In `e2e/sharing.spec.ts`, add `context.grantPermissions(['clipboard-read', 'clipboard-write'])` to the browser context setup before the copy-link test runs, so the "Copied!" assertion is exercised against a context that can actually perform the clipboard write (feedback F002) rather than one where the write may silently fail. Confirm the test still passes with permissions granted (this is a test-hardening change, not a behavior change, so no separate red/green cycle is required — verify by running the updated spec).
+- [x] T003 [parallel] In `e2e/sharing.spec.ts`, add `context.grantPermissions(['clipboard-read', 'clipboard-write'])` to the browser context setup before the copy-link test runs, so the "Copied!" assertion is exercised against a context that can actually perform the clipboard write (feedback F002) rather than one where the write may silently fail. Confirm the test still passes with permissions granted (this is a test-hardening change, not a behavior change, so no separate red/green cycle is required — verify by running the updated spec).
