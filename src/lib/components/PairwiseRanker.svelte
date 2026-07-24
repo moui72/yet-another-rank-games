@@ -5,6 +5,7 @@
 	import { resolveCoverArt } from '$lib/domain/coverArt';
 	import type { Choice } from '$lib/domain/ranking';
 	import { isSurprisingMoveOutcome } from '$lib/domain/moveOutcome';
+	import InfoPopover from '$lib/components/InfoPopover.svelte';
 
 	let {
 		listId,
@@ -233,7 +234,15 @@
 	<section class="flex flex-col gap-4" aria-labelledby="matchup-heading">
 		{#if !session.isFullyOrdered}
 			<div class="flex flex-wrap items-baseline justify-between gap-2">
-				<h2 id="matchup-heading" class="text-lg font-semibold">Which is better?</h2>
+				<h2 id="matchup-heading" class="text-lg font-semibold">
+					Which is better?
+					<InfoPopover label="About pairwise ranking">
+						Pick the better game of each pair, over and over — your full order
+						is inferred from those picks. You can stop any time: the order is
+						valid and saved at any number of comparisons, and you can pick up
+						again later.
+					</InfoPopover>
+				</h2>
 				<p class="text-xs opacity-60">
 					Press <kbd class="kbd kbd-xs">1</kbd>/<kbd class="kbd kbd-xs">2</kbd> (or ←/→),
 					<kbd class="kbd kbd-xs">U</kbd> to undo
@@ -280,7 +289,16 @@
 
 <section class="card bg-base-200 border-base-300 border" aria-labelledby="ranking-heading">
 	<div class="card-body gap-3">
-		<h2 id="ranking-heading" class="card-title text-lg">Ranked</h2>
+		<h2 id="ranking-heading" class="card-title text-lg">
+			Ranked
+			<InfoPopover label="About the move up/down controls">
+				This ranking is built from all your comparisons, so a nudge is
+				recorded as one more comparison and the whole order is recomputed.
+				It usually moves the game one spot, but against strong earlier
+				picks it may move less — or hold — until you nudge again or
+				compare it head-to-head.
+			</InfoPopover>
+		</h2>
 		<ol id="ranked-list" class="flex flex-col gap-1.5">
 			{#each session.ranked as gameId, i (gameId)}
 				<li class="flex items-center gap-2">

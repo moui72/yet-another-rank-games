@@ -226,7 +226,14 @@
 				{/each}
 			</ul>
 
-			<h3 class="mt-2 font-semibold">Create a list</h3>
+			<h3 class="mt-2 font-semibold">
+				Create a list
+				<InfoPopover label="About collections, pools, and lists">
+					A collection is your imported BGG set. A pool is a reusable curated
+					group built from it. A list ranks a pool — and many lists can rank
+					the same pool differently.
+				</InfoPopover>
+			</h3>
 			<form class="flex flex-col gap-3" method="POST" action="?/createList" use:enhance>
 				<div class="form-control">
 					<label class="label" for="name"><span class="label-text">List name</span></label>
