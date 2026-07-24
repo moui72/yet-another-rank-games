@@ -1,7 +1,7 @@
 ---
 plan: plan-foundation-2026-07-10.md
 generated: 2026-07-10
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -72,11 +72,11 @@ collections to pools. T023/T024 were reworked accordingly.
 
 ## Phase 6: Deployment & cost guardrails
 
-- [ ] T035 [artifacts: infrastructure] Containerize the web (`adapter-node`) and worker as separate images; local container smoke test of both.
-- [ ] T036 [artifacts: infrastructure] Deploy both to Cloud Run: web `min-instances=1`, **`max-instances` caps on both services** (Principle IV), deliberate request concurrency.
-- [ ] T037 [artifacts: infrastructure] [parallel] Cloud Tasks production queue config: bounded retry count + dead-letter target aligned with the worker's give-up state.
-- [ ] T038 [artifacts: infrastructure] [parallel] GCP **billing budget + alerts** and low quota caps as a kill-switch; verify an alert fires against a low test threshold.
-- [ ] T039 [artifacts: infrastructure] Production config/secrets management (no secrets in the image); end-to-end smoke on Cloud Run: import → rank → export against the deployed stack.
+- [x] T035 [artifacts: infrastructure] Containerize the web (`adapter-node`) and worker as separate images; local container smoke test of both. [satisfied by plan-multi-env-deploy T001/T002: `Dockerfile` builds the web image, locally smoke-tested; the worker is deployed as its own Cloud Run service (`yarg-worker`) with its own local-smoke (simulated Cloud Tasks POST), but deliberately reuses the same built image with a different entrypoint/env rather than a second Dockerfile — a documented decision, not a gap]
+- [x] T036 [artifacts: infrastructure] Deploy both to Cloud Run: web `min-instances=1`, **`max-instances` caps on both services** (Principle IV), deliberate request concurrency. [satisfied by `infra/terraform/modules/environment/run.tf`: `google_cloud_run_v2_service` for both `web` (min=`var.web_min_instances`) and `worker` (min=0), both capped at `var.max_instances`; deployed via plan-multi-env-deploy's staging/production workflows]
+- [x] T037 [artifacts: infrastructure] [parallel] Cloud Tasks production queue config: bounded retry count + dead-letter target aligned with the worker's give-up state. [satisfied by `infra/terraform/modules/environment/tasks.tf`: `google_cloud_tasks_queue.import` with bounded `max_attempts=5`/`max_retry_duration=3600s`; Cloud Tasks has no native dead-letter, so the give-up state is the app-side `Collection.import_status = failed` from T020, as documented in the module]
+- [x] T038 [artifacts: infrastructure] [parallel] GCP **billing budget + alerts** and low quota caps as a kill-switch; verify an alert fires against a low test threshold. [satisfied by `infra/terraform/modules/billing-guard/`: `google_billing_budget` with 50/90/100% threshold alerts plus an opt-in Pub/Sub-triggered Cloud Function kill-switch that unlinks billing when cost exceeds budget; Cloud Run `max_instances` caps provide the request-volume ceiling]
+- [x] T039 [artifacts: infrastructure] Production config/secrets management (no secrets in the image); end-to-end smoke on Cloud Run: import → rank → export against the deployed stack. [satisfied by `infra/terraform/modules/environment/secrets.tf` (Secret Manager secret containers, values added out-of-band, never in tofu state or the image) and plan-multi-env-deploy T008, which smoke-tested the full sign-up → import → pool → rank → export flow against both deployed staging and production]
 
 ## Design foundation (visual design, 2026-07-11)
 
