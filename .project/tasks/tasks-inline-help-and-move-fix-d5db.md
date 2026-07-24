@@ -15,7 +15,7 @@ status: in-progress
 
 ## Phase 2: Help — InfoPopover component
 
-- [ ] T004 [artifacts: ui, design] [parallel] Test-first: create `src/lib/components/InfoPopover.svelte` — an "ⓘ" trigger that toggles a short static blurb (passed as a slot/child or prop), with collapsed and expanded states only. Keyboard-operable (open/close, Esc to dismiss), `aria`-labelled and `aria-expanded` wired, focus-manageable per constitution Principle VI. No new dependency (DaisyUI/Tailwind + Svelte 5 runes). Component test covers toggle behavior and the accessibility attributes; include an axe assertion on the rendered open state.
+- [x] T004 [artifacts: ui, design] [parallel] Test-first: create `src/lib/components/InfoPopover.svelte` — an "ⓘ" trigger that toggles a short static blurb (passed as a slot/child or prop), with collapsed and expanded states only. Keyboard-operable (open/close, Esc to dismiss), `aria`-labelled and `aria-expanded` wired, focus-manageable per constitution Principle VI. No new dependency (DaisyUI/Tailwind + Svelte 5 runes). Component test covers toggle behavior and the accessibility attributes; include an axe assertion on the rendered open state.
 
 ## Phase 3: Help — attach contextual blurbs to the views
 
