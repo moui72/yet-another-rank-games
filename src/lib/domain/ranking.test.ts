@@ -211,3 +211,132 @@ describe('splitRankedUnranked', () => {
 		expect(ranked).toEqual([1, 2, 3]);
 	});
 });
+
+// F001 regression guard (T001): pairwise manual move reload divergence.
+// research-pairwise-manual-reorder-reload-divergence-2026-07-21-49c5.md found
+// that a move-up/move-down click appends a synthetic comparison to the
+// client's in-memory (append-only) log, but the server persists it via an
+// upsert on the unordered pair (`comparisons.ts`'s `recordComparison`) that
+// (a) overwrites a re-judged pair's row instead of duplicating it and (b)
+// bumps that row's `createdAt` — so `listComparisons`'s replay order
+// (`(createdAt, id)`) moves the overridden pair to the *end* of the log.
+// Every rating computed between a pair's original and new replay position
+// differs, so a reload can show a different order than the session did —
+// including moving games the user never touched.
+//
+// `PairwiseSession` itself (`pairwiseSession.svelte.ts`) can't be unit-tested
+// in this project's plain vitest config (it needs the Svelte rune compiler —
+// confirmed: importing it here throws `$state is not defined`; per
+// `vitest.config.ts` it is "exercised via e2e"). So this guard reproduces its
+// exact `moveUp`/`moveDown` neighbor-selection algorithm — read the neighbor
+// from the order derived from the *current* log, emit a synthetic choice —
+// directly against the exported domain functions, which is everything the
+// divergence depends on.
+describe('F001 pairwise move reload divergence (T001)', () => {
+	const [Hotel, India, Golf, Lima, Juliet, Kilo] = [1, 2, 3, 4, 5, 6];
+	const gameIds = [Hotel, India, Golf, Lima, Juliet, Kilo];
+
+	// A deterministic 10-row partial prior (found by simulation against this
+	// module's own `rankGames`/`ratingsFromComparisons` — every game already
+	// has at least one comparison, so nothing starts Unranked), then the
+	// research recipe's moves: Juliet ▲×3, India ▼×2.
+	const prior: Choice[] = [
+		{ winnerId: India, loserId: Lima },
+		{ winnerId: Golf, loserId: Juliet },
+		{ winnerId: Hotel, loserId: Lima },
+		{ winnerId: Kilo, loserId: Lima },
+		{ winnerId: India, loserId: Juliet },
+		{ winnerId: Kilo, loserId: Golf },
+		{ winnerId: Hotel, loserId: Juliet },
+		{ winnerId: Golf, loserId: Hotel },
+		{ winnerId: Golf, loserId: Lima },
+		{ winnerId: Hotel, loserId: Kilo }
+	];
+	const moveSequence = [
+		{ dir: 'up', gameId: Juliet },
+		{ dir: 'up', gameId: Juliet },
+		{ dir: 'up', gameId: Juliet },
+		{ dir: 'down', gameId: India },
+		{ dir: 'down', gameId: India }
+	] as const;
+
+	/**
+	 * Mirror `comparisons.ts`'s upsert/replay semantics purely in memory: a
+	 * write dedupes on the unordered pair (a later write overwrites the
+	 * winner of an existing row) and moves that pair's replay position to the
+	 * end — the `createdAt` bump — matching `listComparisons`'s
+	 * `(createdAt, id)` ordering.
+	 */
+	function persistedReplay(writes: readonly Choice[]): Choice[] {
+		const order: string[] = [];
+		const rows = new Map<string, Choice>();
+		for (const w of writes) {
+			const key = pairKey(w.winnerId, w.loserId);
+			if (rows.has(key)) order.splice(order.indexOf(key), 1);
+			rows.set(key, w);
+			order.push(key);
+		}
+		return order.map((k) => rows.get(k)!);
+	}
+
+	/** Mirrors `PairwiseSession.moveUp`: neighbor read from the order the *current* log derives. */
+	function moveUp(log: readonly Choice[], gameId: number): Choice | null {
+		const ranked = rankGames(gameIds, ratingsFromComparisons(log));
+		const index = ranked.indexOf(gameId);
+		if (index <= 0) return null;
+		return { winnerId: gameId, loserId: ranked[index - 1] };
+	}
+	/** Mirrors `PairwiseSession.moveDown`. */
+	function moveDown(log: readonly Choice[], gameId: number): Choice | null {
+		const ranked = rankGames(gameIds, ratingsFromComparisons(log));
+		const index = ranked.indexOf(gameId);
+		if (index === -1 || index >= ranked.length - 1) return null;
+		return { winnerId: ranked[index + 1], loserId: gameId };
+	}
+
+	/**
+	 * Drive the move sequence, choosing each move's neighbor from `logForMove`
+	 * (the log the client currently holds) but always accumulating the full
+	 * write history in `persistedWrites` (what the server sees). After each
+	 * write, `resync` decides what the client's log becomes for the *next*
+	 * move: identity (append-only, pre-fix) or the canonical replay (T003).
+	 */
+	function applyMoves(resync: (persistedWrites: readonly Choice[]) => Choice[]) {
+		let clientLog: Choice[] = [...prior];
+		let persistedWrites: Choice[] = [...prior];
+		for (const m of moveSequence) {
+			const choice = m.dir === 'up' ? moveUp(clientLog, m.gameId) : moveDown(clientLog, m.gameId);
+			if (!choice) throw new Error('fixture move was a no-op — recipe invalid');
+			persistedWrites = [...persistedWrites, choice];
+			clientLog = resync(persistedWrites);
+		}
+		return { clientLog, persistedWrites };
+	}
+
+	it('an append-only client log diverges from the server-replayed reload order', () => {
+		// Current (pre-fix) behavior: the client just appends each move's
+		// synthetic choice to its own log and never resyncs.
+		let writeCount = 0;
+		const { clientLog, persistedWrites } = applyMoves((writes) => {
+			writeCount++;
+			return writes.slice(0, prior.length + writeCount); // == append-only: writes so far, in write order
+		});
+		const liveOrder = rankGames(gameIds, ratingsFromComparisons(clientLog));
+		const reloadOrder = rankGames(gameIds, ratingsFromComparisons(persistedReplay(persistedWrites)));
+
+		expect(liveOrder).not.toEqual(reloadOrder);
+		// The moved game itself lands somewhere other than where the reload puts it.
+		expect(liveOrder.indexOf(Juliet)).not.toBe(reloadOrder.indexOf(Juliet));
+	});
+
+	it('T003 fix: resyncing the client to the canonical replayed log after every move keeps the displayed order equal to the reload order', () => {
+		// Post-fix behavior: T002 has the compare endpoint return the
+		// canonical replayed log; T003 rebuilds the client session from it
+		// after every move instead of trusting the append-only log.
+		const { clientLog, persistedWrites } = applyMoves((writes) => persistedReplay(writes));
+
+		const displayedOrder = rankGames(gameIds, ratingsFromComparisons(clientLog));
+		const reloadOrder = rankGames(gameIds, ratingsFromComparisons(persistedReplay(persistedWrites)));
+		expect(displayedOrder).toEqual(reloadOrder);
+	});
+});
