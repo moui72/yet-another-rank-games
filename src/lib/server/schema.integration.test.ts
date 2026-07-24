@@ -149,3 +149,24 @@ describe('bgg cover art & show-cover-art preference schema (T001)', () => {
 		expect(user.show_cover_art).toBe(true);
 	});
 });
+
+// public-list-sharing (T001): lists.is_shared (default false) and
+// lists.share_token (nullable uuid), lazily populated on first share.
+describe('public list sharing schema (T001)', () => {
+	it('adds is_shared (default false) and a nullable share_token to lists', async () => {
+		const cols = await columns('lists');
+		expect(cols, 'lists.is_shared').toContain('is_shared');
+		expect(cols, 'lists.share_token').toContain('share_token');
+
+		const [userRow] = await sql<{ id: string }[]>`
+			insert into auth.users (id) values (gen_random_uuid()) returning id`;
+		const [pool] = await sql<{ id: string }[]>`
+			insert into pools (user_id, name) values (${userRow.id}, 'Sharing test pool') returning id`;
+		const [list] = await sql<{ is_shared: boolean; share_token: string | null }[]>`
+			insert into lists (pool_id, user_id, name, ranking_method)
+			values (${pool.id}, ${userRow.id}, 'Sharing test list', 'pairwise')
+			returning is_shared, share_token`;
+		expect(list.is_shared).toBe(false);
+		expect(list.share_token).toBeNull();
+	});
+});

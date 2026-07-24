@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Data model
 
-- [ ] T001 [artifacts: datamodel] Write a migration adding `is_shared` (bool, default `false`) and `share_token` (nullable uuid) columns to the `List` table, per `datamodel.md`. Write a failing test first asserting the migration applies cleanly and both columns exist with the correct defaults/nullability, then make it pass (Principle I, Principle X).
+- [x] T001 [artifacts: datamodel] Write a migration adding `is_shared` (bool, default `false`) and `share_token` (nullable uuid) columns to the `List` table, per `datamodel.md`. Write a failing test first asserting the migration applies cleanly and both columns exist with the correct defaults/nullability, then make it pass (Principle I, Principle X).
 
 ## Phase 2: Public read route
 

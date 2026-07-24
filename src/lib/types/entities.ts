@@ -131,6 +131,10 @@ export interface List {
 	description: string | null;
 	rankingMethod: RankingMethod;
 	status: ListStatus;
+	/** Private by default (feature `public-list-sharing`); gates *new* lookups only. */
+	isShared: boolean;
+	/** Generated once, on first `isShared` transition to true; never rotated. */
+	shareToken: string | null;
 	createdAt: string;
 }
 

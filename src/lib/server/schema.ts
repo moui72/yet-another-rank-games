@@ -94,6 +94,8 @@ interface ListsTable {
 	description: string | null;
 	rankingMethod: RankingMethod;
 	status: Generated<ListStatus>;
+	isShared: Generated<boolean>;
+	shareToken: string | null;
 	createdAt: Generated<string>;
 }
 
