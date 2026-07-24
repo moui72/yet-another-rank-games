@@ -18,7 +18,7 @@ status: in-progress
 ## Phase 3: Sharing UI
 
 - [x] T004 [artifacts: ui] [parallel] Add an enable/disable share toggle and a copy-link affordance to the List result & export view, wired to `is_shared` and displaying the `/share/[token]` URL once enabled. Write a failing test first covering: toggling on shows a copyable link; toggling off keeps the link functional per the non-revocable model but updates the UI's own displayed state accordingly (Principle I).
-- [ ] T005 [artifacts: ui] [parallel] Add an `InfoPopover` help blurb (per the existing Help & info text pattern) next to the share toggle explaining: sharing is private by default, a shared link keeps working even after the toggle is turned off, and the shared view always reflects the list's current live ranking.
+- [x] T005 [artifacts: ui] [parallel] Add an `InfoPopover` help blurb (per the existing Help & info text pattern) next to the share toggle explaining: sharing is private by default, a shared link keeps working even after the toggle is turned off, and the shared view always reflects the list's current live ranking.
 
 ## Phase 4: Accessibility & polish
 
