@@ -1,6 +1,6 @@
 ---
 slug: in-app-help-and-info-text
-status: tasked
+status: implemented
 logged: 2026-07-20
 plan: plan-inline-help-and-move-fix-2026-07-21-683a.md
 tasks: tasks-inline-help-and-move-fix-d5db.md
