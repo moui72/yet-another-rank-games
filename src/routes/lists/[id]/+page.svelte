@@ -12,6 +12,24 @@
 	// Optimistic (writable $derived): flips immediately, form action persists
 	// it in the background; re-syncs whenever load data changes.
 	let showCoverArt = $derived(data.showCoverArt);
+
+	// public-list-sharing: reflects the UI's own displayed state, which is
+	// allowed to diverge from the (non-revocable) DB truth once a link has
+	// been handed out — see ui.md.
+	let isShared = $derived(data.isShared);
+	let shareToken = $derived(data.shareToken);
+	const sharePath = $derived(shareToken ? resolve('/share/[token]', { token: shareToken }) : null);
+	const shareUrl = $derived(
+		sharePath && typeof window !== 'undefined' ? `${window.location.origin}${sharePath}` : sharePath
+	);
+	let copyStatus = $state<'idle' | 'copied'>('idle');
+
+	async function copyShareLink() {
+		if (!shareUrl) return;
+		await navigator.clipboard.writeText(shareUrl);
+		copyStatus = 'copied';
+		setTimeout(() => (copyStatus = 'idle'), 2000);
+	}
 </script>
 
 <svelte:head><title>{data.list.name} · ranking · yet-another-rank-games</title></svelte:head>
@@ -68,5 +86,65 @@
 			<a class="btn btn-outline btn-sm" href="{exportBase}?format=bbcode" download>GeekList</a>
 		</div>
 		<p class="text-sm opacity-70">GeekList: paste into a new GeekList on BGG.</p>
+	</section>
+
+	<section class="flex flex-col gap-2" aria-labelledby="share-heading">
+		<h2 id="share-heading" class="text-lg font-semibold">
+			Share
+			<InfoPopover label="About sharing">
+				Sharing is private by default. Once you turn it on, anyone with the
+				link can view a read-only copy of this ranking — no login required —
+				and it always reflects the list's current live order. Turning
+				sharing back off stops new visibility, but a link already handed out
+				keeps working.
+			</InfoPopover>
+		</h2>
+		<form
+			method="POST"
+			action="?/toggleShare"
+			use:enhance={() => {
+				return async ({ update, result }) => {
+					await update({ reset: false });
+					if (result.type === 'success' && result.data) {
+						isShared = result.data.isShared as boolean;
+						shareToken = result.data.shareToken as string | null;
+					}
+				};
+			}}
+		>
+			<input type="hidden" name="isShared" value={(!isShared).toString()} />
+			<label class="label cursor-pointer gap-2">
+				<input
+					type="checkbox"
+					class="checkbox checkbox-sm"
+					checked={isShared}
+					aria-describedby="share-heading"
+					onchange={(e) => {
+						isShared = e.currentTarget.checked;
+						e.currentTarget.closest('form')?.requestSubmit();
+					}}
+				/>
+				<span class="label-text">Share a read-only link</span>
+			</label>
+		</form>
+		{#if shareUrl}
+			<div class="flex flex-wrap items-center gap-2">
+				<input
+					class="input input-bordered input-sm w-full max-w-md"
+					type="text"
+					readonly
+					aria-label="Share link"
+					value={shareUrl}
+				/>
+				<button type="button" class="btn btn-sm" onclick={copyShareLink}>
+					{copyStatus === 'copied' ? 'Copied!' : 'Copy link'}
+				</button>
+			</div>
+			{#if !isShared}
+				<p class="text-sm opacity-70">
+					Sharing is off, but this link keeps working for anyone who already has it.
+				</p>
+			{/if}
+		{/if}
 	</section>
 </main>
