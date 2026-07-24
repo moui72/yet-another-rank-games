@@ -1,7 +1,7 @@
 ---
 plan: plan-80b9-2026-07-24-fac9.md
 generated: 2026-07-24
-status: in-progress
+status: completed
 ---
 
 # Tasks
