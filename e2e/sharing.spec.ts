@@ -41,6 +41,11 @@ async function seedPoolAndList(userId: string): Promise<{ listId: string }> {
 		const [list] = await sql<{ id: string }[]>`
 			insert into lists (pool_id, user_id, name, ranking_method)
 			values (${pool.id}, ${userId}, 'Sharing list', 'pairwise') returning id`;
+		for (const [index, g] of games.entries()) {
+			await sql`
+				insert into list_entries (list_id, game_id, position)
+				values (${list.id}, ${g.id}, ${index + 1})`;
+		}
 		return { listId: list.id };
 	} finally {
 		await sql.end();
