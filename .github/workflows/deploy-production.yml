@@ -2,11 +2,11 @@ name: Deploy production
 
 # Fires on push to `production` — which, per infrastructure.md's release flow,
 # only ever happens via promote-to-production.yml fast-forwarding the branch
-# to a commit that already passed staging CI and deploy. This workflow never
-# rebuilds: it resolves the exact image staging already validated (by the
-# `production` tip's commit SHA) and redeploys that same artifact, so
-# production ships the identical bits staging ran (infra "Cut a release =
-# promote, don't rebuild").
+# to a commit that already passed CI. This workflow never rebuilds: it
+# resolves the exact image build.yml already pushed for the `production`
+# tip's commit SHA and deploys that same artifact (infra "Cut a release =
+# promote, don't rebuild"). Staging was torn down 2026-07-27; the image now
+# lives in production's own registry from the start.
 on:
   push:
     branches: [production]
@@ -30,7 +30,6 @@ env:
   PROJECT_ID: yarg-production-cwqd
   REGION: us-east4
   REPOSITORY: us-east4-docker.pkg.dev/yarg-production-cwqd/yarg
-  STAGING_REPOSITORY: us-east4-docker.pkg.dev/yarg-staging-zbch/yarg
 
 jobs:
   deploy:
@@ -55,37 +54,18 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker us-east4-docker.pkg.dev --quiet
 
-      # No rebuild: `production`'s tip commit SHA is the exact commit staging
-      # already built and deployed (deploy-staging.yml tags images by
-      # `github.sha`). Pull that SHA-tagged image from staging's registry and
-      # re-push (retag only) into production's own registry — Cloud Run can't
-      # cross-pull another project's registry directly, so "same SHA image"
-      # means same-digest-different-registry, matching the manual T004
-      # precedent (see tasks-multi-env-deploy-5928.md T004).
-      #
-      # Requires: the production deployer SA
-      # (yarg-deployer@yarg-production-cwqd.iam.gserviceaccount.com) must have
-      # artifactregistry.reader on staging's `yarg` repository
-      # (yarg-staging-zbch). This is a one-time cross-project IAM grant a repo
-      # admin/GCP owner must apply by hand (see the blocker note in
-      # tasks-multi-env-deploy-5928.md T007) — CI cannot grant its own
-      # cross-project read access.
-      - name: Resolve and promote the staging image (no rebuild)
+      # No rebuild: `production`'s tip commit SHA is the exact commit
+      # build.yml already built and pushed to this registry on its `main`
+      # push. Resolve the SHA tag to its digest and deploy by digest, not the
+      # mutable tag — the stale-redeploy bug from T003/T004: a repeated apply
+      # against an unchanged tag string produces no Terraform diff, so Cloud
+      # Run never re-pulls a corrected image.
+      - name: Resolve the built image digest (no rebuild)
         id: image
         run: |
-          STAGING_IMAGE="${{ env.STAGING_REPOSITORY }}/web:${{ github.sha }}"
-          docker pull "$STAGING_IMAGE"
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$STAGING_IMAGE" | sed 's/.*@//')
-
-          PROD_IMAGE="${{ env.REPOSITORY }}/web:${{ github.sha }}"
-          docker tag "$STAGING_IMAGE" "$PROD_IMAGE"
-          docker push "$PROD_IMAGE"
-          PROD_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$PROD_IMAGE" | sed 's/.*@//')
-
-          # Deploying by digest, not the mutable SHA tag — the same
-          # stale-redeploy bug from T003/T004 applies here too (see
-          # deploy-staging.yml's comment on the same lesson).
-          echo "image=${{ env.REPOSITORY }}/web@${PROD_DIGEST}" >> "$GITHUB_OUTPUT"
+          IMAGE="${{ env.REPOSITORY }}/web:${{ github.sha }}"
+          DIGEST=$(gcloud artifacts docker images describe "$IMAGE" --format='value(image_summary.digest)')
+          echo "image=${{ env.REPOSITORY }}/web@${DIGEST}" >> "$GITHUB_OUTPUT"
 
       - uses: supabase/setup-cli@v1
         with:

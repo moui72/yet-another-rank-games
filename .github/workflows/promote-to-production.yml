@@ -24,14 +24,16 @@ jobs:
           SHA=$(git rev-parse HEAD)
           echo "Checking CI status for main@${SHA}..."
 
-          # CI (ci.yml) runs two jobs — "quality" and "e2e" — on every push to
-          # main. Both must have completed successfully for this exact commit;
+          # CI (ci.yml) runs "quality" and "e2e" on every push to main, and
+          # build.yml runs "build" (pushes the SHA-tagged production image —
+          # deploy-production.yml deploys that image without rebuilding). All
+          # three must have completed successfully for this exact commit;
           # anything else (missing, pending, failure) blocks the promotion.
           # This is a hard requirement per the plan's "promote gate on CI"
           # decision (lean hard-require) — no override, no --force option.
-          RUNS=$(gh api "repos/${{ github.repository }}/commits/${SHA}/check-runs" --jq '.check_runs[] | select(.name == "quality" or .name == "e2e") | {name, status, conclusion}')
+          RUNS=$(gh api "repos/${{ github.repository }}/commits/${SHA}/check-runs" --jq '.check_runs[] | select(.name == "quality" or .name == "e2e" or .name == "build") | {name, status, conclusion}')
 
-          for job in quality e2e; do
+          for job in quality e2e build; do
             ENTRY=$(echo "$RUNS" | jq -s --arg job "$job" '[.[] | select(.name == $job)] | sort_by(.status) | last')
             if [ "$ENTRY" = "null" ]; then
               echo "::error::No '$job' check run found for main@${SHA}. Promotion blocked."

@@ -1,0 +1,49 @@
+name: Build image
+
+# Builds and pushes the SHA-tagged production image on every push to `main`.
+# Nothing is deployed here: deploy-production.yml (gated by the `production`
+# GitHub Environment's required reviewer) later resolves this exact SHA tag
+# and deploys by digest — "promote, don't rebuild", now without a staging
+# environment in the middle (staging was torn down 2026-07-27).
+#
+# Auth uses repo-level vars (PROD_GCP_WIF_PROVIDER / PROD_GCP_DEPLOYER_SA)
+# rather than the `production` environment's vars, deliberately: attaching
+# this job to that environment would put a human-approval gate on every main
+# push. The WIF pool is repo-scoped, so this is equivalent access-wise.
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: build-image
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  REPOSITORY: us-east4-docker.pkg.dev/yarg-production-cwqd/yarg
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.PROD_GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.PROD_GCP_DEPLOYER_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-east4-docker.pkg.dev --quiet
+
+      - name: Build and push image (SHA-tagged)
+        run: |
+          IMAGE="${{ env.REPOSITORY }}/web:${{ github.sha }}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"

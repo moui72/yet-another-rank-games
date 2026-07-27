@@ -170,7 +170,7 @@ two paths it uses against any environment:
   sign-in / JWTs / OAuth.
 
 So "local Supabase" is really **Postgres-in-Docker plus the auth service the app
-depends on** — the same shape as staging/production. Keeping local on the
+depends on** — the same shape as production. Keeping local on the
 Supabase stack (rather than a bare Postgres container) is deliberate: the schema
 FKs into Supabase's `auth` schema (`users.id references auth.users(id)`) and the
 app authenticates via GoTrue, so a non-Supabase local DB would break local auth
@@ -179,38 +179,40 @@ deployed environments (see below).
 
 ## Environments & release flow
 
-Three environments, all running the **same app image** configured only by env
+Two environments, both running the **same app image** configured only by env
 vars (one build, many environments). Each has its **own** Supabase project and
-secrets — no environment shares a database with another:
+secrets — no environment shares a database with another. (A hosted **staging**
+environment existed until 2026-07-27, when it was torn down as not worth the
+sync burden for a solo project; local + CI now cover pre-production testing.)
 
 | Environment | Data + Auth | Deploy trigger |
 |---|---|---|
 | **local** | Supabase CLI stack (Docker), on the dev machine | `npm run dev` |
-| **staging** | a dedicated hosted Supabase project | **automatic** on push to `main` |
-| **production** | a **separate** hosted Supabase project | on push to the `production` branch (a promotion) |
+| **production** | a dedicated hosted Supabase project | on push to the `production` branch (a promotion) |
 
-Keeping all three on Supabase (rather than plain Postgres locally) preserves
+Keeping both on Supabase (rather than plain Postgres locally) preserves
 **dev/prod parity** for the Auth coupling described under Local development.
 
 **Branch-based GitOps.**
-- `main` is the trunk. Every push to `main` (i.e. every merge) **auto-deploys to
-  staging**.
+- `main` is the trunk. Every push to `main` (i.e. every merge) runs CI and
+  **builds + pushes the SHA-tagged image** to production's Artifact Registry
+  (`build.yml`) — nothing is deployed by a `main` push.
 - `production` is a **fast-forward-only pointer branch** — never committed to
-  directly, only advanced to a commit already on `main`. Its tip therefore
-  always names a commit that has passed through staging; the branch cannot
+  directly, only advanced to a commit already on `main`; the branch cannot
   diverge from `main`. Pushing to `production` **deploys to production**.
 
 **Cut a release = promote, don't rebuild.** `main`'s CI builds a **single
-immutable image tagged by commit SHA** and deploys that image to staging. A
-manual **"Promote to production"** GitHub Action (`workflow_dispatch`)
-fast-forwards `production` to `main`'s current tip; the resulting push to
-`production` deploys **the same SHA image** to production (no rebuild), so
-production ships the exact artifact staging validated. The `production` tip SHA
-is both "what is live" and "which image."
+immutable image tagged by commit SHA**. A manual **"Promote to production"**
+GitHub Action (`workflow_dispatch`) hard-requires green `quality`, `e2e`, and
+`build` checks on `main`'s tip, then fast-forwards `production` to it; the
+resulting deploy resolves **the same SHA image** by digest (no rebuild). The
+`production` tip SHA is both "what is live" and "which image."
 
 **Approval gate.** Per-environment secrets and the production gate use **GitHub
-Environments** (`staging`, `production`): the `production` environment requires a
-**manual reviewer**, so a promotion pauses for approval before it ships.
+Environments**: the `production` environment requires a **manual reviewer**, so
+a promotion pauses for approval before it ships. `build.yml` deliberately uses
+repo-level vars (`PROD_GCP_WIF_PROVIDER` / `PROD_GCP_DEPLOYER_SA`) instead of
+that environment, so image builds on `main` don't trip the approval gate.
 
 **Migrations per environment.** Each deploy applies that environment's Supabase
 migrations (`supabase db push` against the linked project) before shifting
@@ -223,7 +225,7 @@ previous revision** (revisions are immutable and retained), plus, if a migration
 was involved, its contract step. Re-pointing the `production` branch is reserved
 for the exceptional case.
 
-**Connection pooling (deployed environments).** Staging and production connect
+**Connection pooling (deployed environments).** Production connects
 through Supabase's **pooler (Supavisor)**, not a direct per-instance connection —
 with Cloud Run `max-instances` a direct connection would exhaust Postgres
 connections. Local keeps the direct `:54322` connection (single developer).
@@ -237,12 +239,10 @@ without a rebuild**. There is no committed env file with real values and no
 auto-revokes secret keys detected in public repositories). The variable contract
 lives in the committed `.env.example`.
 
-The same variables are set to **per-environment values** — the local demo stack,
-the staging Supabase project, and the production Supabase project each supply
-their own (`Deployed` below covers both staging and production, each with its
-own GitHub Environment secrets):
+The same variables are set to **per-environment values** — the local demo stack
+and the production Supabase project each supply their own:
 
-| Variable | Secret? | Local | Deployed (staging / production) |
+| Variable | Secret? | Local | Deployed (production) |
 |---|---|---|---|
 | `PUBLIC_SUPABASE_URL` | no | `.env` | Cloud Run plain env var |
 | `PUBLIC_SUPABASE_PUBLISHABLE_KEY` | no | `.env` | Cloud Run plain env var |
@@ -255,8 +255,8 @@ The database connection accepts **either** a full `DATABASE_URL` (used locally
 and by tooling) **or** discrete components. Deployed environments use the
 components so that **only `DB_PASSWORD` is a secret** — host, port, user, and
 database name are non-sensitive plain config, and the app assembles the
-connection (no password ever embedded in a stored URL string). In staging and
-production the host/port point at the Supabase **pooler** (see Environments).
+connection (no password ever embedded in a stored URL string). In production
+the host/port point at the Supabase **pooler** (see Environments).
 
 The web and worker Cloud Run services receive the same bindings; secret-marked
 variables are injected from Secret Manager as env vars at container start.
@@ -288,8 +288,7 @@ variables are injected from Secret Manager as env vars at container start.
 
 Production's web Cloud Run service is mapped to `https://yarg.ty-pe.com`
 (feature `custom-domain-mapping`) instead of users bookmarking the default
-`*.run.app` URL. Staging keeps its default `*.run.app` URL — the custom
-domain is production-only.
+`*.run.app` URL.
 
 - **Domain ownership verification is a human-only prerequisite.** Cloud Run
   domain mapping requires the domain be verified in **Google Search
