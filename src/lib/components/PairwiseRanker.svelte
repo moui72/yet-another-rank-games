@@ -223,7 +223,10 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-<div class="toast toast-top toast-center z-50" role="status" aria-live="polite">
+<!-- aria-live (not role="status") so this always-present container announces
+     without joining the `status` role — the progress counter below owns that
+     role, and two matches break assistive-tech and test queries alike. -->
+<div class="toast toast-top toast-center z-50" aria-live="polite">
 	{#if moveToast}
 		<div class="alert alert-info">{moveToast}</div>
 	{/if}

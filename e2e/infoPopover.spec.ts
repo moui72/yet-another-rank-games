@@ -53,6 +53,9 @@ test('pool builder: InfoPopover triggers are keyboard-operable and labelled, zer
 	const userId = await signUp(page);
 	const { poolId } = await seedPoolAndList(userId);
 	await page.goto(`/pools/${poolId}`);
+	// Interacting immediately after goto can race the client hydration that
+	// wires up event handlers (same flake as sharing.spec.ts / 8bb624f).
+	await page.waitForLoadState('networkidle');
 
 	const hierarchyTrigger = page.getByRole('button', { name: 'About collections, pools, and lists' }).first();
 	await expect(hierarchyTrigger).toHaveAttribute('aria-expanded', 'false');
@@ -61,7 +64,11 @@ test('pool builder: InfoPopover triggers are keyboard-operable and labelled, zer
 	await hierarchyTrigger.focus();
 	await page.keyboard.press('Enter');
 	await expect(hierarchyTrigger).toHaveAttribute('aria-expanded', 'true');
-	await expect(page.getByText(/A collection is your imported BGG set/)).toBeVisible();
+	// Scope text assertions to the popover note — the blurbs can repeat copy
+	// that already exists elsewhere on the page (strict-mode violations).
+	await expect(page.getByRole('note', { name: 'About collections, pools, and lists' })).toContainText(
+		'A collection is your imported BGG set'
+	);
 
 	await axeClean(page);
 
@@ -74,19 +81,20 @@ test('pool builder: InfoPopover triggers are keyboard-operable and labelled, zer
 	await filterTrigger.focus();
 	await page.keyboard.press(' ');
 	await expect(filterTrigger).toHaveAttribute('aria-expanded', 'true');
-	await expect(page.getByText(/combine with AND/)).toBeVisible();
+	await expect(page.getByRole('note', { name: 'About filter matching' })).toContainText('combine with AND');
 });
 
 test('pairwise ranking view: InfoPopover triggers are keyboard-operable, zero AA violations', async ({ page }) => {
 	const userId = await signUp(page);
 	const { listId } = await seedPoolAndList(userId);
 	await page.goto(`/lists/${listId}`);
+	await page.waitForLoadState('networkidle'); // let hydration finish before keyboard interaction
 
 	const pairwiseTrigger = page.getByRole('button', { name: 'About pairwise ranking' });
 	await pairwiseTrigger.focus();
 	await page.keyboard.press('Enter');
 	await expect(pairwiseTrigger).toHaveAttribute('aria-expanded', 'true');
-	await expect(page.getByText(/full order is inferred/)).toBeVisible();
+	await expect(page.getByRole('note', { name: 'About pairwise ranking' })).toContainText('full order is inferred');
 
 	await axeClean(page);
 
@@ -100,7 +108,9 @@ test('pairwise ranking view: InfoPopover triggers are keyboard-operable, zero AA
 	await moveControlsTrigger.focus();
 	await page.keyboard.press('Enter');
 	await expect(moveControlsTrigger).toHaveAttribute('aria-expanded', 'true');
-	await expect(page.getByText(/recorded as one more comparison/)).toBeVisible();
+	await expect(page.getByRole('note', { name: 'About the move up/down controls' })).toContainText(
+		'recorded as one more comparison'
+	);
 
 	await axeClean(page);
 });
@@ -109,12 +119,13 @@ test('list export view: InfoPopover trigger is keyboard-operable, zero AA violat
 	const userId = await signUp(page);
 	const { listId } = await seedPoolAndList(userId);
 	await page.goto(`/lists/${listId}`);
+	await page.waitForLoadState('networkidle'); // let hydration finish before keyboard interaction
 
 	const exportTrigger = page.getByRole('button', { name: 'About export formats' });
 	await exportTrigger.focus();
 	await page.keyboard.press('Enter');
 	await expect(exportTrigger).toHaveAttribute('aria-expanded', 'true');
-	await expect(page.getByText(/paste into a new GeekList/)).toBeVisible();
+	await expect(page.getByRole('note', { name: 'About export formats' })).toContainText('paste into a new GeekList');
 
 	await axeClean(page);
 
